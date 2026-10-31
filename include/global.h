@@ -968,6 +968,8 @@ struct TrainerHillSave
                u16 hasDefeatedGold:1;
                //u16 padding:5;
     u16 gaugeCredits;
+    u16 nextBrainThreshold;
+    u8 runBP;
     u8 prevFirstTrainers[NUM_TRAINER_HILL_MODES][NUM_TRAINER_HILL_FLOORS];
     u8 currentFloorTrainers[NUM_TRAINER_HILL_FLOORS][HILL_TRAINERS_PER_FLOOR];
     u8 monSlots[NUM_TRAINER_HILL_FLOORS][HILL_TRAINERS_PER_FLOOR][MULTI_PARTY_SIZE];
