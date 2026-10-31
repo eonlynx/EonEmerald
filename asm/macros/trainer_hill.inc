@@ -131,3 +131,15 @@
 	setvar VAR_0x8004, TRAINER_HILL_FUNC_GIVE_BRAIN_PRIZE
 	special CallTrainerHillFunction
 	.endm
+
+	@ Checks if player has spoken to the owner on the roof (returns in VAR_RESULT)
+	.macro trainerhill_getspoketoowner
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_GET_SPOKE_TO_OWNER
+	special CallTrainerHillFunction
+	.endm
+
+	@ Sets dynamic graphics vars VAR_OBJ_GFX_ID_0..7 for the 8 roof spectators
+	.macro trainerhill_setspectatorgfx
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_SET_SPECTATOR_GFX
+	special CallTrainerHillFunction
+	.endm
