@@ -13,37 +13,51 @@ TrainerHill_Entrance_OnWarpTable:
 
 TrainerHill_Entrance_EventScript_CheckPlayerOrientation::
 	getplayerxy VAR_TEMP_2, VAR_TEMP_3
-	goto_if_le VAR_TEMP_3, 5, TrainerHill_Entrance_EventScript_TurnPlayerSouth
-	goto_if_eq VAR_TRAINER_HILL_IS_ACTIVE, 1, TrainerHill_Entrance_EventScript_TurnPlayerEast
-	goto_if_eq VAR_TEMP_3, 7, TrainerHill_Entrance_EventScript_TurnPlayerSouth
+	goto_if_le VAR_TEMP_3, 8, TrainerHill_Entrance_EventScript_PlayerInCorridor
+	goto_if_eq VAR_TEMP_3, 11, TrainerHill_Entrance_EventScript_TurnPlayerNorth
 	end
 
-TrainerHill_Entrance_EventScript_TurnPlayerSouth::
+TrainerHill_Entrance_EventScript_PlayerInCorridor::
 	turnobject LOCALID_PLAYER, DIR_SOUTH
+	call_if_eq VAR_TRAINER_HILL_IS_ACTIVE, 1, TrainerHill_Entrance_EventScript_AttendantAsideInCorridor
 	end
 
-TrainerHill_Entrance_EventScript_TurnPlayerEast::
-	turnobject LOCALID_PLAYER, DIR_EAST
+TrainerHill_Entrance_EventScript_AttendantAsideInCorridor::
+	setobjectxy LOCALID_TRAINER_HILL_ATTENDANT, 2, 9
+	turnobject LOCALID_TRAINER_HILL_ATTENDANT, DIR_EAST
+	return
+
+TrainerHill_Entrance_EventScript_TurnPlayerNorth::
+	turnobject LOCALID_PLAYER, DIR_NORTH
 	end
 
 TrainerHill_Entrance_OnTransition:
 	setflag FLAG_LANDMARK_TRAINER_HILL
-	getplayerxy VAR_TEMP_D, VAR_RESULT
+	getplayerxy VAR_TEMP_D, VAR_TEMP_E
+	call TrainerHill_Entrance_EventScript_PositionAttendant
 	end
 
-@ Unused
-TrainerHill_Entrance_OnWarp:
-	end
+TrainerHill_Entrance_EventScript_PositionAttendant::
+	goto_if_ne VAR_TRAINER_HILL_IS_ACTIVE, 1, TrainerHill_Entrance_EventScript_AttendantInitialPos
+	goto_if_gt VAR_TEMP_E, 8, TrainerHill_Entrance_EventScript_AttendantInitialPos
+	setobjectxyperm LOCALID_TRAINER_HILL_ATTENDANT, 2, 9
+	setobjectmovementtype LOCALID_TRAINER_HILL_ATTENDANT, MOVEMENT_TYPE_FACE_RIGHT
+	return
+
+TrainerHill_Entrance_EventScript_AttendantInitialPos::
+	setobjectxyperm LOCALID_TRAINER_HILL_ATTENDANT, 3, 10
+	setobjectmovementtype LOCALID_TRAINER_HILL_ATTENDANT, MOVEMENT_TYPE_FACE_DOWN
+	return
 
 TrainerHill_Entrance_OnResume:
 	trainerhill_resumetimer
 	setvar VAR_TEMP_0, 0
 	getplayerxy VAR_TEMP_2, VAR_TEMP_3
-	goto_if_le VAR_TEMP_3, 5, TrainerHill_Entrance_EventScript_PlayerDontFaceAttendant
+	goto_if_le VAR_TEMP_3, 8, TrainerHill_Entrance_EventScript_PlayerDontFaceAttendant
 	goto_if_eq VAR_TRAINER_HILL_IS_ACTIVE, 0, TrainerHill_Entrance_EventScript_PlayerDontFaceAttendant
 	trainerhill_getusingereader
 	goto_if_eq VAR_RESULT, FALSE, TrainerHill_Entrance_EventScript_TryFaceAttendant  @ VAR_RESULT always FALSE here
-	setobjectxy LOCALID_PLAYER, 9, 6
+	setobjectxy LOCALID_PLAYER, 3, 11
 	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PlayerFaceAttendant
 	end
 
@@ -57,24 +71,22 @@ TrainerHill_Entrance_EventScript_PlayerDontFaceAttendant::
 	end
 
 TrainerHill_Entrance_OnReturn:
-	addobject LOCALID_TRAINER_HILL_NURSE
 	addobject LOCALID_TRAINER_HILL_ATTENDANT
 	addobject LOCALID_TRAINER_HILL_MAN
 	addobject LOCALID_TRAINER_HILL_GIRL
 	end
 
 TrainerHill_Entrance_OnLoad:
-	call_if_eq VAR_TEMP_D, 17, TrainerHill_Entrance_EventScript_OpenCounterDoor
+	call_if_eq VAR_TEMP_D, 19, TrainerHill_Entrance_EventScript_OpenCounterDoor
 	end
 
 TrainerHill_Entrance_EventScript_OpenCounterDoor::
-	setmetatile 17, 10, METATILE_TrainerHill_GreenFloorTile, FALSE
+	setmetatile 19, 3, METATILE_TrainerHill_GreenFloorTile, FALSE
 	return
 
 TrainerHill_Entrance_OnFrame:
 	map_script_2 VAR_TEMP_0, 0, TrainerHill_Entrance_EventScript_ExitChallenge
-	map_script_2 VAR_TEMP_D, 17, TrainerHill_Entrance_EventScript_ExitElevator
-	map_script_2 VAR_TEMP_5, 1, TrainerHill_Entrance_EventScript_EntryTrigger
+	map_script_2 VAR_TEMP_D, 19, TrainerHill_Entrance_EventScript_ExitElevator
 	map_script_2 VAR_TEMP_1, 1, TrainerHill_EventScript_WarpToEntranceCounter
 	.2byte 0
 
@@ -82,7 +94,7 @@ TrainerHill_Entrance_EventScript_ExitElevator::
 	lockall
 	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PlayerExitElevator
 	waitmovement 0
-	setmetatile 17, 10, METATILE_TrainerHill_CounterDoor, TRUE
+	setmetatile 19, 3, METATILE_TrainerHill_CounterDoor, TRUE
 	special DrawWholeMapView
 	playse SE_CLICK
 	waitse
@@ -93,7 +105,7 @@ TrainerHill_Entrance_EventScript_ExitElevator::
 TrainerHill_Entrance_EventScript_ExitChallenge::
 	setvar VAR_TEMP_0, 1
 	getplayerxy VAR_TEMP_2, VAR_TEMP_3
-	goto_if_le VAR_TEMP_3, 5, TrainerHill_Entrance_EventScript_EndExitChallenge
+	goto_if_le VAR_TEMP_3, 8, TrainerHill_Entrance_EventScript_EndExitChallenge
 	trainerhill_getstatus
 	switch VAR_RESULT
 	case TRAINER_HILL_PLAYER_STATUS_LOST, TrainerHill_Entrance_EventScript_ExitChallengeLost
@@ -117,8 +129,6 @@ TrainerHill_Entrance_EventScript_ExitChallengeDidntSave::
 	waitse
 	msgbox TrainerHill_Entrance_Text_HopeToSeeYouAgain, MSGBOX_DEFAULT
 	closemessage
-	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PushPlayerBackFromCounter
-	waitmovement 0
 	releaseall
 	end
 
@@ -170,37 +180,15 @@ TrainerHill_Entrance_EventScript_ExitChallengeECard::
 	callnative UpdateFollowingPokemon
 TrainerHill_Entrance_EventScript_PlayerExitChallenge::
 	closemessage
-	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PushPlayerBackFromCounter
-	waitmovement 0
 	releaseall
 TrainerHill_Entrance_EventScript_EndExitChallenge::
-	end
-
-TrainerHill_Entrance_EventScript_Nurse::
-	setvar VAR_0x800B, LOCALID_TRAINER_HILL_NURSE
-	call Common_EventScript_PkmnCenterNurse
-	waitmessage
-	waitbuttonpress
-	release
 	end
 
 TrainerHill_Entrance_EventScript_Attendant::
 	lock
 	faceplayer
 	trainerhill_inchallenge
-	goto_if_eq VAR_RESULT, FALSE, TrainerHill_Entrance_EventScript_ThanksForPlaying
-	msgbox TrainerHill_Entrance_Text_HopeYouGiveItYourBest, MSGBOX_DEFAULT
-	goto TrainerHill_Entrance_EventScript_AttendantEnd
-
-TrainerHill_Entrance_EventScript_ThanksForPlaying::
-	msgbox TrainerHill_Entrance_Text_ThankYouForPlaying, MSGBOX_DEFAULT
-TrainerHill_Entrance_EventScript_AttendantEnd::
-	release
-	end
-
-TrainerHill_Entrance_EventScript_EntryTrigger::
-	lockall
-	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PlayerFaceAttendant
+	goto_if_eq VAR_RESULT, TRUE, TrainerHill_Entrance_EventScript_HopeYouGiveItYourBest
 	goto_if_unset FLAG_SYS_GAME_CLEAR, TrainerHill_Entrance_EventScript_Closed
 	msgbox TrainerHill_Entrance_Text_WelcomeToTrainerHill, MSGBOX_DEFAULT
 TrainerHill_Entrance_EventScript_AskChallengeTrainers::
@@ -212,6 +200,11 @@ TrainerHill_Entrance_EventScript_AskChallengeTrainers::
 	case 1, TrainerHill_Entrance_EventScript_Info
 	case 2, TrainerHill_Entrance_EventScript_CancelEntry
 	case MULTI_B_PRESSED, TrainerHill_Entrance_EventScript_CancelEntry
+	end
+
+TrainerHill_Entrance_EventScript_HopeYouGiveItYourBest::
+	msgbox TrainerHill_Entrance_Text_HopeYouGiveItYourBest, MSGBOX_DEFAULT
+	release
 	end
 
 TrainerHill_Entrance_EventScript_Info::
@@ -252,8 +245,6 @@ TrainerHill_Entrance_EventScript_PartyLevelTooHigh50::
 	msgbox TrainerHill_Entrance_Text_PartyLevelTooHigh50, MSGBOX_DEFAULT
 	closemessage
 	setvar VAR_TEMP_5, 0
-	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PushPlayerBackFromCounter
-	waitmovement 0
 	releaseall
 	end
 
@@ -271,6 +262,11 @@ TrainerHill_Entrance_EventScript_EnterChallenge::
 	setvar VAR_TEMP_5, 0
 	special HealPlayerParty
 	callnative UpdateFollowingPokemon
+	applymovement LOCALID_TRAINER_HILL_ATTENDANT, TrainerHill_Entrance_Movement_AttendantStepAside
+	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PlayerStepInCorridor
+	waitmovement 0
+	setobjectxyperm LOCALID_TRAINER_HILL_ATTENDANT, 2, 9
+	setobjectmovementtype LOCALID_TRAINER_HILL_ATTENDANT, MOVEMENT_TYPE_FACE_RIGHT
 	msgbox TrainerHill_Entrance_Text_TimeProgessGetSetGo, MSGBOX_DEFAULT
 	closemessage
 	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PlayerWalkUp
@@ -284,6 +280,18 @@ TrainerHill_Entrance_EventScript_CancelChallengeSaveFailed::
 	setvar VAR_TRAINER_HILL_IS_ACTIVE, 0
 	goto TrainerHill_Entrance_EventScript_CancelEntry
 
+TrainerHill_Entrance_Movement_AttendantStepAside:
+	walk_up
+	walk_left
+	face_right
+	step_end
+
+TrainerHill_Entrance_Movement_PlayerStepInCorridor:
+	walk_up
+	walk_up
+	face_left
+	step_end
+
 TrainerHill_Entrance_Movement_PlayerWalkUp:
 	walk_up
 	step_end
@@ -292,14 +300,13 @@ TrainerHill_Entrance_EventScript_CancelEntry::
 	setvar VAR_TEMP_5, 0
 	msgbox TrainerHill_Entrance_Text_PleaseVisitUsAgain, MSGBOX_DEFAULT
 	closemessage
-	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PushPlayerBackFromCounter
-	waitmovement 0
 	releaseall
 	end
 
 TrainerHill_Entrance_EventScript_RetireTrigger::
 	lockall
-	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PlayerFaceAttendant
+	applymovement LOCALID_PLAYER, Common_Movement_FaceLeft
+	applymovement LOCALID_TRAINER_HILL_ATTENDANT, Common_Movement_FaceRight
 	waitmovement 0
 	msgbox TrainerHill_Entrance_Text_RetireFromChallenge, MSGBOX_YESNO
 	switch VAR_RESULT
@@ -321,8 +328,11 @@ TrainerHill_Entrance_EventScript_Retire::
 	waitse
 	msgbox TrainerHill_Entrance_Text_HopeToSeeYouAgain, MSGBOX_DEFAULT
 	closemessage
-	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PushPlayerBackFromCounter
+	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PlayerExitCorridor
+	applymovement LOCALID_TRAINER_HILL_ATTENDANT, TrainerHill_Entrance_Movement_AttendantReturnToPost
 	waitmovement 0
+	setobjectxyperm LOCALID_TRAINER_HILL_ATTENDANT, 3, 10
+	setobjectmovementtype LOCALID_TRAINER_HILL_ATTENDANT, MOVEMENT_TYPE_FACE_DOWN
 	releaseall
 	end
 
@@ -333,6 +343,17 @@ TrainerHill_Entrance_EventScript_DontRetire::
 	releaseall
 	end
 
+TrainerHill_Entrance_Movement_PlayerExitCorridor:
+	walk_down
+	walk_down
+	step_end
+
+TrainerHill_Entrance_Movement_AttendantReturnToPost:
+	walk_right
+	walk_down
+	face_down
+	step_end
+
 TrainerHill_Entrance_Movement_PushPlayerBackFromExit:
 	walk_up
 	step_end
@@ -340,21 +361,10 @@ TrainerHill_Entrance_Movement_PushPlayerBackFromExit:
 TrainerHill_Entrance_EventScript_Closed::
 	msgbox TrainerHill_Entrance_Text_StillGettingReady, MSGBOX_DEFAULT
 	closemessage
-	applymovement LOCALID_PLAYER, TrainerHill_Entrance_Movement_PushPlayerBackFromCounter
-	waitmovement 0
 	releaseall
 	end
 
 TrainerHill_Entrance_Movement_PlayerFaceAttendant:
-	face_right
-	step_end
-
-TrainerHill_Entrance_Movement_PushPlayerBackFromCounter:
-	walk_down
-	step_end
-
-@ Unused
-TrainerHill_Entrance_Movement_FaceUp:
 	face_up
 	step_end
 
@@ -388,54 +398,6 @@ TrainerHill_Entrance_EventScript_Girl::
 TrainerHill_Entrance_EventScript_GirlTrainerHillClosed::
 	msgbox TrainerHill_Entrance_Text_DoYouKnowWhenTheyOpen, MSGBOX_NPC
 	end
-
-TrainerHill_Entrance_EventScript_Clerk::
-	lock
-	faceplayer
-	message gText_HowMayIServeYou
-	waitmessage
-	goto_if_set FLAG_SYS_GAME_CLEAR, TrainerHill_Entrance_EventScript_ExpandedPokemart
-	pokemart TrainerHill_Entrance_Pokemart_Basic
-	msgbox gText_PleaseComeAgain, MSGBOX_DEFAULT
-	release
-	end
-
-	.align 2
-TrainerHill_Entrance_Pokemart_Basic:
-	.2byte ITEM_SUPER_POTION
-	.2byte ITEM_ANTIDOTE
-	.2byte ITEM_PARALYZE_HEAL
-	.2byte ITEM_AWAKENING
-	.2byte ITEM_X_SPEED
-	.2byte ITEM_X_SP_ATK
-	.2byte ITEM_X_ATTACK
-	.2byte ITEM_X_DEFENSE
-	.2byte ITEM_DIRE_HIT
-	.2byte ITEM_GUARD_SPEC
-	.2byte ITEM_X_ACCURACY
-	pokemartlistend
-
-TrainerHill_Entrance_EventScript_ExpandedPokemart::
-	pokemart TrainerHill_Entrance_Pokemart_Expanded
-	msgbox gText_PleaseComeAgain, MSGBOX_DEFAULT
-	release
-	end
-
-	.align 2
-TrainerHill_Entrance_Pokemart_Expanded:
-	.2byte ITEM_HYPER_POTION
-	.2byte ITEM_MAX_POTION
-	.2byte ITEM_FULL_RESTORE
-	.2byte ITEM_FULL_HEAL
-	.2byte ITEM_REVIVE
-	.2byte ITEM_X_SPEED
-	.2byte ITEM_X_SP_ATK
-	.2byte ITEM_X_ATTACK
-	.2byte ITEM_X_DEFENSE
-	.2byte ITEM_DIRE_HIT
-	.2byte ITEM_GUARD_SPEC
-	.2byte ITEM_X_ACCURACY
-	pokemartlistend
 
 TrainerHill_Entrance_Text_StillGettingReady:
 	.string "Where the speed of TRAINERS\n"
@@ -547,23 +509,24 @@ TrainerHill_Roof_Text_HaveTheMostMarvelousGift:
 TrainerHill_Roof_Text_OwnerAnnounceWallySilver:
 	.string "Bravo! Welcome to the summit!\p"
 	.string "I watched your ascent, and your speed\n"
-	.string "across every floor was astonishing!\p"
+	.string "across each floor was astonishing!\p"
 	.string "A challenge so marvelous warrants\n"
 	.string "an exhibition of the highest order!\p"
-	.string "Our FRONTIER BRAIN has arrived!$"
+	.string "Look! The TRAINERS you defeated\n"
+	.string "have come to watch the match!$"
 
 TrainerHill_Roof_Text_OwnerAnnounceWallyGold:
-	.string "Bravo! Welcome back to the summit!\p"
-	.string "Your agility has reached a realm\n"
-	.string "few TRAINERS ever attain!\p"
-	.string "The crowd eagerly awaits this clash!\n"
-	.string "Our FRONTIER BRAIN is here!$"
+	.string "Magnifico! The champion returns!\p"
+	.string "Your breathtaking streak has set\n"
+	.string "the entire hill ablaze with hype!\p"
+	.string "Every single TRAINER you conquered\n"
+	.string "has rushed to the roof for this!\p"
+	.string "Prepare for the ultimate clash at\n"
+	.string "the highest pinnacle of agility!$"
 
 TrainerHill_Roof_Text_OwnerRestoreParty:
-	.string "The TRAINERS you defeated have\n"
-	.string "gathered around the arena to watch!\p"
-	.string "First, I shall restore your\n"
-	.string "POKéMON to full health!$"
+	.string "Now that everyone is gathered, I will\n"
+	.string "restore your POKéMON to full health!$"
 
 TrainerHill_Roof_Text_OwnerTakeBattlePosition:
 	.string "Challenger! Step forward to the\n"
@@ -571,8 +534,9 @@ TrainerHill_Roof_Text_OwnerTakeBattlePosition:
 
 TrainerHill_Roof_Text_OwnerIntroduceWally:
 	.string "Ladies and gentlemen!\p"
-	.string "Please welcome our FRONTIER BRAIN,\n"
-	.string "WALLY the HILL PRODIGY!$"
+	.string "Our FRONTIER BRAIN has arrived!\p"
+	.string "Please welcome WALLY,\n"
+	.string "the HILL PRODIGY!$"
 
 TrainerHill_Roof_Text_WallySilverIntro:
 	.string "WALLY: Hi, {PLAYER}!\p"
