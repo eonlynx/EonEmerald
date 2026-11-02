@@ -101,7 +101,7 @@ Each run randomly selects **8 trainers distributed across 4 floors** (2 trainers
 - **Legacy Cleanup:** Unused item prize list structures and lookup functions (`sPrizeListSets`, `GetPrizeItemId`, `GetPrizeListId`) were safely decommissioned to ensure clean, warning-free compilation.
 
 ### 2.11. Frontier Brain Wally & Gauge Credits System
-- **Integration as Battle Hill:** Trainer Hill has been rebranded to **Battle Hill** across all scripts, map names, landmarks, and signposts, fully integrating it into the Battle Frontier experience. Facility music across all floors and lobby retains the facility theme `MUS_B_TOWER_RS`, and reception dialogue is harmonized to the Frontier standard (*"Where the agility of TRAINERS is put to the test! Welcome to the BATTLE HILL!"*). The reception menu uses `MULTI_CHALLENGEINFO` (`CHALLENGE / INFO / EXIT`) with full Battle Frontier rules explanation and farewell phrasing.
+- **Integration as Battle Hill:** Trainer Hill has been rebranded to **Battle Hill** across all scripts, map names, landmarks, and signposts, fully integrating it into the Battle Frontier experience. Facility music across all floors and lobby retains the facility theme `MUS_B_TOWER_RS`, and reception dialogue is harmonized to the Frontier standard (*"Where the agility of TRAINERS is put to the test! Welcome to the BATTLE HILL!"*). All interior maps (`TrainerHill_Entrance`, `TrainerHill_1F`–`4F`, `Roof`, `Elevator`) use `MAPSEC_BATTLE_FRONTIER` as their `region_map_section`, ensuring that saving displays `BATTLE FRONTIER` and the Town Map / PokéNav points to the Battle Frontier sector rather than Route 111, matching all other Frontier battle facilities. The reception menu uses `MULTI_CHALLENGEINFO` (`CHALLENGE / INFO / EXIT`) with full Battle Frontier rules explanation and farewell phrasing.
 - **Frontier Brain Integration:** Wally serves as the Frontier Brain of Battle Hill with the official title and class **Hill Prodigy** (`TRAINER_CLASS_HILL_PRODIGY` / `"HILL PRODIGY"`).
 - **Gauge Credits Accumulation:**
   - Challengers earn base gauge credits depending on their clear time:
@@ -192,7 +192,7 @@ Each run randomly selects **8 trainers distributed across 4 floors** (2 trainers
   - Integrated into `data/maps/TrainerHill_Entrance/map.json` facing North (`BG_EVENT_PLAYER_FACING_NORTH`).
 - **Battle Frontier Pop-up Window Parity:** Uses the canonical Battle Frontier results window framework (`sFrontierResultsWindowTemplate`, `FRONTIER_FACILITY_HILL` / `10`, invoked via `frontier_results` and dismissed with `special RemoveRecordsWindow`).
 - **3-Column Layout Matching Battle Factory Parity:**
-  - Header: `{PLAYER}'s Battle Tag [Mode] Results` centered at top (`y = 0`).
+  - Header: `{PLAYER}'s [Mode] Tag Match Results` centered at top (`y = 0`).
   - **Column 1 (`x = 8`):** Section and row labels (`LV. 50`, `PREV.` / `CURRENT`, `RECORD`, `OPEN LV.`). Dynamically displays `CURRENT` (`gText_Current`) when the player has an active winning streak (`winStreaks[mode][lvlMode] > 0`) and `PREV.` (`gText_Prev`) when unplayed or after a streak ends via defeat, retirement, or disqualification, matching the rest of the Battle Frontier facilities.
   - **Column 2 (`x = 64`):** Challenge clear times formatted via `FormatTrainerHillTime(dst, total, hasCleared)` using the exact vanilla time calculation (`PrintOnTrainerHillRecordsWindow` / `BufferChallengeTime`). Displays `Time: --'--" --` when `timesCleared[mode][lvlMode] == 0`, and two-digit leading-zero minutes, seconds, and hundredths `Time: 12'34" 56` (clamped at `HILL_MAX_TIME = 215999` / `59'59" 99`) once cleared (`timesCleared[mode][lvlMode] > 0`), aligned on the same horizontal column as Battle Factory's `Win streak:`.
   - **Column 3 (`x = 154`):** Winning streak counts (`Streak:    0`), right-aligned to match Battle Factory's `Times:`.
@@ -208,6 +208,40 @@ Each run randomly selects **8 trainers distributed across 4 floors** (2 trainers
   - `ResetTrainerHillResults()` initializes `recordTimes` and `prevTimes` to `HILL_MAX_TIME` (`215999`), and `TrainerHillSetMode()` loads `gSaveBlock1Ptr->trainerHill.bestTime` from `recordTimes[mode][lvlMode]` (defaulting to `HILL_MAX_TIME` if uninitialized).
   - Updated upon rooftop victory via `UpdateTrainerHillClearRecords()` (comparing `bestTime > timer` just like vanilla `CheckFinalTime()`), with `winStreaks` reset to 0 upon defeat (`TrainerHillSetPlayerLost()`), retirement (`TrainerHillRetire()`), or quit/reset disqualification (`TrainerHillGetChallengeStatus()`), and `prevStreaks` cleared at the start of a new challenge (`TrainerHillStartChallenge()`) if no streak is active.
   - **Timer Stop Safeguards:** `TrainerHillCheckFrontierBrain()` immediately calls `ClearTrainerHillVBlankCounter()` upon reaching the Owner on the roof and sets `spokeToOwner = TRUE` when Wally appears, ensuring the timer never runs during Wally's rooftop entrance cutscene, battle, or post-battle sequence. `TrainerHillResumeTimer()` and `InitTrainerHillBattleStruct()` likewise verify `!spokeToOwner` and `timer < HILL_MAX_TIME` before enabling the VBlank counter.
+
+### 2.14. Rules Board & Early Game Access Parity
+- **Unrestricted Early-Game Access:** All pre-Champion checks (`FLAG_SYS_GAME_CLEAR`) were decommissioned in `TrainerHill_Entrance`. Battle Hill is now accessible from the start of the adventure upon reaching Route 111, with the attendant open for challenges and lobby NPCs actively conversing about the facility.
+- **Dedicated Rules Board (`MULTI_BATTLE_HILL_RULES`):** Placed at `(1, 10)` in `TrainerHill_Entrance/map.json` matching Battle Frontier convention, featuring interactive headings tailored to Battle Hill's unique gameplay:
+  - **`HILL INFO`:** Explains the 4-floor speed and endurance ascent and how clear times award Battle Points on the roof.
+  - **`TAG BATTLES`:** Details the 2-on-1 tag battle mechanic triggered by trainers' crossing vision cones.
+  - **`CHALLENGE MODES`:** Explains the differences across Normal, Variety, Unique, and Expert modes.
+  - **`POKéMON & ITEMS`:** Highlights Battle Hill's unique rule allowing a full party of 6 Pokémon, all legendary/mythical species, and duplicate held items.
+- **Dialogue Consistency & De-duplication:**
+  - `TrainerHill_Roof_Text_GotHereMarvelouslyQuickly` was refined (*"That is simply delightful! Truly a marvelous feat of agility!"*) to avoid redundant references to reception time boards before the game save prompt.
+  - Lobby NPCs updated to reference the **Results boards** and describe tag battle synergy and speed instead of repeating vanilla placeholder phrases.
+
+### 2.15. Quadruple Receptionists & Mode-Dedicated Corridors (Battle Tower Parity)
+- **4 Dedicated Receptionists:** Matching Battle Tower's 4 receptionists (Singles, Doubles, Multis, Link), Battle Hill features 4 dedicated attendants in `TrainerHill_Entrance/map.json`:
+  - **Normal (`LOCALID_ATTENDANT_NORMAL`):** Stationed at `(3, 10)` offering Normal Tag Match.
+  - **Variety (`LOCALID_ATTENDANT_VARIETY`):** Stationed at `(7, 10)` offering Variety Tag Match.
+  - **Unique (`LOCALID_ATTENDANT_UNIQUE`):** Stationed at `(11, 10)` offering Unique Tag Match.
+  - **Expert (`LOCALID_ATTENDANT_EXPERT`):** Stationed at `(15, 10)` offering Expert Tag Match.
+  - Legacy `MULTI_TAG_MATCH_TYPE` menu and generic introduction texts were deprecated; each attendant introduces and explains her mode directly with authentic Battle Frontier dialogue.
+- **Dedicated Corridor Warps & Stepping Sequences:**
+  - When challenging a mode, only that mode's attendant steps into her corridor alcove `(X-1, 9)` facing East (`DIR_EAST`), while the player steps into `(X, 9)` and walks up to warp at `(X, 6)` towards `TrainerHill_1F`. The remaining three attendants remain stationary at their desks.
+- **Dynamic 1F Floor Return (`SetWarpDestinationTrainerHill1F`):**
+  - When descending the stairs from 1F into the Entrance lobby, `SetWarpDestinationTrainerHill1F()` in `src/trainer_hill.c` and `src/field_control_avatar.c` calculates the player's landing coordinates dynamically:
+    $$X = 3 + (\text{mode} \times 4),\quad Y = 7$$
+    returning the player cleanly into the exact corridor belonging to their active challenge mode.
+- **Independent Retirement Triggers:**
+  - Dedicated coordinate triggers placed at `(3, 9)`, `(7, 9)`, `(11, 9)`, and `(15, 9)` intercept the player if attempting to return south into the lobby during an active challenge (`VAR_TRAINER_HILL_IS_ACTIVE == 1`).
+  - The mode's attendant interacts with the player via `VAR_LAST_TALKED`:
+    - **Retire:** Saves challenge data, steps the player down to `(X, 11)`, returns that attendant to her desk at `(X, 10)`, and clears active challenge state.
+    - **Continue:** Steps the player 1 tile north towards 1F (`walk_up`) while the attendant stays stepped aside.
+- **Mode-Specific Defeat, Wally Victory & Save Respawn Anchoring:**
+  - **Defeat / Loss:** `TrainerHill_EventScript_WarpToEntranceCounter` warps the player to `(X, 11)` facing their mode's attendant.
+  - **Rooftop Wally Victory:** Warps the player to `(X, 11)` facing their mode's attendant.
+  - **Mid-Climb Disqualification / Reset:** `TrainerHillSaveChallenge` anchors flash save respawn coordinates to `X = 3 + (mode * 4), Y = 11`. Upon reloading, `OnResume` positions the player facing North directly before their mode's attendant, who delivers the disqualification notice and saves progress.
 
 ---
 
