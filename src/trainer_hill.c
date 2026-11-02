@@ -36,8 +36,6 @@
 #include "constants/trainer_hill.h"
 #include "constants/trainer_types.h"
 
-#define HILL_MAX_TIME 215999 // 60 * 60 * 60 - 1
-
 struct FloorTrainers
 {
     u8 name[HILL_TRAINERS_PER_FLOOR][TRAINER_NAME_LENGTH + 1];
@@ -255,7 +253,7 @@ void CallTrainerHillFunction(void)
 void ResetTrainerHillResults(void)
 {
 #if FREE_TRAINER_HILL == FALSE
-    s32 i;
+    s32 i, j;
 #endif //FREE_TRAINER_HILL
 
     gSaveBlock2Ptr->frontier.savedGame = 0;
@@ -263,7 +261,18 @@ void ResetTrainerHillResults(void)
 #if FREE_TRAINER_HILL == FALSE
     gSaveBlock1Ptr->trainerHill.bestTime = 0;
     for (i = 0; i < NUM_TRAINER_HILL_MODES; i++)
+    {
         SetTimerValue(&gSaveBlock1Ptr->trainerHillTimes[i], HILL_MAX_TIME);
+        for (j = 0; j < FRONTIER_LVL_MODE_COUNT; j++)
+        {
+            SetTimerValue(&gSaveBlock1Ptr->trainerHill.recordTimes[i][j], HILL_MAX_TIME);
+            SetTimerValue(&gSaveBlock1Ptr->trainerHill.prevTimes[i][j], HILL_MAX_TIME);
+            gSaveBlock1Ptr->trainerHill.recordStreaks[i][j] = 0;
+            gSaveBlock1Ptr->trainerHill.prevStreaks[i][j] = 0;
+            gSaveBlock1Ptr->trainerHill.winStreaks[i][j] = 0;
+            gSaveBlock1Ptr->trainerHill.timesCleared[i][j] = 0;
+        }
+    }
     memset(gSaveBlock1Ptr->trainerHill.prevFirstTrainers, 0xFF, sizeof(gSaveBlock1Ptr->trainerHill.prevFirstTrainers));
     memset(gSaveBlock1Ptr->trainerHill.currentFloorTrainers, 0xFF, sizeof(gSaveBlock1Ptr->trainerHill.currentFloorTrainers));
     gSaveBlock1Ptr->trainerHill.gaugeCredits = 0;
@@ -322,7 +331,8 @@ void InitTrainerHillBattleStruct(void)
         sFloorTrainers->facilityClass[i] = sHillData->floors[sHillData->floorId].trainers[i].facilityClass;
     }
 #if FREE_TRAINER_HILL == FALSE
-    SetTrainerHillVBlankCounter(&gSaveBlock1Ptr->trainerHill.timer);
+    if (!gSaveBlock1Ptr->trainerHill.spokeToOwner && gSaveBlock1Ptr->trainerHill.timer < HILL_MAX_TIME)
+        SetTrainerHillVBlankCounter(&gSaveBlock1Ptr->trainerHill.timer);
 #endif //FREE_TRAINER_HILL
     FreeDataStruct();
 }
@@ -557,7 +567,16 @@ static void TrainerHillStartChallenge(void)
 {
     TrainerHillDummy();
 #if FREE_TRAINER_HILL == FALSE
-    GenerateTrainerHillChallenge(gSaveBlock1Ptr->trainerHill.mode);
+    u8 mode = gSaveBlock1Ptr->trainerHill.mode;
+    u8 lvlMode = gSaveBlock1Ptr->trainerHill.lvlMode;
+
+    GenerateTrainerHillChallenge(mode);
+
+    if (mode < NUM_TRAINER_HILL_MODES && lvlMode < FRONTIER_LVL_MODE_COUNT)
+    {
+        if (gSaveBlock1Ptr->trainerHill.winStreaks[mode][lvlMode] == 0)
+            gSaveBlock1Ptr->trainerHill.prevStreaks[mode][lvlMode] = 0;
+    }
 
     if (!ReadTrainerHillAndValidate())
         gSaveBlock1Ptr->trainerHill.field_3D6E_0f = 1;
@@ -643,17 +662,65 @@ static u8 GetRunBP(u8 mode, u32 timer)
     }
 }
 
+static bool8 sIsNewRecord = FALSE;
+
+static void UpdateTrainerHillClearRecords(void)
+{
+    u8 mode = gSaveBlock1Ptr->trainerHill.mode;
+    u8 lvlMode = gSaveBlock1Ptr->trainerHill.lvlMode;
+    u32 timer = gSaveBlock1Ptr->trainerHill.timer;
+    u32 bestTime;
+
+    if (mode >= NUM_TRAINER_HILL_MODES)
+        mode = HILL_MODE_NORMAL;
+    if (lvlMode >= FRONTIER_LVL_MODE_COUNT)
+        lvlMode = FRONTIER_LVL_50;
+
+    if (timer >= HILL_MAX_TIME)
+        timer = HILL_MAX_TIME;
+
+    if (gSaveBlock1Ptr->trainerHill.timesCleared[mode][lvlMode] < 0xFFFF)
+        gSaveBlock1Ptr->trainerHill.timesCleared[mode][lvlMode]++;
+
+    SetTimerValue(&gSaveBlock1Ptr->trainerHill.prevTimes[mode][lvlMode], timer);
+
+    bestTime = GetTimerValue(&gSaveBlock1Ptr->trainerHill.recordTimes[mode][lvlMode]);
+    if (bestTime == 0 || bestTime > HILL_MAX_TIME)
+        bestTime = HILL_MAX_TIME;
+
+    if (bestTime > timer || gSaveBlock1Ptr->trainerHill.timesCleared[mode][lvlMode] == 1)
+    {
+        sIsNewRecord = (bestTime > timer);
+        SetTimerValue(&gSaveBlock1Ptr->trainerHill.bestTime, timer);
+        SetTimerValue(&gSaveBlock1Ptr->trainerHill.recordTimes[mode][lvlMode], timer);
+        gSaveBlock1Ptr->trainerHillTimes[mode] = gSaveBlock1Ptr->trainerHill.bestTime;
+    }
+    else
+    {
+        sIsNewRecord = FALSE;
+    }
+
+    if (gSaveBlock1Ptr->trainerHill.winStreaks[mode][lvlMode] < 0xFFFF)
+        gSaveBlock1Ptr->trainerHill.winStreaks[mode][lvlMode]++;
+
+    gSaveBlock1Ptr->trainerHill.prevStreaks[mode][lvlMode] = gSaveBlock1Ptr->trainerHill.winStreaks[mode][lvlMode];
+
+    if (gSaveBlock1Ptr->trainerHill.winStreaks[mode][lvlMode] > gSaveBlock1Ptr->trainerHill.recordStreaks[mode][lvlMode])
+        gSaveBlock1Ptr->trainerHill.recordStreaks[mode][lvlMode] = gSaveBlock1Ptr->trainerHill.winStreaks[mode][lvlMode];
+}
+
 static void GiveChallengePrize(void)
 {
 #if FREE_TRAINER_HILL == FALSE
     u16 points, cardPoints;
 
-    if (sHillData->challenge.numFloors != NUM_TRAINER_HILL_FLOORS || gSaveBlock1Ptr->trainerHill.receivedPrize || gSaveBlock2Ptr->frontier.trainerFlags != 0xFF)
+    if (gSaveBlock1Ptr->trainerHill.receivedPrize || gSaveBlock2Ptr->frontier.trainerFlags != 0xFF)
     {
         gSpecialVar_Result = 2;
         return;
     }
 
+    UpdateTrainerHillClearRecords();
     points = gSaveBlock1Ptr->trainerHill.runBP;
     if (points == 0)
         points = GetRunBP(gSaveBlock1Ptr->trainerHill.mode, gSaveBlock1Ptr->trainerHill.timer);
@@ -690,15 +757,15 @@ static void CheckFinalTime(void)
     {
         gSpecialVar_Result = 2;
     }
-    else if (GetTimerValue(&gSaveBlock1Ptr->trainerHill.bestTime) > gSaveBlock1Ptr->trainerHill.timer)
-    {
-        SetTimerValue(&gSaveBlock1Ptr->trainerHill.bestTime, gSaveBlock1Ptr->trainerHill.timer);
-        gSaveBlock1Ptr->trainerHillTimes[gSaveBlock1Ptr->trainerHill.mode] = gSaveBlock1Ptr->trainerHill.bestTime;
-        gSpecialVar_Result = 0;
-    }
     else
     {
-        gSpecialVar_Result = 1;
+        if (!gSaveBlock1Ptr->trainerHill.receivedPrize)
+            UpdateTrainerHillClearRecords();
+
+        if (sIsNewRecord)
+            gSpecialVar_Result = 0;
+        else
+            gSpecialVar_Result = 1;
     }
 
     gSaveBlock1Ptr->trainerHill.checkedFinalTime = TRUE;
@@ -708,12 +775,21 @@ static void CheckFinalTime(void)
 static void TrainerHillResumeTimer(void)
 {
 #if FREE_TRAINER_HILL == FALSE
-    if (!gSaveBlock1Ptr->trainerHill.spokeToOwner)
+    if (!InTrainerHillChallenge() || gSaveBlock1Ptr->trainerHill.spokeToOwner)
+    {
+        ClearTrainerHillVBlankCounter();
+    }
+    else
     {
         if (gSaveBlock1Ptr->trainerHill.timer >= HILL_MAX_TIME)
+        {
             gSaveBlock1Ptr->trainerHill.timer = HILL_MAX_TIME;
+            ClearTrainerHillVBlankCounter();
+        }
         else
+        {
             SetTrainerHillVBlankCounter(&gSaveBlock1Ptr->trainerHill.timer);
+        }
     }
 #endif //FREE_TRAINER_HILL
 }
@@ -721,6 +797,14 @@ static void TrainerHillResumeTimer(void)
 static void TrainerHillSetPlayerLost(void)
 {
 #if FREE_TRAINER_HILL == FALSE
+    u8 mode = gSaveBlock1Ptr->trainerHill.mode;
+    u8 lvlMode = gSaveBlock1Ptr->trainerHill.lvlMode;
+
+    ClearTrainerHillVBlankCounter();
+
+    if (mode < NUM_TRAINER_HILL_MODES && lvlMode < FRONTIER_LVL_MODE_COUNT)
+        gSaveBlock1Ptr->trainerHill.winStreaks[mode][lvlMode] = 0;
+
     gSaveBlock1Ptr->trainerHill.hasLost = TRUE;
     gSaveBlock1Ptr->trainerHill.gaugeCredits = 0;
     gSaveBlock1Ptr->trainerHill.nextBrainThreshold = 200;
@@ -755,6 +839,12 @@ static void TrainerHillGetChallengeStatus(void)
     else if (gSaveBlock2Ptr->frontier.savedGame)
     {
         // Player quit or reset without finishing the challenge.
+        u8 mode = gSaveBlock1Ptr->trainerHill.mode;
+        u8 lvlMode = gSaveBlock1Ptr->trainerHill.lvlMode;
+
+        ClearTrainerHillVBlankCounter();
+        if (mode < NUM_TRAINER_HILL_MODES && lvlMode < FRONTIER_LVL_MODE_COUNT)
+            gSaveBlock1Ptr->trainerHill.winStreaks[mode][lvlMode] = 0;
         gSaveBlock2Ptr->frontier.savedGame = FALSE;
         gSaveBlock1Ptr->trainerHill.gaugeCredits = 0;
         gSaveBlock1Ptr->trainerHill.nextBrainThreshold = 200;
@@ -1272,8 +1362,20 @@ static void GetChallengeWon(void)
 static void TrainerHillSetMode(void)
 {
 #if FREE_TRAINER_HILL == FALSE
-    gSaveBlock1Ptr->trainerHill.mode = gSpecialVar_0x8005;
-    gSaveBlock1Ptr->trainerHill.bestTime = gSaveBlock1Ptr->trainerHillTimes[gSpecialVar_0x8005];
+    u8 mode = gSpecialVar_0x8005;
+    u8 lvlMode = gSaveBlock1Ptr->trainerHill.lvlMode;
+    u32 bestTime;
+
+    if (mode >= NUM_TRAINER_HILL_MODES)
+        mode = HILL_MODE_NORMAL;
+    if (lvlMode >= FRONTIER_LVL_MODE_COUNT)
+        lvlMode = FRONTIER_LVL_50;
+
+    gSaveBlock1Ptr->trainerHill.mode = mode;
+    bestTime = GetTimerValue(&gSaveBlock1Ptr->trainerHill.recordTimes[mode][lvlMode]);
+    if (bestTime == 0 || bestTime > HILL_MAX_TIME)
+        bestTime = HILL_MAX_TIME;
+    gSaveBlock1Ptr->trainerHill.bestTime = bestTime;
 #endif //FREE_TRAINER_HILL
 }
 
@@ -1303,8 +1405,11 @@ static void TrainerHillCheckFrontierBrain(void)
     u16 earned;
     u8 mode;
 
-    if (sHillData->challenge.numFloors != NUM_TRAINER_HILL_FLOORS 
-        || gSaveBlock1Ptr->trainerHill.hasLost 
+    ClearTrainerHillVBlankCounter();
+    if (gSaveBlock1Ptr->trainerHill.timer > HILL_MAX_TIME)
+        gSaveBlock1Ptr->trainerHill.timer = HILL_MAX_TIME;
+
+    if (gSaveBlock1Ptr->trainerHill.hasLost 
         || gSaveBlock1Ptr->trainerHill.receivedPrize
         || gSaveBlock2Ptr->frontier.trainerFlags != 0xFF)
     {
@@ -1360,6 +1465,7 @@ static void TrainerHillCheckFrontierBrain(void)
     // Check Brain appearance:
     if (gSaveBlock1Ptr->trainerHill.gaugeCredits >= gSaveBlock1Ptr->trainerHill.nextBrainThreshold)
     {
+        gSaveBlock1Ptr->trainerHill.spokeToOwner = TRUE;
         if (gSaveBlock1Ptr->trainerHill.nextBrainThreshold == HILL_GAUGE_SILVER_THRESHOLD)
         {
             if (!gSaveBlock1Ptr->trainerHill.hasDefeatedSilver)
@@ -1385,8 +1491,11 @@ static void TrainerHillCheckFrontierBrain(void)
 static void TrainerHillGiveBrainPrize(void)
 {
 #if FREE_TRAINER_HILL == FALSE
-    u16 points = 10 + gSaveBlock1Ptr->trainerHill.runBP;
+    u16 points;
     u16 cardPoints;
+
+    UpdateTrainerHillClearRecords();
+    points = 10 + gSaveBlock1Ptr->trainerHill.runBP;
 
     gSaveBlock2Ptr->frontier.battlePoints += points;
     if (gSaveBlock2Ptr->frontier.battlePoints > MAX_BATTLE_FRONTIER_POINTS)
@@ -1493,6 +1602,14 @@ static void TrainerHillSaveChallenge(void)
 static void TrainerHillRetire(void)
 {
 #if FREE_TRAINER_HILL == FALSE
+    u8 mode = gSaveBlock1Ptr->trainerHill.mode;
+    u8 lvlMode = gSaveBlock1Ptr->trainerHill.lvlMode;
+
+    ClearTrainerHillVBlankCounter();
+
+    if (mode < NUM_TRAINER_HILL_MODES && lvlMode < FRONTIER_LVL_MODE_COUNT)
+        gSaveBlock1Ptr->trainerHill.winStreaks[mode][lvlMode] = 0;
+
     gSaveBlock1Ptr->trainerHill.hasLost = FALSE;
     gSaveBlock1Ptr->trainerHill.gaugeCredits = 0;
     gSaveBlock1Ptr->trainerHill.nextBrainThreshold = 200;
