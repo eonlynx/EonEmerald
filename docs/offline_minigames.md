@@ -17,13 +17,13 @@ In the original game, all three minigames strictly required a Game Boy Advance W
 ### Key Goals:
 - **Unified Minigame Hub:** Bring all three wireless minigames—**Pokémon Jump**, **Dodrio's Berry Picking**, and **Berry Crush**—together into the **Mossdeep City Game Corner**.
 - **Solo Play with AI Companions:** Allow playing completely offline without a Wireless Adapter or link partners.
-- **Maximum Participant Support:** Run all minigames with the full 5-player maximum (`MAX_RFU_PLAYERS = 5`), populating positions 1 through 4 with intelligent CPU-controlled Pokémon / Dodrios / Trainers (`LADDIE`, `LASSIE`, `DUDE`, `MISS`).
+- **Maximum Participant Support:** Run all minigames with the full 5-player maximum (`MAX_RFU_PLAYERS = 5`), populating positions with intelligent CPU-controlled Pokémon / Dodrios / Trainers dynamically chosen from the full authentic Berry Blender cast (`MISTER`, `LADDIE`, `LASSIE`, `DUDE`, `MISS`, and `MASTER`).
 - **Authentic Atmosphere & Dialogue:** Welcoming greeting mentioning **MOSSDEEP GAME CORNER** without awkward artificial delays or connection-checking text.
 - **Difficulty Selection & Opponents:**
-  - **Pokémon Jump:** Purely cooperative jumping rope. If ANY Pokémon touches the rope, `UpdateVineHitStates()` returns `FALSE` and triggers an immediate `FUNC_GAME_OVER` for the entire party. A weaker AI would cause frustrating, unavoidable losses for the human player. Therefore, difficulty selection is completely removed (single unified balanced mode where bots jump in sync with staggered human micro-delays). Blend Master (`MASTER`) appears cosmetically with sharp timing.
+  - **Pokémon Jump:** Purely cooperative jumping rope. If ANY Pokémon touches the rope, `UpdateVineHitStates()` returns `FALSE` and triggers an immediate `FUNC_GAME_OVER` for the entire party. A weaker AI would cause frustrating, unavoidable losses for the human player. Therefore, difficulty selection is completely removed (single unified balanced mode where bots jump in sync with staggered human micro-delays). Player position is randomized across the 5 spots ($0..4$) rather than being stuck on the far left. Opponent Pokémon are dynamically picked from a pool of 21 authentic jumping species. Blend Master (`MASTER`) appears cosmetically with a rare 5% rate with sharp timing.
   - **Berry Crush:** Purely cooperative button mashing with shared Berry Powder reward ($B \times S \times P$). Better bots only help the team, and difficulty selection is eliminated in favor of an authentic 8-tier Daily Berry Lottery system based on player berry anchoring and daily RTC seeds. Blend Master (`MASTER`) appears only on the first game of the day if a berry of Tier 5 or higher is in play, mashing at top human cadence (12 presses/sec).
-  - **Dodrio Berry Picking:** Highly competitive for 1st place (only top score wins a berry), yet drops penalize the shared status bar. Difficulty selection (**NORMAL** vs **HARD**) is maintained so players can choose their competitive challenge. Blend Master (`MASTER`) appears as an opponent on Hard difficulty using advanced competitive AI.
-- **Graceful Save and Exit:** Fixed softlock in `Task_LinkFullSave` (`src/save.c`) which previously stalled forever waiting for wireless link standby packets in offline play. Also removed out-of-place link standby and "A member dropped out" messages when exiting solo Berry Crush. Offline games now save sector-by-sector to flash memory and transition smoothly back to the overworld.
+  - **Dodrio Berry Picking:** Highly competitive for 1st place (only top score wins a berry), yet drops penalize the shared status bar. Player position is preserved at the bottom-center controls position identically to multiplayer. Difficulty selection (**NORMAL** vs **HARD**) is maintained so players can choose their competitive challenge. Blend Master (`MASTER`) appears as an opponent 5% of the time on Normal mode and 10% of the time on Hard mode using advanced competitive AI.
+- **Graceful Save and Exit:** Fixed softlock in `Task_LinkFullSave` (`src/save.c`) which previously stalled forever waiting for wireless link standby packets in offline play. Also removed out-of-place link standby and "A member dropped out" messages when exiting solo Berry Crush and Pokémon Jump. Offline games now save sector-by-sector to flash memory and transition smoothly back to the overworld.
 - **Wireless Multiplayer Intact:** Keep the original Wireless Link flow fully functional for when players choose to play via Wireless Adapter.
 
 ---
@@ -79,13 +79,17 @@ The Info Man provides rule explanations for all 3 games:
   - `GetNumPokeJumpPlayers()` returns `sIsSoloMinigame ? MAX_RFU_PLAYERS : GetLinkPlayerCount()`.
   - In vanilla, `GetNumPokeJumpPlayers()` returned `GetLinkPlayerCount()` which is 0 or 1 in offline play, causing `sMonXCoords[playersCount - 2]` to access invalid memory and skipping the sprite creation loop entirely (rendering Pokémon invisible). Returning `MAX_RFU_PLAYERS = 5` creates all 5 Pokémon sprites at positions `{56, 88, 120, 152, 184}` alongside star particles and player name windows.
 
-### 3.2. CPU opponent logic & Blend Master (`UpdateCpuJumpStates`, `InitSoloPokeJumpPlayers`)
-- Each CPU Pokémon (`sPokemonJump->players[1..4]`) monitors the Venusaur rope swing state (`sPokemonJump->vineState`):
+### 3.2. CPU opponent logic, Dynamic Positions & Species Pool (`UpdateCpuJumpStates`, `InitSoloPokeJumpPlayers`)
+- Each CPU Pokémon monitors the Venusaur rope swing state (`sPokemonJump->vineState`):
   - **Human Reaction Staggering:** Rather than jumping on the exact identical frame, each CPU receives a small natural reaction delay (0 to 2 frames) as the vine reaches `VINE_LOWEST`.
   - Sprites take off with organic, believable stagger rather than robotic unison.
   - Jump heights remain well above ground level during the `VINE_UPSWING_LOWER` collision check, guaranteeing that CPUs never trip the rope.
   - Peak jump intervals (`JUMP_PEAK`) overlap dynamically with other CPUs and the player, awarding authentic synchronization combos.
-  - **Blend Master Appearance:** The Blend Master (`MASTER`) has a chance to appear cosmetically in place of CPU 1 with `SPECIES_PIKACHU` and sharp reaction timing (0-frame reaction delay), without altering difficulty rules.
+  - **Randomized Player Position:** In multiplayer, clients were placed at positions 1 through 4 depending on join order. In solo play, `sPokemonJump->multiplayerId` is now randomized among positions 0 through 4 (`Random() % MAX_RFU_PLAYERS`), so the human player no longer always stands on the far left. The name window and sprite highlighting adapt automatically.
+  - **Failure Handling Across All Positions:** Fixed a softlock where `GameOver_Leader` and `UpdateVineHitStates` previously looped `for (i = 1; i < sPokemonJump->numPlayers; i++)`, which assumed the human was always player 0. If the player was in slots 1 through 4, slot 0 remained in `JUMPSTATE_NONE`, causing `AllPlayersJumpedOrHit()` to hang indefinitely. Both loops now iterate through all CPU slots `i != multiplayerId`.
+  - **Expanded Species Variety:** Instead of the same 4 hardcoded Pokémon every match, CPUs are dynamically populated by choosing 4 unique Pokémon from a pool of 21 verified jumping species (Pikachu, Eevee, Torchic, Treecko, Mudkip, Skitty, Plusle, Minun, Clefairy, Jigglypuff, Meowth, Psyduck, Poliwag, Marill, Togepi, Wooper, Bulbasaur, Charmander, Squirtle, Bellossom, Pichu). A safety fallback in `InitPlayerAndJumpTypes` ensures any unforeseen species without jump tables defaults to `PKMN_JUMP_TYPE_NORMAL` so sprites never freeze.
+  - **Blender Names & Rare MASTER Appearance:** Opponent names are selected from the 5 regular Berry Blender characters (`MISTER`, `LADDIE`, `LASSIE`, `DUDE`, `MISS`). Blend Master (`MASTER`) appears cosmetically with a rare 5% rate with sharp reaction timing (0-frame reaction delay).
+  - **Clean Solo Exit:** In `DoPlayAgainPrompt()`, declining to play again skips `GFXFUNC_MSG_COMM_STANDBY`, avoiding the out-of-place "COMMUNICATION STANDBY..." text.
   - **Single Unified Mode:** The leftover `sSoloDifficulty` variable was completely eliminated; Pokémon Jump operates in a single, balanced mode.
 
 ---
@@ -117,15 +121,28 @@ The Info Man provides rule explanations for all 3 games:
     - Berries fall at accelerated velocity (difficulty stage 14).
     - CPUs are sharp and competitive: they catch decisively at `fallDist == 6` and contest shared columns with 40% aggression, putting up a genuine challenge for 1st place using the pre-existing advanced AI.
 
+### 4.3. Replay Persistence & Multi-Round Fix (`ResetGame`)
+- In solo play, selecting "Yes" to "Play again?" previously reset `sGame->numPlayers = 1` because `gReceivedRemoteLinkPlayers` was FALSE, causing all 4 companion Dodrios to vanish in round 2.
+- `ResetGame()` was patched to guard against solo play (`if (!gReceivedRemoteLinkPlayers && !sIsSoloMinigame)`) and recalculate active berry columns with `GetActiveBerryColumns(...)`, allowing endless replay rounds with all 5 Dodrios active.
+- To ensure consistent behavior matching Pokémon Jump and Berry Crush, opponent roster initialization (`InitSoloDodrioPlayers()`) is run only once on game start. Replay rounds maintain the exact same opponent Dodrios and names; players only change when exiting and re-entering the minigame.
+
 ---
 
 ## 5. Berry Crush (`src/berry_crush.c`)
 
-### 5.1. Solo Startup & RFU Decoupling
+### 5.1. Solo Startup, RFU Decoupling & Replay Persistence
 - **`StartBerryCrushSolo(void)`:** Sets `sIsSoloMinigame = TRUE`, configures `VAR_CABLE_CLUB_STATE` to `USING_MINIGAME`, warps to coordinates `(5, 1)`, sets wireless comm type 0, and starts the game with `CB2_LoadMap`.
 - **Decoupled Link Hooks & Clean Exit:**
   - In solo mode, RFU handshake waits (`Rfu_SetLinkStandbyCallback`, `IsLinkTaskFinished`, `SendBlock`) are cleanly bypassed during palette fade, berry dropping, crusher lid fall, countdown, results tabulation, saving, and exiting.
   - When the player selects "NO" on the "Play again?" prompt, offline solo play bypasses `MSG_COMM_STANDBY` ("COMMUNICATION STANDBY...") and `MSG_DROPPED` ("A member dropped out"), transitioning immediately to link cleanup and fading back to the overworld.
+- **Persistent Player Names Across Rounds & Berry Selection:**
+  - In the original implementation, CPU names were re-randomized after exiting the Berry Pouch (`ChooseCpuBerries`), causing the opponent nameplates to change mid-game.
+  - CPU names are now set once during initial startup in `SetNamesAndTextSpeed()` and remain strictly consistent throughout the entire session.
+  - If Blend Master (`MASTER`) was assigned for the daily first play, in subsequent replay rounds `ResetGame()` reverts that slot back to `MISTER` so `MASTER` only plays on the daily lucky run.
+- **Replay Freeze Fix in Round 2:**
+  - In `HandleSoloGameLeader`, `memcpy(game->recvCmd, &game->localState, sizeof(game->recvCmd))` previously wrote at offset 0 of `recvCmd`. Because `struct BerryCrushGame_LinkState` has `u16 rfuCmd` at offset 0 while `struct BerryCrushGame_LocalState` does not, this shifted all fields by 2 bytes and copied 2 bytes past `localState` into `sparkleAmount`.
+  - In round 2, this read the previous match's powder (>1000) into `sparkleAmount`, causing `UpdateInputEffects()` to iterate hundreds of times over `gfx->sparkleSprites[11]` and dereference invalid memory, instantly locking up the GBA on the first A press of round 2.
+  - Fixed by populating `game->recvCmd[0] = RFUCMD_SEND_PACKET;` and copying `sizeof(game->localState)` to `&game->recvCmd[1]`, clamping `maxSparkles = min(ARRAY_COUNT(gfx->sparkleSprites), ...)`, guarding against division by zero in sparkle x-coords, and fully zeroing `results`, `localState`, and `recvCmd` in `ResetGame()`.
 - **Simulated Teammates, Authentic Names & 8-Tier Berry Selection (`ChooseCpuBerries`):**
   - 4 CPU companions join the game using authentic Berry Blender names (`LADDIE`, `LASSIE`, `DUDE`, `MISS`).
   - **Blend Master Condition:** The Blend Master (`MASTER`) appears **only** on the first game of the day (`!FlagGet(FLAG_DAILY_BERRY_CRUSH_RECEIVED_BONUS)`) if any berry in play (either chosen by the player or rolled by a CPU) is Tier 5 or higher (`highestCpuTier >= 5 || playerTier >= 5`).
