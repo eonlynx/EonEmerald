@@ -411,12 +411,13 @@ static void InitSoloPokeJumpPlayers(void);
 static void UpdateCpuJumpStates(void);
 
 static bool8 sIsSoloMinigame = FALSE;
-static u8 sSoloDifficulty = 0;
+static u8 sCpuJumpDelays[MAX_RFU_PLAYERS];
 
 static const u8 sCpuName_Laddie[] = _("LADDIE");
 static const u8 sCpuName_Lassie[] = _("LASSIE");
 static const u8 sCpuName_Dude[]   = _("DUDE");
 static const u8 sCpuName_Miss[]   = _("MISS");
+static const u8 sCpuName_Master[] = _("MASTER");
 
 static const u8 *const sCpuNames[MAX_RFU_PLAYERS - 1] =
 {
@@ -440,7 +441,6 @@ EWRAM_DATA static struct PokemonJumpGfx *sPokemonJumpGfx = NULL;
 void StartPokemonJumpSolo(void)
 {
     sIsSoloMinigame = TRUE;
-    sSoloDifficulty = gSpecialVar_0x8006;
     VarSet(VAR_CABLE_CLUB_STATE, USING_MINIGAME);
     SetWarpDestination(gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum, WARP_ID_NONE, 5, 1);
     SetDynamicWarpWithCoords(0, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum, WARP_ID_NONE, 5, 1);
@@ -494,8 +494,6 @@ static void InitGame(struct PokemonJump *jump)
     ResetForNewGame(jump);
     if (jump->numPlayers == MAX_RFU_PLAYERS)
         IncrementGamesWithMaxPlayers();
-    if (sIsSoloMinigame && sSoloDifficulty == 1)
-        jump->vineSpeedStage = 2;
 }
 
 static void ResetForNewGame(struct PokemonJump *jump)
@@ -613,6 +611,14 @@ static void InitSoloPokeJumpPlayers(void)
         sPokemonJump->monInfo[i].personality = i * 1000;
         StringCopy(sPokemonJump->players[i].name, sCpuNames[i - 1]);
     }
+
+    // Blend Master appears cosmetically as an opponent
+    if ((Random() % 3) == 0)
+    {
+        StringCopy(sPokemonJump->players[1].name, sCpuName_Master);
+        sCpuJumpDelays[1] = 0; // Blend Master jumps with sharp precision
+    }
+
     InitPlayerAndJumpTypes();
 }
 
@@ -1139,8 +1145,6 @@ static bool32 ResetGame_Leader(void)
         if (sPokemonJump->allPlayersReady)
         {
             ResetForNewGame(sPokemonJump);
-            if (sIsSoloMinigame && sSoloDifficulty == 1)
-                sPokemonJump->vineSpeedStage = 2;
             sPokemonJump->rngSeed = Random();
             sPokemonJump->comm.data = sPokemonJump->rngSeed;
             sPokemonJump->nextFuncId = FUNC_GAME_INTRO;
@@ -1326,15 +1330,33 @@ static void UpdateCpuJumpStates(void)
 {
     int i;
 
+    if (sPokemonJump->prevVineState != VINE_LOWEST && sPokemonJump->vineState == VINE_LOWEST)
+    {
+        // New swing reached the bottom: stagger reaction delays (0 to 2 frames) for believable human timing
+        for (i = 1; i < sPokemonJump->numPlayers; i++)
+        {
+            sCpuJumpDelays[i] = (i - 1) % 3;
+            if (Random() % 2 == 0 && sCpuJumpDelays[i] > 0)
+                sCpuJumpDelays[i]--;
+        }
+    }
+
     if (sPokemonJump->vineState == VINE_LOWEST)
     {
         for (i = 1; i < sPokemonJump->numPlayers; i++)
         {
             if (sPokemonJump->players[i].monState == MONSTATE_NORMAL)
             {
-                sPokemonJump->players[i].jumpTimeStart = sPokemonJump->vineTimer;
-                sPokemonJump->players[i].prevMonState = sPokemonJump->players[i].monState;
-                sPokemonJump->players[i].monState = MONSTATE_JUMP;
+                if (sCpuJumpDelays[i] > 0)
+                {
+                    sCpuJumpDelays[i]--;
+                }
+                else
+                {
+                    sPokemonJump->players[i].jumpTimeStart = sPokemonJump->vineTimer;
+                    sPokemonJump->players[i].prevMonState = sPokemonJump->players[i].monState;
+                    sPokemonJump->players[i].monState = MONSTATE_JUMP;
+                }
             }
         }
     }
