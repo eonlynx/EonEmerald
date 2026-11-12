@@ -38,6 +38,9 @@
 #include "task.h"
 #include "text.h"
 #include "text_window.h"
+#include "time_capsule.h"
+#include "time_capsule/gb_protocol.h"
+#include "time_capsule/gb_trade_link.h"
 #include "trainer_card.h"
 #include "trade.h"
 #include "union_room.h"
@@ -386,6 +389,8 @@ static bool32 IsWirelessTrade(void)
 
 static void SetTradeLinkStandbyCallback(u8 unused)
 {
+    if (gTimeCapsuleActive)
+        return;
     SetLinkStandbyCallback();
 }
 
@@ -441,7 +446,8 @@ void CB2_StartCreateTradeMenu(void)
 {
     SetMainCallback2(CB2_CreateTradeMenu);
     gMain.callback1 = NULL;
-    gPartiesCount[B_TRAINER_OPPONENT_A] = 0;
+    if (!gTimeCapsuleActive)
+        gPartiesCount[B_TRAINER_OPPONENT_A] = 0;
 }
 
 static void CB2_CreateTradeMenu(void)
@@ -466,13 +472,20 @@ static void CB2_CreateTradeMenu(void)
     case 1:
         gPaletteFade.bufferTransferDisabled = FALSE;
 
-        for (i = 0; i < PARTY_SIZE; i++)
-            CreateRandomMon(&gParties[B_TRAINER_OPPONENT_A][i], SPECIES_NONE, 0);
+        if (!gTimeCapsuleActive)
+        {
+            for (i = 0; i < PARTY_SIZE; i++)
+                CreateRandomMon(&gParties[B_TRAINER_OPPONENT_A][i], SPECIES_NONE, 0);
+        }
 
         PrintTradeMessage(MSG_STANDBY);
         ShowBg(0);
 
-        if (!gReceivedRemoteLinkPlayers)
+        if (gTimeCapsuleActive)
+        {
+            gMain.state = 6;
+        }
+        else if (!gReceivedRemoteLinkPlayers)
         {
             gLinkType = LINKTYPE_TRADE_CONNECTING;
             sTradeMenu->timer = 0;
@@ -1051,6 +1064,15 @@ static bool8 BufferTradeParties(void)
     int i;
     struct Pokemon *mon;
 
+    if (gTimeCapsuleActive)
+    {
+        GbProtocol_Update();
+        if (!GbProtocol_IsReady())
+            return FALSE;
+        CalculatePlayerPartyCount();
+        return TRUE;
+    }
+
     switch (sTradeMenu->bufferPartyState)
     {
     case 0:
@@ -1376,6 +1398,15 @@ static void CB1_UpdateLink(void)
 {
     u8 mpId = GetMultiplayerId();
     u8 status;
+
+    if (gTimeCapsuleActive)
+    {
+        GbTrade_Update();
+        if ((status = _GetBlockReceivedStatus()))
+            Leader_ReadLinkBuffer(0, status);
+        Leader_HandleCommunication();
+        return;
+    }
 
     if ((status = _GetBlockReceivedStatus()))
     {
@@ -1731,6 +1762,12 @@ static void CB_InitExitCanceledTrade(void)
 {
     if (!gPaletteFade.active)
     {
+        if (gTimeCapsuleActive)
+        {
+            sTradeMenu->callbackId = CB_EXIT_CANCELED_TRADE;
+            return;
+        }
+
         if (gWirelessCommType)
             SetLinkStandbyCallback();
         else
@@ -1742,6 +1779,16 @@ static void CB_InitExitCanceledTrade(void)
 
 static void CB_ExitCanceledTrade(void)
 {
+    if (gTimeCapsuleActive)
+    {
+        GbTrade_RequestExit();
+        Free(sMenuTextTileBuffer);
+        Free(sTradeMenu);
+        FreeAllWindowBuffers();
+        SetMainCallback2(CB2_ReturnToFieldFromMultiplayer);
+        return;
+    }
+
     if (gWirelessCommType)
     {
         if (IsLinkTradeTaskFinished() && GetNumQueuedActions() == 0)
@@ -2797,7 +2844,7 @@ void CB2_LinkTrade(void)
     switch (gMain.state)
     {
     case 0:
-        if (!gReceivedRemoteLinkPlayers)
+        if (!gReceivedRemoteLinkPlayers && !gTimeCapsuleActive)
         {
             gLinkType = LINKTYPE_TRADE_DISCONNECTED;
             CloseLink();
@@ -2827,8 +2874,13 @@ void CB2_LinkTrade(void)
         if (!gReceivedRemoteLinkPlayers)
         {
             sTradeAnim->isCableTrade = TRUE;
-            OpenLink();
-            gMain.state++;
+            if (gTimeCapsuleActive)
+                gMain.state = 5;
+            else
+            {
+                OpenLink();
+                gMain.state++;
+            }
             sTradeAnim->timer = 0;
         }
         else
@@ -4648,12 +4700,23 @@ static void CB2_UpdateLinkTrade(void)
         DestroySprite(&gSprites[sTradeAnim->monSpriteIds[TRADE_PLAYER]]);
         FreeSpriteOamMatrix(&gSprites[sTradeAnim->monSpriteIds[TRADE_PARTNER]]);
         TradeMons(gSelectedTradeMonPositions[TRADE_PLAYER], gSelectedTradeMonPositions[TRADE_PARTNER] % PARTY_SIZE);
-        if (!IsWirelessTrade())
+        if (gTimeCapsuleActive)
         {
-            sTradeAnim->linkData[0] = LINKCMD_READY_FINISH_TRADE;
-            sTradeAnim->scheduleLinkTransfer = 1;
+            // The GB success handshake is sent after the save (see
+            // CB2_SaveAndEndTrade), so the GB is not streaming while the GBA
+            // writes flash.
+            GbTrade_ResetSuccess();
+            SetMainCallback2(CB2_TryLinkTradeEvolution);
         }
-        SetMainCallback2(CB2_WaitTradeComplete);
+        else
+        {
+            if (!IsWirelessTrade())
+            {
+                sTradeAnim->linkData[0] = LINKCMD_READY_FINISH_TRADE;
+                sTradeAnim->scheduleLinkTransfer = 1;
+            }
+            SetMainCallback2(CB2_WaitTradeComplete);
+        }
     }
     HandleLinkDataSend();
     HandleLinkDataReceive();
@@ -4815,7 +4878,15 @@ static void CB2_SaveAndEndTrade(void)
         }
         break;
     case 9:
-        if (gWirelessCommType && gMain.savedCallback == CB2_StartCreateTradeMenu)
+        if (gTimeCapsuleActive)
+        {
+            if (GbTrade_FinishStep())
+            {
+                gSoftResetDisabled = FALSE;
+                SetMainCallback2(CB2_FreeTradeAnim);
+            }
+        }
+        else if (gWirelessCommType && gMain.savedCallback == CB2_StartCreateTradeMenu)
         {
             if (_IsLinkTaskFinished())
             {

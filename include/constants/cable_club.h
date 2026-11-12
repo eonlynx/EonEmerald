@@ -11,6 +11,8 @@
 #define USING_BERRY_CRUSH    7
 #define USING_MINIGAME       8
 #define USING_BATTLE_TOWER   9
+#define USING_TIME_CAPSULE_TRADE  10
+#define USING_TIME_CAPSULE_BATTLE 11
 
 // Return states for the group of specials that use CreateLinkupTask
 // A few also used by TryBecomeLinkLeader and TryJoinLinkGroup
