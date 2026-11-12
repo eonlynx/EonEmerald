@@ -2,9 +2,7 @@ TimeCapsule_Text_Intro:
 	.string "Welcome to the POKéMON CABLE\n"
 	.string "CLUB TIME CAPSULE.\p"
 	.string "You can travel to the past and\n"
-	.string "trade your POKéMON.\p"
-	.string "Which of our services do you wish\n"
-	.string "to use?$"
+	.string "trade your POKéMON.$"
 
 @ Said by the attendant before choosing a service, like the
 @ WIRELESS CLUB attendant (gText_SorryWirelessClubAdjustments).
@@ -12,12 +10,6 @@ TimeCapsule_Text_Closed:
 	.string "I'm terribly sorry.\n"
 	.string "The TIME CAPSULE is\l"
 	.string "undergoing adjustments now.$"
-
-@ Said after choosing COLOSSEUM, so it uses the same line as the
-@ WIRELESS CLUB box (gText_UndergoingAdjustments).
-TimeCapsule_Text_ColosseumNotReady:
-	.string "It appears to be undergoing\n"
-	.string "adjustments…$"
 
 @ Crystal: "Sorry, [MON] can't be taken."
 TimeCapsule_Text_RejectSpecies:

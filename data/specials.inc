@@ -53,7 +53,6 @@ gSpecials::
 	def_special TimeCapsule_StartExchange, waitstate=1
 	def_special TimeCapsule_CloseLink, waitstate=1
 	def_special TimeCapsule_CheckParty
-	def_special TimeCapsule_GetGeneration
 	def_special TimeCapsule_StartBattle
 	def_special TimeCapsule_DoWarp
 	def_special ValidateMixingGameLanguage, waitstate=1

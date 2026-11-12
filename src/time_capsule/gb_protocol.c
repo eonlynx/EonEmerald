@@ -52,8 +52,17 @@ enum
 
 enum
 {
-    GB_PHASE_SELECT = 0,
-    GB_PHASE_CONFIRM,
+    GB_PARTNER_SELECT = 0, // Waiting for the Pokémon the partner selected.
+    GB_PARTNER_CONFIRM,    // Waiting for the answer of the partner's confirm screen.
+};
+
+// The steps of the Gen I/II trade start handshake.
+enum
+{
+    GB_ROOM_SYNC = 0,   // The room byte (0xD0 | room) is exchanged.
+    GB_ROOM_START_TRADE, // The start-trade byte (0x75) is exchanged.
+    GB_ROOM_PEER_READY,  // The GB sent its start-trade byte, it waits for ours.
+    GB_ROOM_BLOCK,       // The 0x76 is exchanged, the GB waits for the block.
 };
 
 // Gen I/II byte time: 8192 bps -> ~1 ms -> 14 scanlines at 59.7 Hz.
@@ -64,6 +73,14 @@ enum
 // 228 scanlines per frame / 14 = 16 bytes; 10 leaves room for the rest of the
 // frame (rendering, input) and for slow GB replies.
 #define GB_LINK_BYTES_FRAME   10
+
+// The other game has to keep answering: if it stops sending bytes its console
+// was turned off or the cable was pulled.  The Gen I/II games only exchange
+// bytes while they are really linking, so the timeout is generous in the
+// states where the other game waits for its own player (at the console or in
+// the trade menu).
+#define GB_LINK_ALIVE_TIMEOUT      600  // 10 seconds
+#define GB_LINK_ALIVE_TIMEOUT_LONG 3600 // 60 seconds
 
 // The Cable Club waits until the player presses B; do the same.
 #define GB_CONNECT_TIMEOUT    0
@@ -80,6 +97,10 @@ static EWRAM_DATA bool8 sActive;
 static EWRAM_DATA bool8 sFinished;
 static EWRAM_DATA bool8 sPartyReady;
 static EWRAM_DATA bool8 sLinkEstablished;
+// The other game left the trade room (it sent the Gen I/II exit byte).
+static EWRAM_DATA bool8 sPeerExited;
+// Frames since the other game last sent something.
+static EWRAM_DATA u16 sNoDataFrames;
 
 static EWRAM_DATA u16 sFrameCounter;
 
@@ -111,7 +132,7 @@ static EWRAM_DATA u8 sRoomPhase;
 static EWRAM_DATA u16 sTradeCmd;
 static EWRAM_DATA u16 sTradeArg;
 static EWRAM_DATA bool8 sHasTradeCmd;
-static EWRAM_DATA u8 sPhase;
+static EWRAM_DATA u8 sPartnerState;
 
 static EWRAM_DATA u8 sSuccessValue;
 static EWRAM_DATA u8 sPeerSuccessValue;
@@ -278,13 +299,15 @@ static void RestartHandshake(void)
     sGen = TIME_CAPSULE_GEN_NONE;
     sResult = GB_PROTO_RESULT_ONGOING;
     sLinkEstablished = FALSE;
-    sRoomPhase = 0;
+    sRoomPhase = GB_ROOM_SYNC;
     sPartyReady = FALSE;
     sBulkStarted = FALSE;
     sBulkCount = 0;
     sSendSynced = FALSE;
     sSendChunk = 0;
     sSendPos = 0;
+    sPeerExited = FALSE;
+    sNoDataFrames = 0;
     SetTx(0x01);
     sState = GB_STATE_CONNECT;
     sFrameCounter = 0;
@@ -309,7 +332,7 @@ static void ParseBulk(void)
         sPartyReady = TRUE;
         sResult = TIME_CAPSULE_OK;
         sState = GB_STATE_TRADE;
-        sPhase = GB_PHASE_SELECT;
+        sPartnerState = GB_PARTNER_SELECT;
         sFrameCounter = 0;
     }
     else
@@ -373,6 +396,11 @@ static void ProcessBulkByte(u8 byte)
     }
 }
 
+// The Gen I/II trade menu exchanges two bytes per round: the index of the
+// selected Pokémon and then the answer of the confirm screen (1 = the trade
+// was canceled, 2 = the trade was confirmed).  The index of the second
+// Pokémon is 1 as well and the index of the third Pokémon is 2 as well, so
+// the screen the partner is on has to be tracked to tell them apart.
 static void ProcessTradeByte(u8 byte)
 {
     u8 base = TradeBase();
@@ -380,38 +408,51 @@ static void ProcessTradeByte(u8 byte)
     if (byte == 0xFE || byte == 0x00)
         return;
 
-    if (byte >= base && byte < base + 6)
+    if (byte == base + 0xF)
     {
-        sTradeCmd = LINKCMD_READY_TO_TRADE;
-        sTradeArg = byte - base;
-        sHasTradeCmd = TRUE;
-        sPhase = GB_PHASE_SELECT;
-    }
-    else if (byte == base + 1)
-    {
-        if (sPhase == GB_PHASE_CONFIRM)
-            sTradeCmd = LINKCMD_READY_CANCEL_TRADE;
-        else
-            sTradeCmd = LINKCMD_REQUEST_CANCEL;
-        sTradeArg = 0;
-        sHasTradeCmd = TRUE;
-    }
-    else if (byte == base + 2)
-    {
-        sTradeCmd = LINKCMD_INIT_BLOCK;
-        sTradeArg = 0;
-        sHasTradeCmd = TRUE;
-        sPhase = GB_PHASE_CONFIRM;
-    }
-    else if (byte == base + 0xF)
-    {
+        // The partner left the trade room.  This is the Gen I/II "leave the
+        // link" byte: answer it with the same byte and tear the link down.
         sTradeCmd = LINKCMD_REQUEST_CANCEL;
         sTradeArg = 0;
         sHasTradeCmd = TRUE;
+        sPeerExited = TRUE;
         sExitValue = base + 0xF;
+        SetTx(sExitValue);
         sState = GB_STATE_EXIT;
         sFrameCounter = 0;
+        return;
     }
+
+    if (byte < base || byte >= base + 6)
+        return;
+
+    if (sPartnerState == GB_PARTNER_CONFIRM)
+    {
+        if (byte == base + 1)
+        {
+            // The partner canceled the trade.  It goes back to the party
+            // menu, so the next byte is a new selection.
+            sTradeCmd = LINKCMD_READY_CANCEL_TRADE;
+            sTradeArg = 0;
+            sHasTradeCmd = TRUE;
+            sPartnerState = GB_PARTNER_SELECT;
+            return;
+        }
+        if (byte == base + 2)
+        {
+            // The partner confirmed the trade.
+            sTradeCmd = LINKCMD_INIT_BLOCK;
+            sTradeArg = 0;
+            sHasTradeCmd = TRUE;
+            return;
+        }
+    }
+
+    // The partner selected one of its Pokémon.
+    sTradeCmd = LINKCMD_READY_TO_TRADE;
+    sTradeArg = byte - base;
+    sHasTradeCmd = TRUE;
+    sPartnerState = GB_PARTNER_CONFIRM;
 }
 
 static void ProcessByteInner(u8 byte);
@@ -426,6 +467,7 @@ static void ProcessByte(u8 byte)
     if (byte == 0xFE)
         return;
 
+    sNoDataFrames = 0;
     ProcessByteInner(byte);
 
 #if TIME_CAPSULE_DEBUG_LOG
@@ -460,8 +502,12 @@ static void ProcessByteInner(u8 byte)
             sState = GB_STATE_GEN1_ROOM_WAIT;
             sFrameCounter = 0;
         }
-        else if (byte == 0x61)
+        else if (byte == 0x61 || byte == 0x71)
         {
+            // The GB's receptionist byte.  The high nibble is the link mode:
+            // 0x60 is the Gen I time capsule, 0x70 the trade center.  It has
+            // to be answered with the same high nibble, or the GB's
+            // WaitLinkTransfer never accepts the byte and the link fails.
             sGen = TIME_CAPSULE_GEN_2;
             sResult = TIME_CAPSULE_OK;
             if (sForcedGen == TIME_CAPSULE_GEN_1)
@@ -472,10 +518,15 @@ static void ProcessByteInner(u8 byte)
             }
             else
             {
-                SetTx(0x61);
+                SetTx(byte);
                 sState = GB_STATE_GEN2_ENTER;
             }
             sFrameCounter = 0;
+        }
+        else if (byte == 0xDE)
+        {
+            // FailedLinkToPast: the Gen I game cannot link to the past.
+            SetError(TIME_CAPSULE_ERR_NO_LINK);
         }
         else if (byte == 0xD1 || byte == 0xD2)
         {
@@ -487,7 +538,7 @@ static void ProcessByteInner(u8 byte)
             sGen = TIME_CAPSULE_GEN_2;
             sResult = TIME_CAPSULE_OK;
             sLinkEstablished = TRUE;
-            sRoomPhase = 0;
+            sRoomPhase = GB_ROOM_SYNC;
             SetTx(byte);
             sState = GB_STATE_ROOM_WAIT;
             sFrameCounter = 0;
@@ -506,14 +557,15 @@ static void ProcessByteInner(u8 byte)
                 break;
             }
             sLinkEstablished = TRUE;
-            sRoomPhase = 0;
+            sRoomPhase = GB_ROOM_SYNC;
             SetTx(byte);
             sState = GB_STATE_ROOM_WAIT;
             sFrameCounter = 0;
         }
-        else if (byte == 0x61)
+        else if (byte == 0x61 || byte == 0x71)
         {
-            SetTx(0x61);
+            // The GB's receptionist byte again (see GB_STATE_CONNECT).
+            SetTx(byte);
         }
         break;
 
@@ -522,23 +574,70 @@ static void ProcessByteInner(u8 byte)
         // until it sees ours, and only later 0x76 (action 6).  Echoing the
         // peer keeps us from switching to 0x76 while the GB is still
         // validating 0x75, which would make it report a timeout.
+        // The Gen I/II trade start is a three step handshake (see
+        // Pokemon-Gen3-to-GenX's gen2_start_trade_start_trade_procedure):
+        //
+        //   the master sends 0x75, waits for the peer's 0x75, sends 0x75
+        //   again, waits for the peer's 0x00 acknowledgement and only then
+        //   sends 0x76.
+        //
+        // The 0x76 has to be sent *before* the GB reads it: pokecrystal's
+        // CheckLinkTimeout_Gen2 reads the byte of the previous exchange (the
+        // slave is one exchange behind), so a master that waits for the GB's
+        // 0x76 would make the GB read a 0x75 and report a timeout.
         if (byte == 0x75)
         {
-            sRoomPhase = 1;
+            // The GB is ready for the trade (its start-trade byte).
+            if (sRoomPhase == GB_ROOM_START_TRADE)
+                sRoomPhase = GB_ROOM_PEER_READY;
             SetTx(0x75);
+        }
+        else if (byte == 0x00)
+        {
+            if (sRoomPhase == GB_ROOM_SYNC)
+            {
+                // The room sync is finished (the GB sent its 0x00 acks, so
+                // its Link_EnsureSync is done).  Present the start-trade byte
+                // right away, exactly like gen2_start_trade_start_trade_procedure
+                // does, instead of waiting for the GB to offer it first.
+                sRoomPhase = GB_ROOM_START_TRADE;
+                SetTx(0x75);
+            }
+            else if (sRoomPhase == GB_ROOM_START_TRADE || sRoomPhase == GB_ROOM_PEER_READY)
+            {
+                // The GB acknowledged the start-trade byte and now waits for
+                // the block, so the 0x76 can be sent.
+                sRoomPhase = GB_ROOM_BLOCK;
+                SetTx(0x76);
+            }
         }
         else if (byte == 0x76)
         {
-            sRoomPhase = 2;
+            // The GB waits for the block now.
+            sRoomPhase = GB_ROOM_BLOCK;
             SetTx(0x76);
             sState = GB_STATE_BLOCK_WAIT;
             sFrameCounter = 0;
+        }
+        else if (byte == 0xFD)
+        {
+            // The GB already starts the block.
+            StartBlock(FALSE);
+            ProcessBulkByte(byte);
         }
         else if (byte == 0x02 || byte == 0x01)
         {
             RestartHandshake();
         }
-        else if (sRoomPhase == 0)
+        else if (byte == 0x7F)
+        {
+            // END_TRADE_BYTE_GEN2: the GB left the Cable Club room.
+            sExitValue = 0x7F;
+            SetTx(0x7F);
+            sState = GB_STATE_EXIT;
+            sFrameCounter = 0;
+        }
+        else if (sRoomPhase == GB_ROOM_SYNC)
         {
             // Keep presenting the room byte.  The GB's Link_EnsureSync
             // retries until one of the two bytes it receives has the 0xD0
@@ -564,6 +663,13 @@ static void ProcessByteInner(u8 byte)
         else if (byte == 0x02 || byte == 0x01)
         {
             RestartHandshake();
+        }
+        else if (byte == 0x7F)
+        {
+            sExitValue = 0x7F;
+            SetTx(0x7F);
+            sState = GB_STATE_EXIT;
+            sFrameCounter = 0;
         }
         break;
 
@@ -637,6 +743,9 @@ static void ProcessByteInner(u8 byte)
         break;
 
     case GB_STATE_SUCCESS:
+        // The anti-cloning byte has to match exactly: pokecrystal keeps
+        // sending its byte until it receives the same value
+        // (.send_checkbyte in engine/link/link.asm).
         if (byte == sSuccessValue)
         {
             sSuccessDone = TRUE;
@@ -698,10 +807,12 @@ void GbProtocol_Init(u8 room, u8 forcedGen)
     sSendSize = 0;
     sSendOffset = 0;
     sHasTradeCmd = FALSE;
-    sPhase = GB_PHASE_SELECT;
+    sPartnerState = GB_PARTNER_SELECT;
+    sPeerExited = FALSE;
+    sNoDataFrames = 0;
     sSuccessDone = FALSE;
     sPeerSuccessValue = 0;
-    sRoomPhase = 0;
+    sRoomPhase = GB_ROOM_SYNC;
 
     GbLink_Init();
 
@@ -716,6 +827,42 @@ void GbProtocol_Shutdown(void)
     sActive = FALSE;
     sLinkEstablished = FALSE;
     sState = GB_STATE_IDLE;
+}
+
+// The other game has to keep answering.  When it stops sending bytes its
+// console was turned off or the cable was pulled, which the vanilla Cable
+// Club reports with the black "Communication error" screen.
+static void CheckPeerIsAlive(void)
+{
+    u16 timeout;
+
+    switch (sState)
+    {
+    case GB_STATE_CONNECT:
+        // Nobody answered the linkup.  The vanilla Cable Club shows its
+        // "link error" message for this, not the black screen.
+        if (++sNoDataFrames > GB_LINK_ALIVE_TIMEOUT)
+            SetError(TIME_CAPSULE_ERR_TIMEOUT);
+        return;
+    case GB_STATE_ROOM_WAIT:
+    case GB_STATE_TRADE:
+        // The Gen I/II game waits for its own player (at the console or in
+        // the trade menu) and does not exchange bytes while it does, so this
+        // can only be a long timeout.
+        timeout = GB_LINK_ALIVE_TIMEOUT_LONG;
+        break;
+    case GB_STATE_BULK:
+    case GB_STATE_BLOCK_WAIT:
+    case GB_STATE_SUCCESS_WAIT:
+    case GB_STATE_SUCCESS:
+        timeout = GB_LINK_ALIVE_TIMEOUT;
+        break;
+    default:
+        return;
+    }
+
+    if (++sNoDataFrames > timeout)
+        SetError(TIME_CAPSULE_ERR_LINK_LOST);
 }
 
 void GbProtocol_Update(void)
@@ -733,6 +880,8 @@ void GbProtocol_Update(void)
     if ((sState == GB_STATE_BULK || sState == GB_STATE_BLOCK_WAIT)
      && sFrameCounter > GB_BULK_TIMEOUT)
         SetError(TIME_CAPSULE_ERR_TIMEOUT);
+
+    CheckPeerIsAlive();
 
 #if TIME_CAPSULE_DEBUG_LOG
     if ((sFrameCounter % 60) == 0)
@@ -827,6 +976,16 @@ bool8 GbProtocol_IsFinished(void)
     return sFinished;
 }
 
+bool8 GbProtocol_IsExiting(void)
+{
+    return sState == GB_STATE_EXIT;
+}
+
+bool8 GbProtocol_PeerLeft(void)
+{
+    return sPeerExited;
+}
+
 u8 GbProtocol_GetResult(void)
 {
     return sResult;
@@ -835,11 +994,6 @@ u8 GbProtocol_GetResult(void)
 u8 GbProtocol_GetGeneration(void)
 {
     return sGen;
-}
-
-u8 GbProtocol_GetRoom(void)
-{
-    return sRoom;
 }
 
 bool8 GbProtocol_HasTradeCommand(void)
@@ -869,22 +1023,32 @@ void GbProtocol_SendTradeCommand(u16 cmd, u16 arg)
     switch (cmd)
     {
     case LINKCMD_READY_TO_TRADE:
+        // The index of the selected Pokémon (0-5).
         SetTx(base + (arg & 0xF));
-        sPhase = GB_PHASE_SELECT;
         break;
     case LINKCMD_INIT_BLOCK:
+        // The confirm screen of the Gen I/II games.
         SetTx(base + 2);
-        sPhase = GB_PHASE_CONFIRM;
         break;
     case LINKCMD_READY_CANCEL_TRADE:
+        // The trade was declined, both of them stay in the trade room.
         SetTx(base + 1);
         break;
     case LINKCMD_REQUEST_CANCEL:
-        SetTx(base + 1);
+        // The player leaves the trade room.  The Gen I/II games leave the
+        // link with the 0xF byte, the same one the partner uses to leave.
+        sExitValue = base + 0xF;
+        SetTx(sExitValue);
+        sState = GB_STATE_EXIT;
+        sFrameCounter = 0;
         break;
     case LINKCMD_PLAYER_CANCEL_TRADE:
-    case LINKCMD_BOTH_CANCEL_TRADE:
     case LINKCMD_PARTNER_CANCEL_TRADE:
+        // The trade was canceled, both of them stay in the trade room.
+        SetTx(base + 1);
+        break;
+    case LINKCMD_BOTH_CANCEL_TRADE:
+        // Both of them leave the trade room.
         sExitValue = base + 0xF;
         SetTx(sExitValue);
         sState = GB_STATE_EXIT;

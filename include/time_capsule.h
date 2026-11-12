@@ -21,8 +21,8 @@ void TimeCapsule_TryConnect(void);
 void TimeCapsule_StartExchange(void);
 void TimeCapsule_CloseLink(void);
 void TimeCapsule_CheckParty(void);
-void TimeCapsule_GetGeneration(void);
 void TimeCapsule_StartBattle(void);
 void TimeCapsule_DoWarp(void);
+void TimeCapsule_EnsureLinkTask(void);
 
 #endif // GUARD_TIME_CAPSULE_H

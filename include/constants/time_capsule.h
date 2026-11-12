@@ -22,5 +22,9 @@
 #define TIME_CAPSULE_ERR_CANCELLED     12
 #define TIME_CAPSULE_LINK_ESTABLISHED  13
 #define TIME_CAPSULE_CONFIRMED         14
+// The other game stopped answering (the console was turned off or the cable
+// was pulled).  The vanilla Cable Club shows the black "Communication error"
+// screen for this.
+#define TIME_CAPSULE_ERR_LINK_LOST     15
 
 #endif // GUARD_CONSTANTS_TIME_CAPSULE_H

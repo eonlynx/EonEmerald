@@ -44,8 +44,4 @@ bool8 GbConvert_ParseTradeBlock(u8 gen, u8 room, const u8 *in, u16 size);
 // species/move for the message.
 u8 GbConvert_CheckParty(u8 gen, u16 *arg1, u16 *arg2);
 
-// Exposed for the trade-menu shim.
-u16 GbConvert_GetPartnerTrainerId(void);
-void GbConvert_GetPartnerName(u8 *dst);
-
 #endif // GUARD_TIME_CAPSULE_GB_CONVERT_H

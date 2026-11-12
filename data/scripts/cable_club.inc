@@ -703,23 +703,27 @@ EventScript_BattleColosseum_4P_CancelSpotTrigger::
 
 EventScript_TradeCenter_Chair0::
 	setvar VAR_0x8005, 0
+	goto_if_eq VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, TimeCapsule_EventScript_AwaitLinkup
 	special PlayerEnteredTradeSeat
 	end
 
 EventScript_TradeCenter_Chair1::
 	setvar VAR_0x8005, 1
+	goto_if_eq VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, TimeCapsule_EventScript_AwaitLinkup
 	special PlayerEnteredTradeSeat
 	end
 
 /* Never used */
 EventScript_TradeCenter_Chair2::
 	setvar VAR_0x8005, 2
+	goto_if_eq VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, TimeCapsule_EventScript_AwaitLinkup
 	special PlayerEnteredTradeSeat
 	end
 
 /* Never used */
 EventScript_TradeCenter_Chair3::
 	setvar VAR_0x8005, 3
+	goto_if_eq VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, TimeCapsule_EventScript_AwaitLinkup
 	special PlayerEnteredTradeSeat
 	end
 

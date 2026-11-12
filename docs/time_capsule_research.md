@@ -1004,14 +1004,24 @@ TimeCapsule_EventScript_EnterRoom::
    `B Button: Cancel`);
 6. `gText_ConfirmStartLinkWithXPlayers` with 2 players (the GBA + the other
    game);
-7. `gText_AwaitingLinkup` while the party block is received (`B Button:
-   Cancel`);
-8. on success, `CableClub_Text_PleaseEnter`;
-9. on no link, `CableClub_Text_OtherTrainerNotReady`;
-10. on a link error, `Text_LinkErrorPleaseReset`;
-11. on a room mismatch, `Text_PlayersMadeDifferentSelections`;
-12. on cancel/other aborts, `CableClub_Text_PleaseVisitAgain`;
-13. when leaving the room, `CableClub_Text_HopeToSeeYouAgain`.
+7. `CableClub_Text_PleaseEnter` and the warp into the trade room (both games
+   are in their trade room from this point on);
+8. in the room, at a chair, `gText_PleaseWaitForLink` (the same text the
+   vanilla Cable Club shows while the player takes a seat) while the party
+   block is received (`B Button: Cancel`); the sprite turns towards the
+   machine; on success the trade menu opens;
+9. the friend of the other game is already sitting at the other console when
+   the player enters the room (`CableClub_EventScript_TooBusyToNotice`);
+10. on no link, `CableClub_Text_OtherTrainerNotReady`;
+11. on a link error, `Text_LinkErrorPleaseReset`;
+12. on a room mismatch, `Text_PlayersMadeDifferentSelections`;
+13. on cancel/other aborts, `CableClub_Text_PleaseVisitAgain`;
+14. when the link is terminated (the other game left the room or the player
+    asked for it), `Text_TerminateLinkPleaseWait` and the player is escorted
+    out of the room (`EventScript_DoLinkRoomExit`);
+15. when the other console is turned off or the cable is pulled, the vanilla
+    black "Communication error" screen (`CB2_LinkError`);
+16. when leaving the room, `CableClub_Text_HopeToSeeYouAgain`.
 
 The two confirmation prompts only appear once the GB link is really up, which is
 the same point at which the GBA Cable Club shows them.  The protocol keeps
@@ -1032,10 +1042,59 @@ dedicated warp:
 - `TryFadeOutOldMapMusic()`;
 - `WarpFadeOutScreen()`;
 - `CreateTask(Task_DoTimeCapsuleWarp, 10)`;
-- in the task: `WarpIntoMap(); SetMainCallback2(CB2_ReturnToField);`
+- in the task: `WarpIntoMap(); SetMainCallback2(CB2_LoadMap);`
   (or a minimal callback that does not touch SIO).
 
+`CB2_ReturnToField` must **not** be used here: it only calls `ResumeMap()`, so
+the tilesets and the tilemap of the new map are never loaded and the trade room
+shows random tiles. `CB2_LoadMap` runs the full map load (`CB2_DoChangeMap` ->
+`CB2_LoadMap2` -> `DoMapLoadLoop` -> `LoadMapInStepsLocal`) and still runs
+`gFieldCallback`, so the link task can be recreated there.
+
+### 6.6 Sitting down at the trade console
+
+The Gen I/II trade room (pokecrystal's `maps/TradeCenter.asm` and
+`maps/TimeCapsule.asm`) has two consoles in the middle of the room with a seat
+on each side of them, and it draws the friend sitting at the other console
+(`SPRITE_CHRIS` at (3,4) and (6,4), facing the machine). The GBA trade room
+has the same layout: the seats are at (4,5) and (7,5) and the consoles at
+(5,5) and (6,5).
+
+The vanilla Cable Club forces the direction the player looks at when it takes
+a seat (`GetDirectionForEventScript` in `src/overworld.c`:
+`FACING_FORCED_RIGHT` for `EventScript_TradeCenter_Chair0` and
+`FACING_FORCED_LEFT` for `EventScript_TradeCenter_Chair1`), so the sprite
+faces the machine.
+
+The GBA link can show the other player walking around the room, but the GB
+cannot, so the friend is spawned already seated at the other console, as
+soon as the player enters the room:
+
+- the GBA is always the clock master, so the friend sits at the right
+  console (7,5) facing left, like pokecrystal does for the player that uses
+  the internal clock;
+- the sprite is `OBJ_EVENT_GFX_RED` / `OBJ_EVENT_GFX_LEAF`, the ones the
+  expansion already uses for a Gen I/II link partner
+  (`GetFRLGAvatarGraphicsIdByGender`). The Gen I/II link protocol does not
+  send the trainer's gender, so the sprite is a compile time option
+  (`TIME_CAPSULE_PARTNER_IS_FEMALE`);
+- it is a normal object event with the vanilla script
+  `CableClub_EventScript_TooBusyToNotice` ("This TRAINER is too busy to
+  notice…"), which is what the vanilla Cable Club answers when the other
+  player is already seated in a trade.
+
 ### 6.6 Starting the trade from the room
+
+Both games must be inside their trade room, including in the Time Capsule, so
+the GBA warps into `MAP_TRADE_CENTER` right after the confirmation prompts (as
+soon as the room byte `0xD1/0xD2` was acknowledged), exactly like the normal
+Cable Club. The `0x75/0x76` handshake and the party block are exchanged from
+the chairs, which is the GBA equivalent of Crystal pressing A at the console.
+
+The `TimeCapsule_EventScript_AwaitLinkup` script (also used by
+`EventScript_TradeCenter_Chair0..3` when `VAR_CABLE_CLUB_STATE ==
+USING_TIME_CAPSULE_TRADE`) shows `gText_AwaitingLinkup`, waits for the block and
+validates the GB party. On success it runs `special PlayerEnteredTradeSeat`.
 
 `PlayerEnteredTradeSeat()` in `src/cable_club.c` must check
 `gTimeCapsuleActive`:
@@ -1044,7 +1103,7 @@ dedicated warp:
 void PlayerEnteredTradeSeat(void)
 {
     if (gTimeCapsuleActive)
-        CreateTask_EnterCableClubSeat(Task_StartTimeCapsuleTrade);
+        CreateTask(Task_StartTimeCapsuleTrade, 80);
     else if (gWirelessCommType != 0)
         CreateTask_EnterCableClubSeat(Task_StartWirelessTrade);
     else
@@ -1052,11 +1111,18 @@ void PlayerEnteredTradeSeat(void)
 }
 ```
 
+The time capsule path must **not** call `CreateTask_EnterCableClubSeat`:
+`Task_EnterCableClubSeat` waits for `GetCableClubPartnersReady()`, which needs
+`sPlayerLinkStates[local] == PLAYER_LINK_STATE_READY` and therefore a real Gen 3
+link. There is none here, so the task would hang in `CABLE_SEAT_WAITING`.
+
 `Task_StartTimeCapsuleTrade`:
 
 1. freezes controls and fades;
 2. does **not** call `OpenLink`/`SetCloseLinkCallback`;
-3. `SetMainCallback2(CB2_StartTimeCapsuleTradeMenu)`.
+3. `SetMainCallback2(CB2_StartCreateTradeMenu)` (the normal trade menu, with
+   `BufferTradeParties` filling `gParties[B_TRAINER_OPPONENT_A]` from the GB
+   block).
 
 ### 6.7 Trade backend
 
@@ -1093,6 +1159,81 @@ Concrete points to touch in `src/trade.c`:
 **Less invasive alternative:** a `time_capsule_trade.c` file duplicating the
 needed parts of the menu. Faster to prototype, but duplicates ~1000 lines and
 complicates maintenance. The abstraction is better.
+
+#### Trade menu bytes (Gen I/II)
+
+The Gen I/II trade menu exchanges two bytes per round with the base `0x70`
+(Gen II) or `0x60` (Gen I):
+
+- the index of the selected Pokémon (0-5);
+- the answer of the confirm screen: `1` = the trade was canceled, `2` = the
+  trade was confirmed.
+
+The index of the second Pokémon is `1` as well and the index of the third
+Pokémon is `2` as well, so the screen the partner is on has to be tracked to
+tell them apart (`sPartnerState` in `gb_protocol.c`).
+
+| `LINKCMD_*` (Gen 3)              | Gen I/II byte | Meaning |
+|---|---|---|
+| `LINKCMD_READY_TO_TRADE` (idx)  | `base + idx`  | the selected Pokémon |
+| `LINKCMD_INIT_BLOCK`            | `base + 2`    | the trade was confirmed |
+| `LINKCMD_READY_CANCEL_TRADE`    | `base + 1`    | the trade was declined, both stay in the room |
+| `LINKCMD_PLAYER_CANCEL_TRADE`   | `base + 1`    | idem |
+| `LINKCMD_PARTNER_CANCEL_TRADE`  | `base + 1`    | idem |
+| `LINKCMD_REQUEST_CANCEL`        | `base + 0xF`  | the player leaves the room (the Gen I/II "leave the link" byte) |
+| `LINKCMD_BOTH_CANCEL_TRADE`     | `base + 0xF`  | both of them leave the room |
+
+`0xF` is the byte pokecrystal sends in `ExitLinkCommunications` and in the
+CANCEL row of its party menu (`LinkTradePartymonMenuCheckCancel`): the partner
+answers it with the same byte and both games leave the cable club room.
+
+#### The room negotiation
+
+The GB's receptionist byte depends on its link mode: `0x60 | action` for the
+Gen I time capsule (`LINK_TIMECAPSULE`) and `0x70 | action` for the trade
+center (`LINK_TRADECENTER`), see `LinkTransfer` in pokecrystal's
+`engine/link/link.asm`.  The master has to answer with the **same high
+nibble**, because the GB's `.Receive` only accepts the byte (and only then
+updates `wOtherPlayerLinkAction`) when the high nibble matches:
+
+```
+GB: 0x71  ->  master: 0x71   (the room is the trade center, 0xD0 | 1)
+GB: 0x61  ->  master: 0x61   (the Gen I time capsule mode)
+```
+
+After that the room is negotiated with `0xD0 | room` (`0xD1` for the trade
+center) and the two games exchange their acknowledgements (`0x00`).
+
+#### The trade start handshake (0x75 / 0x76)
+
+The Gen I/II trade does not start with the block directly.  pokecrystal's
+`CheckLinkTimeout_Gen2` does two checks and the slave reads the byte of the
+**previous** exchange (the slave is one exchange behind, because it queues its
+byte in the exchange that follows the one it just received):
+
+1. it sends its action `5` (`0x75`) and waits until the master sends `0x75`;
+2. it sends its action `6` (`0x76`) and waits until the master sends `0x76`.
+
+So the master has to send `0x76` **before** the slave reads it, which means it
+must not wait for the slave's `0x76`.  The sequence is the one of
+Pokemon-Gen3-to-GenX's master table
+(`gen2_start_trade_start_trade_procedure`):
+
+```
+master: 0x75  ->  waits for 0x75
+master: 0x75  ->  waits for 0x00 (the acknowledgement of the slave)
+master: 0x76  ->  waits for 0xFD (the preamble of the block)
+```
+
+The GBA therefore sends `0x75` when the room sync is acknowledged, and `0x76`
+when the GB acknowledges the start-trade byte (the `0x00` that follows its
+`0x75`).  A master that only sends `0x76` after receiving the slave's `0x76`
+makes pokecrystal read a `0x75` in its second check and report a timeout, so
+the trade never starts.
+
+Like a real Gen 3 link, the leader reads its own command back from slot 0
+(`gBlockRecvBuffer[0]`), so `GbTrade_SendBlock` fills it in. Without it the
+leader would never see that the player canceled the trade.
 
 ### 6.8 `gLinkPlayers` and partner data
 
@@ -1134,14 +1275,9 @@ is not writing flash.
 `include/config/time_capsule.h`:
 
 ```c
-#define TIME_CAPSULE_ENABLED             TRUE
-#define TIME_CAPSULE_SUPPORT_GEN1        TRUE
-#define TIME_CAPSULE_SUPPORT_GEN2        TRUE
-#define TIME_CAPSULE_COLOSSEUM_ENABLED   FALSE   // phase 2
-#define TIME_CAPSULE_ALLOW_KOREAN        FALSE
-#define TIME_CAPSULE_DEBUG_LOG           FALSE
-#define TIME_CAPSULE_SAVE_BEFORE_TRADE   TRUE
+#define TIME_CAPSULE_DEBUG_LOG           TRUE
 #define TIME_CAPSULE_DEFAULT_MET_LOCATION METLOC_IN_GAME_TRADE
+#define TIME_CAPSULE_PARTNER_IS_FEMALE   FALSE
 ```
 
 ### 6.11 Specials

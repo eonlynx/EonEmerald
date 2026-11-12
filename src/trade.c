@@ -8,6 +8,7 @@
 #include "daycare.h"
 #include "decompress.h"
 #include "event_data.h"
+#include "event_scripts.h"
 #include "evolution_scene.h"
 #include "field_screen_effect.h"
 #include "gpu_regs.h"
@@ -1066,7 +1067,11 @@ static bool8 BufferTradeParties(void)
 
     if (gTimeCapsuleActive)
     {
-        GbProtocol_Update();
+        // The map load that opens the trade center reset every task, so the
+        // link task created during the cable club script is gone.  Recreate it
+        // here; from then on it pumps the link for the whole menu, the trade
+        // animation and the save.
+        TimeCapsule_EnsureLinkTask();
         if (!GbProtocol_IsReady())
             return FALSE;
         CalculatePlayerPartyCount();
@@ -1402,6 +1407,16 @@ static void CB1_UpdateLink(void)
     if (gTimeCapsuleActive)
     {
         GbTrade_Update();
+
+        // The other game left the trade room (or the player asked it to
+        // leave): the Gen I/II exit byte is being exchanged, so the trade
+        // menu has to be closed.
+        if (GbProtocol_IsExiting())
+        {
+            sTradeMenu->callbackId = CB_INIT_EXIT_CANCELED_TRADE;
+            return;
+        }
+
         if ((status = _GetBlockReceivedStatus()))
             Leader_ReadLinkBuffer(0, status);
         Leader_HandleCommunication();
@@ -1781,11 +1796,17 @@ static void CB_ExitCanceledTrade(void)
 {
     if (gTimeCapsuleActive)
     {
+        // The link is terminated: the other game left the room or the player
+        // asked for it.  The other game is told with the Gen I/II exit byte
+        // and the player is escorted out of the room, like the vanilla Cable
+        // Club does.
         GbTrade_RequestExit();
         Free(sMenuTextTileBuffer);
         Free(sTradeMenu);
         FreeAllWindowBuffers();
-        SetMainCallback2(CB2_ReturnToFieldFromMultiplayer);
+        gMain.state = 0;
+        SetMainCallback2(CB2_ReturnToField);
+        ScriptContext_SetupScript(TimeCapsule_EventScript_TerminateLink);
         return;
     }
 

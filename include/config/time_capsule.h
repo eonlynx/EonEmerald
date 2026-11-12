@@ -3,27 +3,17 @@
 
 // Time Capsule (GBA <-> Gen I/II link) configuration.
 
-// Master switch. When disabled, the NPC still exists but refuses to link.
-#define TIME_CAPSULE_ENABLED               TRUE
-
-// Generation profiles. Both are required for v1.
-#define TIME_CAPSULE_SUPPORT_GEN1          TRUE
-#define TIME_CAPSULE_SUPPORT_GEN2          TRUE
-
-// Colosseum is phase 2 (it needs a full Gen II/Gen I battle engine).
-// When FALSE, the NPC shows a "not ready" message instead of linking.
-#define TIME_CAPSULE_COLOSSEUM_ENABLED     FALSE
-
-// Korean Gen II uses a two-byte charset and is not supported in v1.
-#define TIME_CAPSULE_ALLOW_KOREAN          FALSE
-
 // Debug logging of TX/RX bytes. Keep FALSE for release builds.
 #define TIME_CAPSULE_DEBUG_LOG             TRUE
 
-// Save the GBA game before completing the trade success handshake.
-#define TIME_CAPSULE_SAVE_BEFORE_TRADE     TRUE
-
 // Met location used for Pokémon received from the past.
 #define TIME_CAPSULE_DEFAULT_MET_LOCATION  0xFE // METLOC_IN_GAME_TRADE
+
+// The Gen I/II link protocol does not transmit the trainer's gender (only the
+// name and the trainer ID of the party owner), so the player of the other game
+// is drawn with a fixed sprite in the trade room:
+//   FALSE -> OBJ_EVENT_GFX_RED  (the Gen I protagonist)
+//   TRUE  -> OBJ_EVENT_GFX_LEAF (the Gen II protagonist)
+#define TIME_CAPSULE_PARTNER_IS_FEMALE     FALSE
 
 #endif // GUARD_CONFIG_TIME_CAPSULE_H

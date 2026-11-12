@@ -1007,6 +1007,12 @@ static bool8 CreateMonFromGen1(const u8 *src, const u8 *otNameSrc, const u8 *nic
 // Patch list
 // ---------------------------------------------------------------------------
 
+// The patch list only covers the bytes after the name, party count, species
+// list and its terminator (19 bytes).  Offsets are 1-based inside each part,
+// and the list is split in two parts of SERIAL_PATCH_DATA_SIZE (0xFC) bytes.
+#define GB_PATCH_BASE      19
+#define GB_PATCH_PART_SIZE 0xFC
+
 static void BuildPatchList(u8 *data, u16 size, u8 *patch)
 {
     u16 i;
@@ -1018,9 +1024,9 @@ static void BuildPatchList(u8 *data, u16 size, u8 *patch)
     patch[pos++] = 0xFD;
     patch[pos++] = 0xFD;
 
-    for (i = 0; i < size && pos < GB_PATCH_LIST_SIZE - 1; i++)
+    for (i = GB_PATCH_BASE; i < size && pos < GB_PATCH_LIST_SIZE - 1; i++)
     {
-        if (part == 0 && i == 0xFC)
+        if (part == 0 && (i - GB_PATCH_BASE) == GB_PATCH_PART_SIZE)
         {
             patch[pos++] = 0xFF;
             part = 1;
@@ -1028,7 +1034,7 @@ static void BuildPatchList(u8 *data, u16 size, u8 *patch)
         if (data[i] == 0xFE)
         {
             data[i] = 0xFF;
-            patch[pos++] = part == 0 ? (i + 1) : (i - 0xFC + 1);
+            patch[pos++] = (u8)((i - GB_PATCH_BASE) - (part ? GB_PATCH_PART_SIZE : 0) + 1);
         }
     }
     if (pos < GB_PATCH_LIST_SIZE)
@@ -1040,6 +1046,7 @@ static void BuildPatchList(u8 *data, u16 size, u8 *patch)
 static void ApplyPatchList(u8 *data, u16 size, const u8 *patch)
 {
     u16 i;
+    u16 offset = GB_PATCH_BASE;
     u8 part = 0;
 
     for (i = 0; i < GB_PATCH_LIST_SIZE; i++)
@@ -1053,18 +1060,14 @@ static void ApplyPatchList(u8 *data, u16 size, const u8 *patch)
             part++;
             if (part > 1)
                 break;
+            offset = GB_PATCH_BASE + GB_PATCH_PART_SIZE;
             continue;
         }
-        if (part == 0)
         {
-            if (value - 1 < size)
-                data[value - 1] = 0xFE;
-        }
-        else
-        {
-            u16 offset = 0xFC + value - 1;
-            if (offset < size)
-                data[offset] = 0xFE;
+            u16 target = offset + value - 1;
+
+            if (target < size)
+                data[target] = 0xFE;
         }
     }
 }
@@ -1234,6 +1237,17 @@ bool8 GbConvert_ParseTradeBlock(u8 gen, u8 room, const u8 *in, u16 size)
     count = partyCopy[11];
     if (count > GB_PARTY_SIZE)
         count = GB_PARTY_SIZE;
+
+    // The species list is authoritative (the GB games mostly ignore the party
+    // count), so stop at its terminator, like read_gen12_trade_data does.
+    for (i = 0; i < count; i++)
+    {
+        if (partyCopy[12 + i] == GB_NO_MON)
+            break;
+    }
+    if (count > i)
+        count = i;
+
     if (count == 0)
         return FALSE;
 
@@ -1294,20 +1308,6 @@ bool8 GbConvert_ParseTradeBlock(u8 gen, u8 room, const u8 *in, u16 size)
     }
 
     return gPartiesCount[B_TRAINER_OPPONENT_A] != 0;
-}
-
-u16 GbConvert_GetPartnerTrainerId(void)
-{
-    return sPartnerTrainerId;
-}
-
-void GbConvert_GetPartnerName(u8 *dst)
-{
-    u8 i;
-
-    for (i = 0; i < PLAYER_NAME_LENGTH; i++)
-        dst[i] = gLinkPlayers[1].name[i];
-    dst[PLAYER_NAME_LENGTH] = 0xFF;
 }
 
 // ---------------------------------------------------------------------------

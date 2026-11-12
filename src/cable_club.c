@@ -1184,7 +1184,7 @@ static void Task_StartTimeCapsuleTrade(u8 taskId)
 void PlayerEnteredTradeSeat(void)
 {
     if (gTimeCapsuleActive)
-        CreateTask_EnterCableClubSeat(Task_StartTimeCapsuleTrade);
+        CreateTask(Task_StartTimeCapsuleTrade, 80);
     else if (gWirelessCommType != 0)
         CreateTask_EnterCableClubSeat(Task_StartWirelessTrade);
     else

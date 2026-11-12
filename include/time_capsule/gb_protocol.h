@@ -15,9 +15,10 @@ bool8 GbProtocol_IsReady(void);       // handshake + party exchange complete
 bool8 GbProtocol_IsLinkEstablished(void); // generation + room selected
 bool8 GbProtocol_IsError(void);
 bool8 GbProtocol_IsFinished(void);    // clean exit complete
+bool8 GbProtocol_IsExiting(void);    // the exit byte is being exchanged
+bool8 GbProtocol_PeerLeft(void);     // the other game left the trade room
 u8 GbProtocol_GetResult(void);
 u8 GbProtocol_GetGeneration(void);
-u8 GbProtocol_GetRoom(void);
 
 // Trade-menu interface (the GB side presents LINKCMD_* commands to trade.c).
 bool8 GbProtocol_HasTradeCommand(void);

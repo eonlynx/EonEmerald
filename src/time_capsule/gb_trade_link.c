@@ -38,17 +38,15 @@ bool8 GbTrade_SendBlock(const void *src, u16 size)
         return FALSE;
 
     GbProtocol_SendTradeCommand(data[0], data[1]);
+
+    // A real link sends the leader's own block back to it, so the leader
+    // reads its own command from slot 0 (trade.c does the same in the normal
+    // Cable Club).
+    gBlockRecvBuffer[0][0] = data[0];
+    gBlockRecvBuffer[0][1] = data[1];
+    gBlockReceivedStatus[0] = TRUE;
+
     return TRUE;
-}
-
-bool8 GbTrade_IsPartyReady(void)
-{
-    return GbProtocol_IsReady();
-}
-
-u8 GbTrade_GetGeneration(void)
-{
-    return GbProtocol_GetGeneration();
 }
 
 void GbTrade_ResetSuccess(void)
@@ -77,9 +75,4 @@ void GbTrade_RequestExit(void)
 {
     if (gTimeCapsuleActive)
         GbProtocol_RequestExit();
-}
-
-bool8 GbTrade_IsFinished(void)
-{
-    return GbProtocol_IsFinished();
 }
