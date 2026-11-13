@@ -30,3 +30,17 @@ The NPC is placed at `(11, 2)`, elevation 0, immediately to the right of the
 existing Direct Corner attendant (`(10, 2)`). It uses
 `OBJ_EVENT_GFX_TEALA`, like the other Cable Club attendants, and the shared
 script `Common_EventScript_TimeCapsuleAttendant`.
+
+## Debug helpers
+
+`dump_rom.py`, `find_placeholder.py` and `find_text.py` are small read-only
+helpers used while debugging compiled map scripts and strings:
+
+```sh
+python tools/time_capsule/dump_rom.py <offset_hex> <length>
+python tools/time_capsule/find_placeholder.py [stringvar_index]
+python tools/time_capsule/find_text.py "text to find"
+```
+
+They read `pokeemerald.gba` and `charmap.txt` from the repository root and do
+not modify the ROM.

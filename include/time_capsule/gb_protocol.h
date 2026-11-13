@@ -6,7 +6,7 @@
 
 #define GB_PROTO_RESULT_ONGOING  0xFF
 
-void GbProtocol_Init(u8 room, u8 forcedGen);
+void GbProtocol_Init(u8 room);
 void GbProtocol_Update(void);
 void GbProtocol_Shutdown(void);
 

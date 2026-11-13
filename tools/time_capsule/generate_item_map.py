@@ -167,7 +167,16 @@ def main():
 
     fwd = open(os.path.join(REF, "data", "item_gen3_to_12.bin"), "rb").read()
     rev_raw = open(os.path.join(REF, "data", "item_gen12_to_3.bin"), "rb").read()
+    invalid_held = open(os.path.join(REF, "data", "invalid_held_items.bin"), "rb").read()
     rev = [struct.unpack_from("<H", rev_raw, 2 * i)[0] for i in range(256)]
+
+    def is_valid_held(official_id):
+        # is_item_valid() in party_handler.c: official Gen III items above
+        # LAST_VALID_GEN_3_ITEM (348) and the invalid_held_items bitmap are
+        # not holdable, so convert_item_of_gen3() strips them.
+        if official_id > 348:
+            return False
+        return not (invalid_held[official_id >> 3] & (1 << (official_id & 7)))
 
     item_count = values.get("ITEMS_COUNT", max(values.values()) + 1)
     to_gen2 = [0] * item_count
@@ -175,6 +184,8 @@ def main():
     for official_id in range(len(fwd)):
         gen2_item = fwd[official_id]
         if gen2_item in (0, 0xFE, 0xFF):
+            continue
+        if not is_valid_held(official_id):
             continue
         name = official[official_id]
         exp_id = find_exp(name)
@@ -211,16 +222,20 @@ def main():
               (name, exp_id, got, want, status))
 
     # The TM/HM names in the official table are "TM01"..; map them by name.
+    # HMs are not holdable, so only apply the mapping when the reference's
+    # invalid_held_items bitmap allows it.
     for n in range(1, 51):
         name = "TM%02d" % n
         exp_id = find_exp(name)
-        if exp_id:
-            to_gen2[exp_id] = fwd[288 + n]
+        official_id = 288 + n
+        if exp_id and is_valid_held(official_id):
+            to_gen2[exp_id] = fwd[official_id]
     for n in range(1, 9):
         name = "HM%02d" % n
         exp_id = find_exp(name)
-        if exp_id:
-            to_gen2[exp_id] = fwd[338 + n]
+        official_id = 338 + n
+        if exp_id and is_valid_held(official_id):
+            to_gen2[exp_id] = fwd[official_id]
 
     print("item_count", item_count)
     print("unmatched official items", len(set(misses)))

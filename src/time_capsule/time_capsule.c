@@ -64,7 +64,6 @@ static EWRAM_DATA u8 sTradeSeat;
 bool8 gTimeCapsuleActive;
 u8 gTimeCapsuleGeneration;
 u8 gTimeCapsuleRoom;
-u8 gTimeCapsuleMode;
 
 #define tState data[0]
 #define tTimer data[1]
@@ -137,6 +136,21 @@ static void FacePlayerAtTradeConsole(u8 seat)
 static void FinishSession(u8 taskId, u8 result)
 {
     gSpecialVar_Result = result;
+
+    // A cable pull / GB power-off at any point shows the same black
+    // "Communication error" screen as the vanilla Cable Club.
+    if (result == TIME_CAPSULE_ERR_LINK_LOST)
+    {
+        GbProtocol_Shutdown();
+        gTimeCapsuleActive = FALSE;
+        RemoveTradePartner();
+        HideFieldMessageBox();
+        SetLinkErrorBuffer(0, 0, 0, FALSE);
+        SetMainCallback2(CB2_LinkError);
+        DestroyTask(taskId);
+        return;
+    }
+
     if (result != TIME_CAPSULE_OK && result != TIME_CAPSULE_LINK_ESTABLISHED
      && result != TIME_CAPSULE_CONFIRMED)
     {
@@ -275,7 +289,6 @@ void TimeCapsule_TryConnect(void)
 {
     u8 taskId;
 
-    gTimeCapsuleMode = gSpecialVar_0x8004;
     gTimeCapsuleRoom = gSpecialVar_0x8005;
     gTimeCapsuleGeneration = TIME_CAPSULE_GEN_NONE;
     gTimeCapsuleActive = TRUE;
@@ -286,7 +299,7 @@ void TimeCapsule_TryConnect(void)
     if (!IsNationalPokedexEnabled())
         EnableNationalPokedex();
 
-    GbProtocol_Init(gTimeCapsuleRoom, 0);
+    GbProtocol_Init(gTimeCapsuleRoom);
     TimeCapsule_EnsureLinkTask();
 
     taskId = CreateTask(Task_TimeCapsuleConnect, 80);
@@ -374,19 +387,6 @@ static void Task_TimeCapsuleExchange(u8 taskId)
     if (ProtocolFailed(&result))
     {
         HideFieldMessageBox();
-        if (result == TIME_CAPSULE_ERR_LINK_LOST)
-        {
-            // The other console was turned off or the cable was pulled.  The
-            // vanilla Cable Club shows the black "Communication error"
-            // screen for this.
-            GbProtocol_Shutdown();
-            gTimeCapsuleActive = FALSE;
-            RemoveTradePartner();
-            SetLinkErrorBuffer(0, 0, 0, FALSE);
-            SetMainCallback2(CB2_LinkError);
-            DestroyTask(taskId);
-            return;
-        }
         FinishSession(taskId, result);
         return;
     }

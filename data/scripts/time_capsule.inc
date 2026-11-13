@@ -31,7 +31,6 @@ TimeCapsule_EventScript_Battle::
 	goto TimeCapsule_EventScript_Abort
 
 TimeCapsule_EventScript_Trade::
-	setvar VAR_0x8004, TIME_CAPSULE_MODE_TRADE
 	setvar VAR_0x8005, TIME_CAPSULE_ROOM_TRADE
 	goto TimeCapsule_EventScript_Connect
 

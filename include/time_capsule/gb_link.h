@@ -26,6 +26,11 @@ bool8 GbLink_IsBusy(void);
 // Starts a transfer.  Does nothing if one is already pending.
 void GbLink_Start(u8 tx);
 
+// Waits up to `lines` scanlines for the GB to arm a byte.  Returns TRUE when
+// SI is low (the GB is ready to be clocked), like the reference's SIO_RDY
+// wait in `sio_normal_inner_master`.
+bool8 GbLink_WaitPeerReady(u16 lines);
+
 // Finishes a pending transfer.  Returns TRUE and stores the received byte
 // when the GB clocked it back.
 bool8 GbLink_Poll(u8 *rx);

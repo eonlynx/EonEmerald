@@ -80,6 +80,29 @@ void GbLink_Start(u8 tx)
     sPending = TRUE;
 }
 
+// Normal-mode SI (SIOCNT bit 2) is driven by the other side: it is low while
+// the GB has a byte armed in SB.  The reference master routine
+// (`sio_normal_inner_master`) waits for this line before clocking; without
+// that check the GBA would shift bytes into an unarmed slave, which reads
+// back SERIAL_NO_DATA_BYTE and, more importantly, lets the GBA run many
+// exchanges ahead of the GB's main loop.  The mGBA bridge refreshes the bit
+// whenever SIOCNT is written, so writing it back (without START) samples the
+// current arming state.
+bool8 GbLink_WaitPeerReady(u16 lines)
+{
+    u16 start = REG_VCOUNT;
+
+    do
+    {
+        REG_SIOCNT = REG_SIOCNT & ~SIO_START;
+
+        if (!(REG_SIOCNT & 0x0004))
+            return TRUE;
+    } while ((u16)(REG_VCOUNT - start) < lines);
+
+    return FALSE;
+}
+
 bool8 GbLink_Poll(u8 *rx)
 {
     if (!sActive || !sPending)

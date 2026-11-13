@@ -82,27 +82,27 @@ enum
     TC_TRADE_HAVE_SUCCESS,
 };
 
-enum
-{
-    GB_PARTNER_SELECT = 0,
-    GB_PARTNER_CONFIRM,
-};
-
-// Gen I/II byte time: 8192 bps -> ~1 ms -> 14 scanlines at 59.7 Hz.
-#define GB_LINK_PACE_LINES    14
+// Gen I/II byte time: 8192 bps -> ~0.98 ms -> ~12 scanlines at 59.7 Hz.
+// Pokemon-Gen3-to-Gen-X uses a VCOUNT wait of 900 us (~12 lines); this is the
+// same effective byte rate.
+#define GB_LINK_PACE_LINES    12
 // Give up on this frame if the GB has not clocked back within this window;
 // the transfer stays pending and is retried on the next frame.
 #define GB_LINK_REPLY_LINES   10
-// 228 scanlines per frame / 14 = 16 bytes; 10 leaves room for the rest of the
-// frame (rendering, input) and for slow GB replies.
-#define GB_LINK_BYTES_FRAME   10
+// The GB must have armed its outgoing byte (SC external clock) before the
+// master clocks it; otherwise the transfer is lost.  This is the same
+// slave-ready check the reference performs on SI (SIO_RDY).
+#define GB_LINK_READY_LINES   12
+// 228 scanlines per frame; 14 exchanges at 12 lines each use 168 lines and
+// leave ~60 lines (4 ms) for rendering, input and sound.  The reference runs
+// one exchange per VCOUNT interrupt (~18/frame); doing that here would block
+// the main loop for the whole frame, so 14 is the safe maximum.
+#define GB_LINK_BYTES_FRAME   14
 
-#define GB_LINK_ALIVE_TIMEOUT      600  // 10 seconds
-#define GB_LINK_ALIVE_TIMEOUT_LONG 3600 // 60 seconds
+#define GB_LINK_ALIVE_TIMEOUT      3600 // 60 seconds, only while streaming data
 
-#define GB_CONNECT_TIMEOUT    0
 #define GB_BULK_TIMEOUT       3600
-#define GB_SUCCESS_TIMEOUT    600
+#define GB_SUCCESS_TIMEOUT    3600
 #define GB_EXIT_TIMEOUT       180
 
 // ---------------------------------------------------------------------------
@@ -131,7 +131,6 @@ enum
 static EWRAM_DATA u8 sState;
 static EWRAM_DATA u8 sGen;
 static EWRAM_DATA u8 sRoom;
-static EWRAM_DATA u8 sForcedGen;
 static EWRAM_DATA u8 sResult;
 static EWRAM_DATA bool8 sActive;
 static EWRAM_DATA bool8 sFinished;
@@ -185,7 +184,6 @@ static EWRAM_DATA u16 sBulkCount;
 // Trade menu (port of get_offer/get_accept/get_success).
 static EWRAM_DATA u8 sTradingState;
 static EWRAM_DATA u8 sTradeOfferOut;
-static EWRAM_DATA u8 sTradeOfferIn;
 static EWRAM_DATA bool8 sReceivedOnce;
 static EWRAM_DATA u8 sLastPeerAction;
 static EWRAM_DATA u16 sTradeCmd;
@@ -206,6 +204,15 @@ static void TcComputeSuccessValue(void);
 static u8 TradeBase(void)
 {
     return (sGen == TIME_CAPSULE_GEN_1) ? 0x60 : 0x70;
+}
+
+// Any 0xD0..0xDF byte is a room-sync byte (Link_EnsureSync): the GB only
+// checks the high nibble, and it uses 0xD0 for the Time Capsule room and 0xD4
+// in EnterTimeCapsule.  Accepting the whole range keeps its sync loop alive
+// without weakening the 0xD1/0xD2 room check for the trade rooms.
+static bool8 IsRoomSyncByte(u8 data)
+{
+    return (data & 0xF0) == 0xD0;
 }
 
 static u16 PartyDataSize(void)
@@ -290,7 +297,6 @@ static bool8 TcParseReceivedBlock(void)
     sPartyReady = TRUE;
     sResult = TIME_CAPSULE_OK;
     sTradingState = TC_TRADE_NO_INFO;
-    sTradeOfferIn = 0;
     sReceivedOnce = FALSE;
     sLastPeerAction = 0xFF;
     sSynTransmitted = 0;
@@ -320,6 +326,7 @@ static void TcInitTransferData(void)
     TcResetTransferBetweenSync();
     sSizesIndex = 0;
     sStartState = TC_START_PAR;
+    sNoDataFrames = 0;
 }
 
 static u8 TcCheckIfContinue(u8 data, const u8 *sends, const u8 *recvs,
@@ -441,7 +448,6 @@ static u8 TcGetOffer(u8 data)
                 if (data == base + CANCEL_VALUE)
                 {
                     // END_TRADE_BYTE_GEN2: the other game left the room.
-                    sTradeOfferIn = CANCEL_VALUE;
                     sPeerExited = TRUE;
                     sTradeCmd = LINKCMD_REQUEST_CANCEL;
                     sTradeArg = 0;
@@ -453,8 +459,6 @@ static u8 TcGetOffer(u8 data)
                     sFrameCounter = 0;
                     return data;
                 }
-
-                sTradeOfferIn = data - base;
                 TcReportTradeCommand(data, LINKCMD_READY_TO_TRADE, data - base);
                 sTradingState = TC_TRADE_NO_INFO;
             }
@@ -479,7 +483,6 @@ static u8 TcGetAccept(u8 data)
             else
             {
                 sReceivedOnce = FALSE;
-                sTradeOfferIn = data - base;
 
                 if (data == base + ACCEPT_VALUE)
                     TcReportTradeCommand(data, LINKCMD_INIT_BLOCK, 0);
@@ -612,16 +615,21 @@ static void TcProcessIdle(u8 data)
         return;
     }
 
-    if (data == 0xD1 || data == 0xD2)
+    if (IsRoomSyncByte(data))
     {
         // Link_EnsureSync completed before we saw the receptionist byte.
-        if (data != (0xD0 | sRoom))
+        // 0xD1/0xD2 select the trade room and must match the one chosen on
+        // the GBA; 0xD0/0xD4 are generic sync retries and are answered with
+        // our room byte without confirming the link yet.
+        if ((data == 0xD1 || data == 0xD2) && data != (0xD0 | sRoom))
         {
             SetError(TIME_CAPSULE_ERR_WRONG_ROOM);
             return;
         }
 
-        sLinkEstablished = TRUE;
+        if (data == 0xD1 || data == 0xD2)
+            sLinkEstablished = TRUE;
+
         sBufferCounter = 2;
         sStartState = TC_START_ENT;
         sTxByte = sEnterSend[2];
@@ -654,17 +662,32 @@ static void TcProcessGen2(u8 data)
     switch (sStartState)
     {
     case TC_START_ENT:
-        if (sBufferCounter == 0 && (data == 0xD1 || data == 0xD2))
+        if (sLinkEstablished && data == START_TRADE_BYTE_GEN2)
+        {
+            // The GB already finished the room sync and moved on to
+            // CheckLinkTimeout_Gen2 (0x75) while a late 0xD0/0xD4 retry had
+            // put us back in the enter table.  0x75 is unambiguous at this
+            // point: answer it and enter the start-trade table instead of
+            // waiting forever for the two 0x00 acks.
+            sBufferCounter = 0;
+            sStartState = TC_START_STA;
+            sTxByte = sStartSend[0];
+            break;
+        }
+
+        if (sBufferCounter == 0 && IsRoomSyncByte(data))
         {
             // Link_EnsureSync arrived before the repeating receptionist byte
             // was seen a second time.  Jump straight to the room ack step.
-            if (data != (0xD0 | sRoom))
+            if ((data == 0xD1 || data == 0xD2) && data != (0xD0 | sRoom))
             {
                 SetError(TIME_CAPSULE_ERR_WRONG_ROOM);
                 break;
             }
 
-            sLinkEstablished = TRUE;
+            if (data == 0xD1 || data == 0xD2)
+                sLinkEstablished = TRUE;
+
             sBufferCounter = 2;
             sTxByte = sEnterSend[2];
             break;
@@ -678,11 +701,21 @@ static void TcProcessGen2(u8 data)
             if (data == 0x61 || data == 0x62 || data == 0x71 || data == 0x72)
                 data = 0x61;
         }
-        else if ((data == 0xD1 || data == 0xD2) && data != (0xD0 | sRoom))
+        else if (sBufferCounter == 1 && IsRoomSyncByte(data))
         {
-            // Link_EnsureSync selected a different room.
-            SetError(TIME_CAPSULE_ERR_WRONG_ROOM);
-            break;
+            // The GB's Link_EnsureSync may present 0xD0 (Time Capsule room)
+            // or 0xD4 (EnterTimeCapsule) here.  Link_EnsureSync only checks
+            // the high nibble, so accept any 0xD0..0xDF as our room byte.
+            if ((data == 0xD1 || data == 0xD2) && data != (0xD0 | sRoom))
+            {
+                SetError(TIME_CAPSULE_ERR_WRONG_ROOM);
+                break;
+            }
+
+            if (data == 0xD1 || data == 0xD2)
+                sLinkEstablished = TRUE;
+
+            data = 0xD0 | sRoom;
         }
 
         sTxByte = TcCheckIfContinue(data, sEnterSend, sEnterRecv, 4,
@@ -690,6 +723,23 @@ static void TcProcessGen2(u8 data)
         break;
 
     case TC_START_STA:
+        if (sBufferCounter < 2 && IsRoomSyncByte(data))
+        {
+            // The GB retried Link_EnsureSync (0xD0/0xD4) before offering
+            // its start-trade byte.  Answer with the room byte; switching to
+            // 0x75 here would make its sync loop fail.
+            if ((data == 0xD1 || data == 0xD2) && data != (0xD0 | sRoom))
+            {
+                SetError(TIME_CAPSULE_ERR_WRONG_ROOM);
+                break;
+            }
+
+            sBufferCounter = 2;
+            sStartState = TC_START_ENT;
+            sTxByte = sEnterSend[2];
+            break;
+        }
+
         if (data == START_TRADE_BYTE_GEN2 && sBufferCounter >= 2)
         {
             // Crystal restarted CheckLinkTimeout_Gen2 (its check 6 failed).
@@ -756,6 +806,7 @@ static void StartBlock(bool8 synced)
     sPartyReady = FALSE;
     sState = GB_STATE_BULK;
     sFrameCounter = 0;
+    sNoDataFrames = 0;
 }
 
 static u8 NextTxByteGen1(void)
@@ -844,7 +895,6 @@ static bool8 ParseBulk(void)
     sResult = TIME_CAPSULE_OK;
     sStartState = TC_START_DON;
     sTradingState = TC_TRADE_NO_INFO;
-    sTradeOfferIn = 0;
     sReceivedOnce = FALSE;
     sLastPeerAction = 0xFF;
     sSynTransmitted = 0;
@@ -1017,6 +1067,19 @@ static void ProcessByte(u8 byte)
     if (byte == 0xFE)
         return;
 
+#if TIME_CAPSULE_DEBUG_LOG
+    {
+        static u16 logCount;
+        if (logCount < 256 || (++logCount & 0x7) == 0)
+        {
+            DebugPrintfLevel(MGBA_LOG_DEBUG,
+                             "TC data: rx=%02X state=%u sub=%u bc=%u tx=%02X",
+                             byte, sState, sStartState, sBufferCounter, sTxByte);
+            logCount++;
+        }
+    }
+#endif
+
     sNoDataFrames = 0;
     ProcessByteInner(byte);
 
@@ -1051,8 +1114,11 @@ static void CheckPeerIsAlive(void)
     switch (sState)
     {
     case GB_STATE_CONNECT:
-        if (++sNoDataFrames > GB_LINK_ALIVE_TIMEOUT)
-            SetError(TIME_CAPSULE_ERR_TIMEOUT);
+        // The GB is at the Cable Club receptionist: it may still be
+        // discovering the link, saving the game or waiting for its player.
+        // The reference master routine has no timeout here; the GB's own
+        // link timeout is the one that decides.  Cancelling with B is always
+        // possible on the GBA side.
         return;
 
     case GB_STATE_GEN2:
@@ -1061,17 +1127,22 @@ static void CheckPeerIsAlive(void)
         if (sStartState == TC_START_DON)
             return;
 
-        // During the initial Cable Club menus (the GB can save the game and
-        // walk around) use the long timeout; the actual block exchange is
-        // quick.
-        timeout = (sStartState == TC_START_PAR) ? GB_LINK_ALIVE_TIMEOUT
-                                                : GB_LINK_ALIVE_TIMEOUT_LONG;
+        // The room sync, the start-trade handshake and the wait for the GB
+        // player to press A at the console are controlled by the other game.
+        // pokecrystal itself keeps retrying (CheckLinkTimeout_Gen2) and only
+        // reports a timeout after its own frames counter expires, so the GBA
+        // must not give up first.  Only the actual block exchange, where both
+        // sides are streaming data, has a bounded timeout.
+        if (sStartState == TC_START_PAR)
+            timeout = GB_LINK_ALIVE_TIMEOUT;
+        else
+            return;
         break;
 
     case GB_STATE_GEN1_SYNC:
     case GB_STATE_GEN1_ROOM_WAIT:
-        timeout = GB_LINK_ALIVE_TIMEOUT_LONG;
-        break;
+        // Same as above: wait for the Gen I/II player, never time out.
+        return;
 
     case GB_STATE_BULK:
         timeout = GB_LINK_ALIVE_TIMEOUT;
@@ -1089,14 +1160,13 @@ static void CheckPeerIsAlive(void)
 // Public interface
 // ---------------------------------------------------------------------------
 
-void GbProtocol_Init(u8 room, u8 forcedGen)
+void GbProtocol_Init(u8 room)
 {
     GbProtocol_Shutdown();
 
     sState = GB_STATE_CONNECT;
     sGen = TIME_CAPSULE_GEN_NONE;
     sRoom = room;
-    sForcedGen = forcedGen;
     sResult = GB_PROTO_RESULT_ONGOING;
     sActive = TRUE;
     sFinished = FALSE;
@@ -1118,7 +1188,6 @@ void GbProtocol_Init(u8 room, u8 forcedGen)
     sSuccessPrepared = FALSE;
     sTradingState = TC_TRADE_NO_INFO;
     sTradeOfferOut = 0;
-    sTradeOfferIn = 0;
     sReceivedOnce = FALSE;
     sLastPeerAction = 0xFF;
     sStartState = TC_START_UNK;
@@ -1197,12 +1266,19 @@ void GbProtocol_Update(void)
 
         if (!GbLink_IsBusy())
         {
+            // Do not clock an unarmed slave.  This is what keeps the GBA in
+            // step with the GB's main loop: the GB only arms SB after its
+            // serial interrupt has stored the previous byte, so clocking
+            // blindly would let us run many bytes ahead and lose the answer.
+            if (!GbLink_WaitPeerReady(GB_LINK_READY_LINES))
+                break;
+
             GbLink_WaitLines(GB_LINK_PACE_LINES);
             GbLink_Start(sTxByte);
         }
 
         if (!WaitReply(&rx))
-            return;
+            break;
 
         ProcessByte(rx);
         sTxByte = (sState == GB_STATE_BULK) ? NextTxByteGen1() : sTxByte;
@@ -1211,10 +1287,6 @@ void GbProtocol_Update(void)
     switch (sState)
     {
     case GB_STATE_CONNECT:
-#if GB_CONNECT_TIMEOUT > 0
-        if (sFrameCounter > GB_CONNECT_TIMEOUT)
-            SetError(TIME_CAPSULE_ERR_NO_LINK);
-#endif
         break;
 
     case GB_STATE_EXIT:
@@ -1501,4 +1573,5 @@ void GbProtocol_PauseForSave(void)
         sHasTradeCmd = FALSE;
     }
 }
+
 

@@ -19,6 +19,54 @@ This document does not implement anything by itself. Its purpose is to settle:
 
 ---
 
+## Implementation status (2026-11-13)
+
+The Trade Center is implemented and matches the reference projects:
+
+| Area | Implementation | Reference analogue |
+|---|---|---|
+| Link/state machine | `src/time_capsule/gb_protocol.c` | `communicator.c`, `sio.c` |
+| Wire block / patch list / parser | `src/time_capsule/gb_convert.c` | `sio_buffers.c` |
+| Pokémon conversion / validation | `src/time_capsule/gb_mon.c` | `gen_converter.c`, `gen12_methods.c`, `party_handler.c` |
+| Low-level GBA SIO | `src/time_capsule/gb_link.c` | `sio.c`, Poke_Transporter_GB `link_handler.cpp` |
+| Trade menu ↔ GBA `trade.c` | `src/time_capsule/gb_trade_link.c` | `main.c` trade menu states |
+| Generated tables | `src/data/time_capsule/tables.h`, `item_map.h` | `data/*.bin` |
+| Table generators | `tools/time_capsule/generate_tables.py`, `generate_item_map.py` | — |
+| Protocol simulator | `tools/time_capsule/tests/sim_protocol.py` | — |
+
+The link layer now waits for the GB's slave-ready line before every transfer
+(`GbLink_WaitPeerReady`, SI low) and the mGBA bridge clears the armed flag after
+a GB master probe.  Together these keep the GBA from clocking an unarmed GB,
+which was the source of the `0xFE` storm and of the two consoles running many
+exchanges apart.  The GBA also has **no handshake timeout**: Crystal may spend
+time saving, walking to the console or waiting for its player, and the GBA must
+not show its link error before the GB's own timeout.  Room-sync retries with
+`0xD0`/`0xD4` are accepted and answered with the GBA's room byte.
+
+The GBA is the **clock master** (normal 8-bit SIO, internal clock) and the GB
+is the **external-clock slave**.  This is the configuration supported by the
+mGBA `gblink` bridge in this repository, and the reference projects expose the
+same role (`Pokemon-Gen3-to-Gen-X` starts its master routine with
+`ENTER_TRADE_MASTER = 0x01`).  The byte cadence is paced by software at one
+exchange per ~12 scanlines (~0.9 ms, 8192 bps).  The GBA also waits for the
+GB's slave-ready signal (SI low, `GbLink_WaitPeerReady`) before each transfer,
+so it never shifts bytes into an unarmed GB or runs ahead of the GB's serial
+interrupt when the two emulator cores are scheduled independently.
+
+The start-trade handshake is the reference master table:
+
+```
+send 0x01 0x61 0xD1 0x00      recv 0x61 0xD1 0x00 0x00   (enter room)
+send 0x75 0x75 0x76 0xFE 0xFE recv 0x75 0x00 0xFD 0xFE 0xFE (start trade)
+```
+
+The critical detail is that the GBA starts presenting `0x76` after receiving
+the GB's `0x00` acknowledgement of action 5, not after receiving the GB's own
+`0x76`.  `CheckLinkTimeout_Gen2` reads the previous exchange's byte, so the
+latter loses the race and Crystal reports "Too much time has elapsed.".
+
+---
+
 ## 0. Design decisions (summary)
 
 ### 0.1 One NPC, automatic detection (recommended)
@@ -48,20 +96,12 @@ is a normal GB link using the profile of the detected generation.
 
 ### 0.2 Alternative: two NPCs / forced modes
 
-The same engine can expose two entries:
+The forced-generation parameter was removed from the final API: the current
+`GbProtocol_Init(room)` auto-detects Gen I vs Gen II from the first unambiguous
+byte (`0x60`/`0xD4`/`0xD5` vs `0x61`/`0xD1`/`0x75`).  If a second NPC is wanted
+later, it can pass a generation flag and restrict the profile; the protocol
+itself does not need to change.
 
-- `TIME CAPSULE (GEN I)`: forces the Gen I profile. If a Gen II game connects,
-  it can be pushed into GSC's Time Capsule mode (reply `0x00` during the
-  timeout check; see §3.2), but Crystal would have to use the Ecruteak Time
-  Capsule receptionist instead of its normal Trade Center.
-- `TIME CAPSULE (GEN II)`: forces the Gen II profile. If a Gen I game connects,
-  show an error.
-
-This does not duplicate the protocol: only `gTimeCapsuleForcedGen` (0 = auto,
-1 = Gen I, 2 = Gen II) and the restriction profile change. **It is not needed
-for the desired use case** (Crystal from any Pokémon Center), so one NPC with
-auto-detection is the recommendation. If two NPCs are wanted later, they can be
-two scripts calling the same `special` with a forced mode.
 
 ### 0.3 Colosseum: phase 2
 
@@ -176,21 +216,30 @@ write the C driver.
 - Do not use the GBA Wireless Adapter or a GBA link cable. The game must
   disable RFU/GBA link during the session.
 
-### 2.2 Why the GBA must be the **slave**
+### 2.2 Clock roles: the implementation uses the GBA as master
 
-In GBA normal SIO:
+The GBA normal SIO can run at **8192, 16384, 262144 or 524288 bps** with the
+internal clock (SIOCNT bits 1:0), or it can accept an external clock.  The
+GB/CGB Gen I/II games use **8192 bps** when they are the clock master.
 
-- As **master**, the GBA can only generate **256 kHz** or **2 MHz**.
-- The GB/CGB in normal mode uses **8192 Hz** (slow) or **262144 Hz** (GBC fast).
-  Gen I/II games use **8192 Hz** (slow).
+On real hardware both roles work:
 
-Therefore the GBA **cannot be master** at 8192 Hz. It must be **slave**
-(external clock), and the GB game must be master. Fortunately, the GB games
-alternate roles during connection, so the GBA can stay slave by always sending
-`0x02` (“I want external clock”); the GB ends up as master.
+- **GBA slave / GB master**: the GB clocks one byte every ~0.98 ms; this is the
+  default role of `Pokemon-Gen3-to-Gen-X` (`master = 0`).
+- **GBA master / GB slave**: normal 8-bit mode with the internal clock runs at
+  8192 bps (bits 1:0 = 0), i.e. one byte per ~1 ms.  The game software presents
+  one byte per ~12 scanlines (~0.9 ms), matching that rate, so the GB has the
+  rest of the byte time to service its serial IRQ.  The GB accepts the external
+  clock in its normal 8192 bps mode.  This is the `master = 1` role of
+  `Pokemon-Gen3-to-Gen-X` and the only role implemented by the mGBA `gblink`
+  bridge in this repository.
 
-> `Pokemon-Gen3-to-Gen-X` does exactly this: `SIO_SLAVE`, `SIO_8`, external
-> clock, and `master = 0` by default.
+`pokeemerald-expansion` uses **GBA master** because that is what the mGBA bridge
+supports and because it keeps the GBA in control of the byte cadence.  The
+software waits for the GB's slave-ready line and paces the transfers with
+`GbLink_WaitLines(12)` (~0.9 ms), so the GB sees the same effective 8192 bps as
+with a GB master.  The GB is told to use the external clock by sending `0x01`
+as the first establishment byte (see the discovery sequence in §3.1).
 
 ### 2.3 Registers and configuration
 
@@ -198,61 +247,67 @@ For the GBA:
 
 ```c
 REG_RCNT   = 0;                                  // Normal mode
-REG_SIOCNT = SIO_8BIT_MODE | SIO_SO_HIGH;        // 8-bit, external clock (slave)
-// bit 14 = IRQ enable
-REG_SIOCNT |= SIO_INTR_ENABLE;
-REG_IE    |= INTR_FLAG_SERIAL;
+REG_SIOCNT = SIO_8BIT_MODE | 0x0001;             // 8-bit, internal clock (master)
+REG_SIODATA8 = tx;
+REG_SIOCNT |= SIO_START;                         // one exchange, polled
 ```
 
 - `SIO_8BIT_MODE` = `0x0000`.
-- `SIO_SO_HIGH` = bit 3 (`0x0008`) = SO high while idle.
-- `SIO_INTR_ENABLE` = bit 14 (`0x4000`).
-- Bit 7 (`SIO_START`) is set to arm the shift register; it clears itself after
-  8 bits and raises `INTR_FLAG_SERIAL`.
+- Bit 0 = internal clock (master).
+- Bit 2 (`SI`) is driven by the GB: it is low while the GB has a byte armed in
+  `SB`.  The game waits for it (`GbLink_WaitPeerReady`) before starting a
+  transfer, like the reference's `sio_normal_inner_master` `SIO_RDY` check.
+  The mGBA bridge refreshes this bit whenever `SIOCNT` is written.
+- Bit 7 (`SIO_START`) is set to start the transfer; it clears itself after
+  8 bits.  The game polls it (`GbLink_Poll`), so no serial IRQ is used and the
+  VBlank handler is untouched.
+- The transfer is started only after the GB is ready and
+  `GbLink_WaitLines(12)` has elapsed, giving the GB time to arm its `SB` byte
+  in its serial IRQ and enforcing the 8192 bps byte time.
 
-The GBA must **not** start transfers; it only arms the register and waits for
-the GB clock. The serial handler:
-
-1. reads `REG_SIODATA8` (received byte);
-2. writes the next byte to send into `REG_SIODATA8`;
-3. re-arms `SIO_START` (and handles SO according to the slave procedure);
-4. acknowledges `REG_IF`.
+`GbLink_Poll` returns `0xFE` (SERIAL_NO_DATA_BYTE) when the GB had not armed a
+byte for that exchange; the protocol ignores it exactly like the reference.
+With the SI check this should only happen if the GB disarms between the check
+and the completion event.
 
 ### 2.4 Real-time behaviour and VBlank risk
 
-At 8192 Hz, one byte takes **≈1.22 ms** (122 µs per bit). The GBA has plenty of
-margin, but the serial handler has **lower priority than VBlank** in the GBA
-interrupt controller (bit 7 vs bit 0). If
-`pokeemerald-expansion`'s VBlank handler takes longer than ~1.2 ms (sound
-mixing, DMA, etc.), bytes can be lost.
+At 8192 bps, one byte takes **≈0.98 ms**.  With the GBA as master the hardware
+shift is ~30 µs, but the software intentionally spaces the bytes to ~1 ms so the
+GB's game code (which uses `DelayFrame` between exchanges and has a
+`wLinkByteTimeout` counter) behaves as on a GB-to-GB link.
 
-Design measures:
+Design measures actually used:
 
-- **Short** serial handler, in IWRAM (`IWRAM_CODE`), no heavy calls.
-- Circular TX/RX queues in IWRAM; the handler only pops/pushes.
-- During the GB session, use a **light VBlank**: stop music
-  (`m4aMPlayAllStop`), avoid large animations/DMA, and reduce the VBlank
-  callback.
-- Do not write flash while streaming a party block. See §6.9 (save order).
-- If a byte is lost, abort the session cleanly and notify the player; do not
-  attempt to “resynchronise” blindly.
+- No serial IRQ: `GbLink_Poll` polls `SIO_START` from the task.
+- A dedicated task (`Task_TimeCapsuleLink`) pumps the protocol every frame, so
+  it survives the confirmation prompts, the warp and the trade menu.
+- The GBA save is performed while the protocol is paused (`0xFE`), so the GB is
+  never streamed during flash writes.
+- Lost bytes are retried: `0xFE` is ignored, and the protocol tables keep
+  presenting the current byte until the peer answers.
+- The GBA only clocks the bus after the GB has armed a byte (SI low).  This
+  keeps the two emulator cores in lockstep even when they run in separate
+  threads: the GBA cannot run several exchanges ahead and consume a stale
+  `SB` value.  Without this check the GBA reads `0xFE` almost every time when
+  the GB core is scheduled a whole frame at a time.
+- The mGBA GB driver clears the armed flag when a master probe completes, so
+  the probe byte (`0x01`/`0x02`) is never mistaken for a real slave answer.
+- The initial discovery, receptionist, room sync and start-trade phases have
+  no GBA-side timeout.  The GB controls those phases (it may be saving, walking
+  to the console or waiting for its player) and has its own link timeout; the
+  GBA player can always cancel with B.  Only the streaming block exchange is
+  guarded for liveness.
 
-### 2.5 Streaming vs. state machine in the IRQ
+### 2.5 Streaming vs. state machine
 
-Two options:
+The implementation follows option 2 of the original plan: the exchange is
+polled from the main loop, not from a serial IRQ.  `GbProtocol_Update()` performs
+up to fourteen exchanges per frame (`GB_LINK_BYTES_FRAME`), each one paced by 12
+scanlines (~0.9 ms, matching the reference's `VCOUNT_WAIT_TIME_NS`).  The state
+machine and the stream buffers are in EWRAM; the low-level SIO driver is in
+`gb_link.c`.
 
-1. **Everything in the IRQ** (like `Pokemon-Gen3-to-Gen-X`): the IRQ runs the
-   byte-by-byte state machine. It is fast and already proven, but hard to debug
-   inside `pokeemerald-expansion`.
-2. **IRQ + queues + state machine in the main loop** (recommended for Emerald):
-   the IRQ only moves bytes; the main loop advances the protocol. For bulk data
-   (party block, patch list), the main loop **pre-fills** the entire TX buffer
-   and the IRQ streams it. For the trade menu (request/response), the main loop
-   can reply calmly because the GB repeats its byte.
-
-Option 2 is safer for not breaking the game and allows unit-testing the state
-machine. The only critical phase is streaming the block: the buffer must be
-complete **before** the GB starts sending its block.
 
 ---
 
@@ -263,29 +318,35 @@ complete **before** the GB starts sending its block.
 
 ### 3.1 Initial connection
 
-The GB game alternates between `0x01` and `0x02`:
+The GB game alternates between `0x01` and `0x02` during discovery:
 
-- `0x01` = “I want internal clock” (the GB would be master),
-- `0x02` = “I want external clock” (the GB would be slave).
+- `0x01` = “use the external clock” (the sender is the clock master),
+- `0x02` = “use the internal clock” (the sender asks the other side to be the
+  master / the sender is the slave).
 
-The GBA always replies **`0x02`** (it wants to be slave). The GB eventually
-sends `0x01` and becomes master.
+The implementation uses the **GBA as clock master**, so the GBA sends **`0x01`**
+continuously (the value that tells the GB to use the external clock).  When the
+GB is in its internal-clock probe phase, the mGBA GB driver clocks that `0x01`
+into the GB, and Crystal sets `hSerialConnectionStatus = USING_EXTERNAL_CLOCK`.
+The GBA may receive the GB's `0x02`/`0x01` probes; it ignores them in
+`GB_STATE_CONNECT`.
 
 Typical Gen II sequence (`WaitForLinkedFriend`):
 
 ```
-GB   -> 0x02 (slave) ... timeout ...
-GB   -> 0x01 (master)
-GBA  -> 0x02
+GB   -> 0x02 (slave probe) ... timeout ...
+GB   -> 0x01 (master probe)
+GBA  -> 0x01
+GB   -> hSerialConnectionStatus = USING_EXTERNAL_CLOCK
 GB   -> 0x00, 0x00   (LinkDataReceived x2)
 ```
 
 Typical Gen I sequence (`CableClubNPC`):
 
 ```
-GB   -> 0x02 (slave) ... timeout ...
-GB   -> 0x01 (master)
-GBA  -> 0x02
+GB   -> 0x02 (slave probe) ... timeout ...
+GB   -> 0x01 (master probe)
+GBA  -> 0x01
 GB   -> 0x00, 0x00   (Serial_SendZeroByte x2)
 ```
 
@@ -329,6 +390,13 @@ Crystal sees a normal Gen II partner.
 The GBA replies with the same room byte. GSC then sends two `0x00`
 (`LinkDataReceived` x2); the GBA replies `0x00`.
 
+`Link_EnsureSync` only checks the **high nibble** of the two received bytes
+(`and $f0; cp $d0`), and Crystal retries the same call with `0xD0` (no room
+selected) and, in `EnterTimeCapsule`, with `0xD4`.  The GBA therefore accepts
+any `0xD0..0xDF` byte as a room-sync byte and answers with its own room byte
+(`0xD0 | room`).  It only reports `TIME_CAPSULE_ERR_WRONG_ROOM` when a real
+`0xD1`/`0xD2` selects a different trade room.
+
 If the rooms differ, GSC shows “Incompatible rooms were chosen.” and closes.
 
 #### Gen I
@@ -350,7 +418,14 @@ The GBA replies `0xD4` or `0xD5`. If the GB is master, its choice wins.
 `CheckLinkTimeout_Gen2` (called from `LinkCommunications`):
 
 - `wPlayerLinkAction = 5` → sends `base + 5`
+- `wLinkTimeoutFrames = 3` frames → `Link_CheckCommunicationError` →
+  `WaitLinkTransfer` (send action 5, receive the peer's action 5)
+- busy-wait ~`0xFFFF` cycles
+- check `wOtherPlayerLinkMode == 5`
 - `wPlayerLinkAction = 6` → sends `base + 6`
+- `wLinkTimeoutFrames = 0x0132` frames → `WaitLinkTransfer` (send action 6,
+  receive the peer's action 6)
+- check `wOtherPlayerLinkMode == 6`
 
 `base` depends on `wLinkMode`:
 
@@ -359,11 +434,24 @@ The GBA replies `0xD4` or `0xD5`. If the GB is master, its choice wins.
 | Trade Center (`LINK_TRADECENTER`) | `0x70` | `0x75`, `0x76` |
 | Colosseum (`LINK_COLOSSEUM`) | `0x80` | `0x85`, `0x86` |
 
-The GBA must reply `0x75`/`0x76` (trade) or `0x85`/`0x86` (Colosseum) in the
-same order.
+The master table from `communicator.c` (the GBA is master) is:
 
-> `Pokemon-Gen3-to-Gen-X` only implements trade; its tables use
-> `{0x75, 0x75, 0x76}`. Colosseum would need `{0x85, 0x85, 0x86}`.
+```
+send 0x75 0x75 0x76 0xFE 0xFE
+recv 0x75 0x00 0xFD 0xFE 0xFE
+```
+
+The key timing detail: the GB's `WaitLinkTransfer` returns as soon as
+`wOtherPlayerLinkAction != 0xFF`, and it reads `hSerialReceive` (the byte of the
+**previous** exchange, because the GB is the external-clock slave).  If the GBA
+waits for the GB's `0x76` before presenting its own, the GB reads the old
+`0x75`, fails the action-6 check and restarts `CheckLinkTimeout_Gen2`; Crystal
+then reports “Too much time has elapsed.”.
+
+Therefore the GBA must start sending `0x76` when it receives the GB's `0x00`
+acknowledgement of action 5 (the `sends[2]` entry), during the acknowledge
+phase of the first `WaitLinkTransfer`.  By the time the GB checks action 6,
+`hSerialReceive` already contains `0x76`.
 
 #### Gen I
 
@@ -372,6 +460,11 @@ same order.
 - the GBA sends `0x60`, expects `0x60`;
 - then `0x60`, expects `0xFD` (start of the random-number block);
 - then the bulk exchange begins.
+
+Gen I never verifies the anti-cloning byte; its re-exchange after a trade jumps
+straight back into `Gen2ToGen1LinkComms`, which sends `0x60` and then the `0xFD`
+preamble.
+
 
 ### 3.5 Bulk data exchange
 
@@ -600,10 +693,35 @@ The GBA must:
   `LinkCommunications` and returns to the Cable Club room.
 - Gen I: `0x6F`; when both send it, it exits.
 
-The GBA must wait for the echo, then **stop the GB session**:
-disable `INTR_FLAG_SERIAL`, set `REG_SIOCNT = 0`, restore `gIntrTable[1]`
-(`SerialIntr`), call `RestoreSerialTimer3IntrHandlers()` if applicable, and
-return to the map with the normal warp.
+The GBA waits for the echo and then stops the GB session
+(`GbLink_Shutdown`), returning to the map with the normal warp.
+
+### 3.13 Timeouts
+
+The **protocol-critical** timeouts are the GB's, because it owns the timeout
+counters in its link routines:
+
+| Phase | GB timeout | GBA guard |
+|---|---|---|
+| Initial discovery / player menus | — | none (player-controlled; B cancels) |
+| `CheckLinkTimeout_Gen2` action 5 | 3 frames | none (retried until the GB answers or the player cancels) |
+| `CheckLinkTimeout_Gen2` action 6 | `0x0132` = 306 frames | none (same) |
+| Room sync / `EnterTimeCapsule` | `Serial_ExchangeByte` byte timeout | none (the GB retries) |
+| `Serial_ExchangeBytes` block stream | `SERIAL_LINK_BYTE_TIMEOUT = 0x5000` loop iterations | `GB_LINK_ALIVE_TIMEOUT` (3600 frames) |
+| `WaitLinkTransfer` in the trade menu | 0 frames (waits forever) | none (`TC_START_DON` has no timer) |
+| GB save after the trade | — | `GB_SUCCESS_TIMEOUT` (3600 frames) |
+| Exit echo | — | `GB_EXIT_TIMEOUT` (180 frames) |
+
+The GBA guards are liveness checks (console off, cable pulled), not protocol
+timers.  Poke Transporter GB uses 2048 transfers for discovery and 180 for the
+clock-confirm, but the real GSC games keep their link routines running while
+the player saves, walks to the console or reads the receptionist text.  A timer
+there aborts valid sessions: the previous 600-frame CONNECT guard fired while
+Crystal was still discovering/saving and Emerald showed its link error before
+the room was reached, and the 3600-frame room-wait guard fired while the GB
+player had not pressed A yet.  The GBA must therefore wait in those phases.
+Only the block stream, where both sides are actively sending, is bounded.
+
 
 ---
 
@@ -619,9 +737,10 @@ return to the map with the normal warp.
 - Mail block present in Trade Center.
 - Restrictions:
   - no Bad Egg;
-  - no Mail;
-  - no species > 251;
-  - no moves > 251;
+  - no Mail data (the mail block is sent empty);
+  - no species > 251 / regional or alternative forms;
+  - moves > 251 are **dropped**; if no valid move remains, the Pokémon is
+    rejected;
   - Unown `?` and `!` (letters 26/27) do not exist in Gen II;
   - shiny Unown only I and V;
   - female shiny with a 7:1 ratio is not representable;
@@ -696,17 +815,21 @@ non-representable forms.
 ### 5.2 Gen3 → Gen2
 
 1. **Validate** (see §4.1).
-2. **Species**: `species` 1..251. If > 251 → error.
+2. **Species**: national 1..251; regional/alternative forms are rejected. If >
+   251 → error.
 3. **Moves**: for each move, if `move <= 251` and `move != STRUGGLE`, keep it;
-   otherwise drop it. If none remain → error (“no valid moves”).
-   PP = base PP + PP Ups (max 40 in Gen II), encoded in the PP byte (bits 6-7 =
-   PP Ups).
-4. **Item**: Gen3 → Gen2 table. Mail → error. No equivalent → 0.
+   otherwise drop it. If none remain → error (“no valid moves”).  PP = base PP
+   + 20% per PP Up, capped at `40 + 7*bonus` so the six-bit Gen II PP field and
+   the two PP-Up bits cannot overflow.
+4. **Item**: full `item_gen3_to_12` table by item name. Invalid held items,
+   items above Gen III item 348, and items with no Gen II equivalent → 0.
 5. **OT ID**: the low 16 bits of the Gen3 OT ID (TID), big-endian.
-6. **Level/exp**: level = Gen3 level (2..100). Exp = Gen3 exp adjusted so the
-   calculated level is the same. The **nature is stored in exp** (see §5.4).
-7. **EVs → stat exp**: `statExp = EV^2` per stat (max 65025, fits in u16).
-   For Special: `statExp = max(SpAtkEV, SpDefEV)^2`.
+6. **Level/exp**: level = Gen3 level (2..100). Exp = the Gen3 exp adjusted so
+   the calculated level is the same; the **nature is stored in the exp**
+   remainder (see §5.4). Eggs use the level-5 minimum.
+7. **EVs → stat exp**: sum the six Gen3 EVs; if ≥ 510 use `65535`, else
+   `(total²) >> 2`.  The same value is written to all five Gen I/II stat-exp
+   fields (the reference’s `convert_evs_of_gen3`).
 8. **IVs → DVs**: `DV = IV >> 1` (0..15), with adjustments for:
    - **Gen II shininess**: atk DV bit 1 = 1, def/spa/spe = 10;
    - **gender**: the Gen II threshold is based on the atk DV;
@@ -714,13 +837,13 @@ non-representable forms.
    If not representable (female shiny 7:1, shiny Unown not I/V), error.
 9. **Pokérus**: convert and sanitize (strain 0..8, valid days).
 10. **Friendship**: 70 by default; for Eggs, use the hatch cycles.
-11. **Met data**: Gen II `caught data` with location/level/time/gender. For
-    normal Pokémon GSC uses defaults; location=1, level=1, time=1, cleared if
-    the OT is male.
-12. **Text**: OT name and nickname with Gen3 → Gen1/2 tables. Truncate to 10
-    (INT) or 5 (JP). Unsupported characters → `?` or the default name.
+11. **Met data**: if the OT is female, Gen II caught data with location 1,
+    level 1, time 1, OT gender female; if male, all caught data is cleared
+    (the reference’s `force_crystal` logic).
+12. **Text**: OT name and nickname with the Gen3 → Gen1/2 **international**
+    table. Truncate to 10. Japanese is not implemented.
 13. **Egg**: if Egg, species list = `0xFD`, `is_egg = 1`, current HP = 0,
-    level = 5, friendship = hatch cycles.
+    level = 5, friendship = hatch cycles, exp = level-5 minimum.
 
 ### 5.3 Gen3 → Gen1
 
@@ -730,10 +853,12 @@ Same as Gen2, with:
 - moves ≤ 165;
 - no Eggs (error);
 - no Mail (error);
-- Gen I types (Magnemite/Magneton → Electric);
-- Gen I stats (single Special = Gen3 SpAtk);
-- byte 7 = mapped Gen2 item (or catch rate).
-- Names/OT converted the same way.
+- Gen I types from `pokemon_types_gen1.bin` (Magnemite/Magneton → Electric);
+- Gen I base stats from `pokemon_stats_gen1.bin` (single Special);
+- byte 7 = mapped Gen2 item (the reference calls this field `item`; in the Gen I
+  party struct it is the catch-rate byte);
+- names/OT converted the same way.
+
 
 ### 5.4 Nature in exp
 
@@ -745,121 +870,120 @@ nature = exp % 25
 adjusted_exp = exp + (desired_nature - nature)   // +/- up to 24
 ```
 
-On the way back to Gen3, `nature = exp % 25`, then the exp is normalised to the
-corresponding level. It is invisible to the player and enables round-tripping.
+On the way back to Gen3, `nature = exp % 25`, then the exp is clamped to its
+level range (`ClampGen12Exp`, the `get_proper_exp_pure` analogue). It is
+invisible to the player and enables round-tripping.  The reference may adjust
+the level slightly at levels < 5 so the remainder fits; the implementation
+does the same (`GetGen12ExpWithNature` updates the level pointer).  At level 100
+there is no room for the nature (the reference also loses it).
 
 `Pokemon-Gen3-to-Gen-X` does this in `convert_exp_nature_of_gen3()` and
 `get_exp_nature()`.
 
 ### 5.5 Gen2/Gen1 → Gen3
 
-1. **Validate** (species index, moves, Gen I types).
-2. **Create the Pokémon** with `CreateMon`/`CreateBoxMon` using:
-   - national species (Gen2) or Gen1 → national table;
+1. **Validate** (species index, moves, Gen I types, forms, mail, eggs for Gen I).
+2. **Create the Pokémon** with `CreateMon` using:
+   - national species (Gen2) or the Gen1 → national table;
    - level;
-   - the GB OT ID;
+   - the GB OT ID (visible TID, SID = 0);
    - a PID generated so that **nature, gender, shininess and Unown** match;
-   - IVs = DV × 2 (+1 if needed for PID consistency).
-3. **Exp**: read the Gen2 exp, extract the nature (`exp % 25`) and normalise the
-   exp to the level. If level 100, clamp to the valid range.
-4. **EVs**: `EV = floor(sqrt(statExp) / 4) * 4` (PCCS formula). SpDef = SpAtk.
-   Then cap at 510 total and 255 per stat (lowering the largest).
-   - Round-trip alternative: if we generate stat exp as `EV^2`, this formula
-     recovers the original EV (multiple of 4).
-5. **Moves/PP**: copy, sanitize PP Ups.
-6. **Item**: Gen2 → Gen3 table. In Gen I, byte 7 is interpreted as a Gen2 item;
-   if invalid, 0.
-7. **Friendship**: 70 (or the Egg value).
-8. **Pokérus**: convert/sanitize.
-9. **OT/nickname**: Gen1/2 → Gen3 tables; truncate to 7/10 (Gen3 INT) or 5 (JP).
-   If the name is empty or has too many `?`, use the species default name.
-10. **Met data**: `METLOC_IN_GAME_TRADE` (0xFE) or a new “Time Capsule”
-    location; `met level` = current level; `met game` = FRLG/HeartGold (design
-    choice); ball = Poké Ball.
-11. **Egg**: `isEgg = 1`, `friendship` = cycles, level 5, no invalid moves.
+   - IVs = DV × 2.
+3. **Exp**: read the Gen2 exp, extract the nature (`exp % 25`) for the PID, and
+   keep the exp clamped to its level range (`ClampGen12Exp`, the
+   `get_proper_exp_pure` analogue). The nature is not recalculated from the
+   level, so the original exp remainder survives.
+4. **EVs**: the reference deliberately sets **0 EVs** when transferring from
+   Gen I/II to Gen III (`convert_evs_to_gen3`): a direct stat-exp conversion
+   would be atrocious for competitive play.
+5. **Moves/PP**: compact valid moves, set the Gen3 base PP, copy the PP-Up bits
+   into `pp_bonuses`, and drop moves that do not exist in the target.
+6. **Item**: `item_gen12_to_3` via the generated name map.
+7. **Friendship**: 70, or the Egg cycles for an Egg.
+8. **Pokérus**: sanitize the Gen I/II strain/days.
+9. **OT/nickname**: Gen1/2 → Gen3 tables; truncate to 7/10.  Japanese text is
+   **not implemented**; the international tables are used.
+10. **Met data**: `METLOC_IN_GAME_TRADE` (0xFE), Poke Ball, met level = current
+    level, met game = the running game.
+11. **Egg**: `isEgg = 1`, friendship = cycles, level 5, exp = level-5 minimum.
 
 ### 5.6 PID/IVs: options
 
-**Option A (fast, recommended for v1):**
-use `GetMonPersonality(species, gender, nature, unownLetter)` from
-`pokeemerald-expansion` and loop until `IsMonShiny` matches the desired
-shininess. For non-shiny, just ensure it is not shiny. It is simple and enough
-for play; the PID will not be “legal” in the PCCS sense, but the game does not
-validate it.
+**Option A (implemented):** `GetMonPersonality(species, gender, nature,
+unownLetter)` from `pokeemerald-expansion`, looping until the Gen II shiny
+condition matches.  It reproduces nature, gender, Unown letter and shininess;
+the IVs are the DVs × 2, which is legal for a trade-origin Pokémon.
 
-**Option B (PCCS-style legality):**
-port `source/pid_iv_tid.c` from `Pokemon-Gen3-to-Gen-X` (MIT). It generates
-PID/IVs that reproduce nature, gender, shininess and Unown with Gen3 origin
-structure (Egg/static/roamer/Unown). It is much more code (1300 lines) and
-depends on encounter tables; only needed if the Pokémon must be
-indistinguishable from a legal one.
+**Option B (not implemented):** port `source/pid_iv_tid.c` from
+`Pokemon-Gen3-to-Gen-X` for a fully fabricated Gen3 origin (Egg/static/roamer/
+Unown encounter, met location/ball).  It is 1300+ lines and depends on the
+encounter tables.  Not needed for a trade whose met location is
+`METLOC_IN_GAME_TRADE`.
 
-For the Time Capsule, Option A is enough; Option B can be added later behind a
-flag.
-
-### 5.7 Required data tables
+### 5.7 Required data tables (all generated/committed)
 
 | Table | Source / generation |
 |---|---|
-| Gen I internal species ↔ national | `Pokemon-Gen3-to-Gen-X/data/gen1_to_3_conv_table.bin` (256 B) and its inverse |
+| Gen I internal species ↔ national | `gen1_to_3_conv_table.bin` and its inverse |
 | Gen II species | national 1..251; Egg `0xFD`; empty `0xFF` |
-| Gen3 ↔ Gen2 moves | IDs 1..354 are the same as Gen3; only filter ≤251 |
+| Gen3 ↔ Gen2 moves | IDs 1..354 match Gen3; only filter ≤251 |
 | Gen1 moves | IDs 1..165; Struggle 165 invalid |
-| Gen3 → Gen2 items | **generate by name** (expansion item IDs are not Gen3 IDs) |
-| Gen2 → Gen3 items | inverse of the above |
-| Invalid items | bitmap of items that cannot be held |
+| Gen3 → Gen2 items | `item_gen3_to_12.bin` matched by item name against the expansion's item list; invalid held items stripped |
+| Gen2 → Gen3 items | `item_gen12_to_3.bin` matched the same way |
+| Invalid items | `invalid_held_items.bin` and `LAST_VALID_GEN_3_ITEM = 348` |
 | Gen3 ↔ Gen1/2 text INT | `text_gen3_to_gen12_int.bin`, `text_gen12_to_gen3_int.bin` |
-| Gen3 ↔ Gen1/2 text JP | `text_gen3_to_gen12_jp.bin`, `text_gen12_to_gen3_jp.bin` |
-| Gen II gender | `pokemon_gender_bin` (per-species thresholds) |
-| Gen I/II base stats | `pokemon_stats_bin`, `pokemon_stats_gen1_bin` (or `gSpeciesInfo`) |
+| Gen II gender | `pokemon_gender.bin` (per-species thresholds) |
+| Gen I/II base stats | `pokemon_stats.bin` (445 × 6), `pokemon_stats_gen1.bin` (256 × 5) |
+| Gen I/II/III move PP | `pokemon_moves_pp.bin` (355) |
 | Exp | `gExperienceTables` from the expansion |
 | Unown | `get_unown_letter_gen2()` / `GET_UNOWN_LETTER()` |
-| Gen2 special encounters | `special_encounters_gen2_bin` (optional, met data) |
 
-**Items:** the expansion uses its own IDs (`ITEM_POKE_BALL = 1`,
-`ITEM_POTION = 28`, etc.), not Gen3 IDs. A table must be generated by
-**name** (`gItemsInfo[].name`) against the Gen2 item list (about 0..0xAD) and
-Gen1 (catch rate). A build script can generate the `.h`.
+The generators are `tools/time_capsule/generate_tables.py` and
+`tools/time_capsule/generate_item_map.py`; both are deterministic and record the
+SHA-1 of every source `.bin` in the generated header.
 
-**Moves:** in the expansion, IDs 1..354 match Gen3 (`MOVE_PSYCHIC = 94`,
-`MOVE_SHADOW_BALL = 247`, `MOVE_DRAGON_CLAW = 337`), so no Gen3 → Gen2 move
-table is needed; only the range filter. Verify that no move in 1..354 has been
-renumbered in the expansion.
+**Moves:** the expansion keeps the Gen3 move IDs for 1..354, so no move table is
+needed; only the range filter.
 
-**Species:** in the expansion, IDs 1..251 match the national dex
-(`SPECIES_BULBASAUR = 1`, `SPECIES_MEW = 151`, `SPECIES_CELEBI = 251`). Regional
-forms/megas have IDs >251 and are blocked automatically.
+**Species:** the expansion keeps the national dex for 1..251
+(`SPECIES_BULBASAUR = 1`, `SPECIES_CELEBI = 251`).  Regional/alternative forms
+have different internal IDs and are rejected by the form check.
+
 
 ---
 
 ## 6. Integration into `pokeemerald-expansion`
 
-### 6.1 Proposed new files
+### 6.1 Actual files
 
 ```
 include/config/time_capsule.h          // build flags
 include/time_capsule.h                 // public API
 include/time_capsule/gb_link.h         // SIO driver
 include/time_capsule/gb_protocol.h     // state machine
-include/time_capsule/gb_convert.h      // conversion
+include/time_capsule/gb_convert.h      // wire block / parser
+include/time_capsule/gb_mon.h          // mon conversion (internal)
 include/time_capsule/gb_trade_link.h   // trade backend
 
-src/time_capsule/gb_link.c             // SIO + IRQ + queues (IWRAM)
-src/time_capsule/gb_protocol.c         // handshake, room, party, trade menu
-src/time_capsule/gb_convert.c          // Gen3 ↔ Gen1/2
+src/time_capsule/gb_link.c             // SIO driver (polled)
+src/time_capsule/gb_protocol.c         // handshake, room, block stream, trade menu
+src/time_capsule/gb_convert.c          // wire block, patch list, parser
+src/time_capsule/gb_mon.c              // Gen3 ↔ Gen1/2 mon conversion + validation
 src/time_capsule/gb_trade_link.c       // trade.c adapter
 src/time_capsule/time_capsule.c        // NPC, connection task, session
-src/time_capsule/time_capsule_trade.c  // GB trade menu (or hooks)
-src/time_capsule/time_capsule_battle.c // Colosseum (phase 2)
 
-src/data/time_capsule/*.h              // generated tables
+src/data/time_capsule/tables.h         // generated character/gender/stats/species tables
+src/data/time_capsule/item_map.h       // generated item map
+tools/time_capsule/generate_tables.py  // table generator
+tools/time_capsule/generate_item_map.py// item-map generator
+tools/time_capsule/tests/sim_protocol.py // byte-level protocol simulator
 data/scripts/time_capsule.inc          // NPC and room scripts
 data/text/time_capsule.inc             // texts
-test/time_capsule.c                    // conversion/protocol tests
 ```
 
-The `Makefile` already globs `src/*.c`, `src/*/*.c`, `test/*.c`, so no source
-list changes are needed.
+The `Makefile` already globs `src/*.c` and `src/*/*.c`, so adding
+`gb_mon.c` needs no source-list change (it is picked up automatically).
+
 
 ### 6.2 New NPC and maps
 
@@ -940,12 +1064,13 @@ Common_EventScript_TimeCapsuleAttendant::
     end
 
 TimeCapsule_EventScript_Trade::
-    setvar VAR_0x8004, TIME_CAPSULE_MODE_TRADE
+    setvar VAR_0x8005, TIME_CAPSULE_ROOM_TRADE
     goto TimeCapsule_EventScript_Connect
 
 TimeCapsule_EventScript_Battle::
-    setvar VAR_0x8004, TIME_CAPSULE_MODE_BATTLE
-    goto TimeCapsule_EventScript_Connect
+    special TimeCapsule_StartBattle
+    msgbox gText_UndergoingAdjustments, MSGBOX_DEFAULT
+    goto TimeCapsule_EventScript_Abort
 
 TimeCapsule_EventScript_Connect::
     call Common_EventScript_SaveGame
@@ -1126,39 +1251,40 @@ link. There is none here, so the task would hang in `CABLE_SEAT_WAITING`.
 
 ### 6.7 Trade backend
 
-To avoid duplicating `trade.c`, abstract the link operations:
+The implementation uses a small adapter instead of duplicating `trade.c`:
 
 ```c
 // include/time_capsule/gb_trade_link.h
-void TradeLink_Init(void);
-void TradeLink_Send(u16 cmd, u16 arg);
-u32  TradeLink_GetReceivedStatus(void);
-u16 *TradeLink_GetReceivedData(u8 player);
-void TradeLink_ResetReceivedFlags(void);
-void TradeLink_RequestBlock(u8 size);
-bool32 TradeLink_IsSendFinished(void);
+void GbTrade_Update(void);
+bool8 GbTrade_SendBlock(const void *src, u16 size);
+void GbTrade_ResetSuccess(void);
+void GbTrade_PrepareSave(void);
+bool8 GbTrade_FinishStep(void);
+void GbTrade_RequestExit(void);
 ```
 
-- GBA implementation: wraps `SendBlock`, `GetBlockReceivedStatus`,
-  `gBlockRecvBuffer`, `ResetBlockReceivedFlags`, `SendBlockRequest`.
-- GB implementation: translates `LINKCMD_*` to `0x70+`/`0x60+` bytes and fills
-  `gBlockRecvBuffer` with the GB's commands.
+- `GbTrade_Update` translates the queued GB command into
+  `gBlockRecvBuffer[1]` + `gBlockReceivedStatus[1]`, so the vanilla
+  `Leader_ReadLinkBuffer` sees a normal partner block.
+- `GbTrade_SendBlock` translates `LINKCMD_*` into `0x70+idx` / `0x71` / `0x72` /
+  `0x7F` (or `0x60+` for Gen I), and fills `gBlockRecvBuffer[0]` with the
+  player's own command (the leader reads its own slot back).
+- `GbTrade_PrepareSave` pauses the stream (`0xFE`) before the GBA flash write.
+- `GbTrade_FinishStep` sends the anti-cloning byte after the save and waits for
+  the GB's next `CheckLinkTimeout` (`0x75`), then queues the re-exchange block.
 
-Concrete points to touch in `src/trade.c`:
+Concrete points touched in `src/trade.c`:
 
 | Location | Change |
 |---|---|
-| `CB2_CreateTradeMenu` cases 1/2/3/4 | In GB mode, skip `OpenLink`/`Task_WaitForLinkPlayerConnection`; the link is already established. |
-| `BufferTradeParties` | In GB mode, fill `gParties[B_TRAINER_OPPONENT_A]` from the GB party block and return TRUE. |
-| `CB1_UpdateLink` | In GB mode, call `GB_TradeLink_Update()`. |
-| `Leader_ReadLinkBuffer`/`Follower_ReadLinkBuffer` | In GB mode, translate `0x70+idx`/`0x71`/`0x72`/`0x7F` to the existing `LINKCMD_*`. |
-| `HandleLinkDataSend`/`HandleLinkDataReceive` (animation) | In GB mode, use the success byte `0x70+n` instead of `LINKCMD_READY_FINISH_TRADE`/`CONFIRM_FINISH_TRADE`. |
-| `CB2_SaveAndEndTrade` | In GB mode, do not call `SetCloseLinkCallback`; save, then complete the GB handshake and return to the GB menu. |
-| `CB2_FreeTradeAnim` | Restore `gMain.savedCallback` to the GB menu or exit. |
+| `CB2_CreateTradeMenu` | In GB mode, skip `OpenLink`/`Task_WaitForLinkPlayerConnection`; `gMain.state = 6`. |
+| `BufferTradeParties` | In GB mode, wait for `GbProtocol_IsReady()` and use the party already parsed by `GbConvert_ParseTradeBlock`. |
+| `CB1_UpdateLink` | In GB mode, call `GbTrade_Update()`; close the menu when `GbProtocol_IsExiting()`. |
+| `Leader_ReadLinkBuffer` | Unchanged: the adapter fills `gBlockRecvBuffer[1]` with `LINKCMD_*`. |
+| `CB2_UpdateLinkTrade` | In GB mode, call `GbTrade_PrepareSave()` before the evolution/save callback. |
+| `CB2_SaveAndEndTrade` | In GB mode, `GbTrade_FinishStep()` sends the success byte and waits for the re-exchange. |
+| `CB2_FreeTradeAnim` | Returns to the normal trade menu; the GB re-sends its block. |
 
-**Less invasive alternative:** a `time_capsule_trade.c` file duplicating the
-needed parts of the menu. Faster to prototype, but duplicates ~1000 lines and
-complicates maintenance. The abstraction is better.
 
 #### Trade menu bytes (Gen I/II)
 
@@ -1171,7 +1297,9 @@ The Gen I/II trade menu exchanges two bytes per round with the base `0x70`
 
 The index of the second Pokémon is `1` as well and the index of the third
 Pokémon is `2` as well, so the screen the partner is on has to be tracked to
-tell them apart (`sPartnerState` in `gb_protocol.c`).
+tell them apart.  The implementation keeps the reference's `trading_state`
+(`HAVE_OFFER` / `HAVE_ACCEPT` / `HAVE_SUCCESS`), `received_once` and
+`sLastPeerAction` debounce instead of a separate `sPartnerState`.
 
 | `LINKCMD_*` (Gen 3)              | Gen I/II byte | Meaning |
 |---|---|---|
@@ -1189,20 +1317,32 @@ answers it with the same byte and both games leave the cable club room.
 
 #### The room negotiation
 
-The GB's receptionist byte depends on its link mode: `0x60 | action` for the
-Gen I time capsule (`LINK_TIMECAPSULE`) and `0x70 | action` for the trade
-center (`LINK_TRADECENTER`), see `LinkTransfer` in pokecrystal's
-`engine/link/link.asm`.  The master has to answer with the **same high
-nibble**, because the GB's `.Receive` only accepts the byte (and only then
-updates `wOtherPlayerLinkAction`) when the high nibble matches:
+Before the room is selected, the GB's `wLinkMode` is `LINK_NULL`, so its
+receptionist action uses the **0x60** high nibble (`0x61` for action 1).  Once
+the GB enters the Trade Center, `wLinkMode = LINK_TRADECENTER` and every trade
+byte uses the **0x70** high nibble (`0x75`, `0x76`, `0x70+i`, ...).
+
+The GB's `.Receive` only accepts a byte (and only then updates
+`wOtherPlayerLinkAction`) when its high nibble matches the mode.  The GBA
+therefore answers the receptionist with `0x61`, then the room sync with
+`0xD1`:
 
 ```
-GB: 0x71  ->  master: 0x71   (the room is the trade center, 0xD0 | 1)
-GB: 0x61  ->  master: 0x61   (the Gen I time capsule mode)
+GB: 0x61 (receptionist action 1) -> GBA: 0x61
+GB: 0xD1 (Link_EnsureSync, room 1) -> GBA: 0xD1
+GB: 0x00 0x00 (LinkDataReceived acks) -> GBA: 0x00 0x00
 ```
 
-After that the room is negotiated with `0xD0 | room` (`0xD1` for the trade
-center) and the two games exchange their acknowledgements (`0x00`).
+The GBA's enter-room table is the reference master table:
+
+```
+send 0x01 0x61 0xD1 0x00
+recv 0x61 0xD1 0x00 0x00
+```
+
+`0x01` is the establishment byte that tells the GB to use the external clock;
+it doubles as the first entry of the table.
+
 
 #### The trade start handshake (0x75 / 0x76)
 
@@ -1378,14 +1518,21 @@ In `test/time_capsule.c`, using the `pokeemerald-expansion` harness:
 
 ### 8.2 Protocol tests with a simulated peer
 
-Without real SIO:
+The committed simulator is:
 
-- feed the state machine with byte traces recorded from
-  `pokecrystal`/`pokered`/`Pokemon-Gen3-to-Gen-X`;
-- verify the GBA replies with the correct sequence at every phase:
-  connection, detection, room, timeout, party, patch list, mail, trade menu,
-  success, re-exchange, exit;
-- simulate byte loss and timeouts.
+```
+python tools/time_capsule/tests/sim_protocol.py
+```
+
+It models the GBA state machine, `CheckLinkTimeout_Gen2` (action 5 and 6,
+including the acknowledge frames and the busy wait) and the three
+`Serial_ExchangeBytes` chunks.  It asserts:
+
+- `wOtherPlayerLinkMode == 5` after check 5;
+- `wOtherPlayerLinkMode == 6` after check 6 (the 0x00 -> 0x76 timing);
+- the 1041 payload bytes of the three chunks arrive exactly.
+
+The script exits with a non-zero code on failure, so it can be wired into CI.
 
 ### 8.3 Emulator tests
 
@@ -1416,78 +1563,66 @@ Without real SIO:
 
 ## 9. Risks and open questions
 
-1. **Long VBlank**: the main technical risk. Mitigate with a light VBlank and
-   IWRAM buffers. Measure in the emulator and on hardware if possible.
-2. **Serial IRQ latency**: 8192 Hz leaves margin, but the handler must be short
-   and must not call heavy ROM functions.
-3. **JP language**: JP games use 6-byte names and a different charset. Detect
-   by the position of the party count (byte 6 vs byte 11) and use the JP
-   tables. Korean can be left out of v1.
-4. **Items**: the name-based table is essential; expansion IDs do not match
-   Gen3. Decide what to do with items that have no equivalent (0 / warning).
-5. **Met location/origin**: decide between `METLOC_IN_GAME_TRADE`, a new
-   “Time Capsule” location, or FRLG/HeartGold as “game of origin”.
-6. **PID legality**: Option A does not generate a PCCS-legal PID. If that
-   matters, port `pid_iv_tid.c` or PCCS.
-7. **Gen II Eggs**: allowed; Gen I no. Ensure the menu cannot select an Egg for
-   Gen I.
-8. **Mew/Celebi**: the anti-cloning check must be implemented exactly, or the
-   trade hangs.
-9. **Mail**: always block; the Gen II mail block is sent empty.
-10. **Colosseum**: do not promise it for v1; the battle engine is the big cost.
-11. **Exit**: do not use the GBA `CloseLink`; it would reset SIO and lose the GB
-    session. Use a dedicated GB shutdown.
-12. **Saving**: save the GBA before the success byte so the re-exchange does not
-    catch flash busy.
+Implemented and no longer open:
+
+- ~~GBA slave/VBlank bit loss~~: the implementation polls the SIO transfer from
+  the main loop (no serial IRQ) and paces one byte per ~12 scanlines, gated by
+  the GB's slave-ready line.
+- ~~Item mapping~~: generated by name from `item_gen3_to_12.bin` /
+  `item_gen12_to_3.bin`, with `invalid_held_items.bin` applied.
+- ~~EV/stat exp~~: total-EV collapse (`convert_evs_of_gen3`) and zero EVs in
+  the reverse direction, exactly like the reference.
+- ~~PP~~: base PP + PP Ups with the six-bit cap.
+- ~~Base stats~~: Gen I/II tables from the reference, not the expansion's
+  modern values.
+- ~~PID legality~~: Option A is in use; it reproduces nature, gender, Unown
+  and shininess.  Fully fabricated Gen3 origins remain optional.
+- ~~Mew/Celebi~~: the anti-cloning byte is sent after the GBA save and the
+  re-handshake is caught from the GB's `0x75`.
+- ~~Mail~~: blocked; the outgoing mail block is empty.
+- ~~Save order~~: the stream is paused (`0xFE`) while the GBA writes flash.
+- ~~Exit~~: dedicated `0x7F` exchange, not the GBA `CloseLink`.
+
+Still open / intentionally out of scope:
+
+1. **Japanese text**: the JP charset/name length differ (6 bytes); the
+   international tables are always used.  A JP mode needs separate party
+   struct sizes and language selection.
+2. **Regional/alternative forms**: rejected; no Gen I/II equivalent.
+3. **Nature at level 100**: there is no room to encode it in the exp (the
+   reference also loses it at level 100).  Levels 2-4 with an exp range < 25
+   are the other edge case.
+4. **Special met data** (`special_encounters_gen2_bin`): not used; it is the
+   reference's table of event-Pokémon met data (met location, level and a
+   `force_crystal` flag).  Normal trades use the in-game-trade met data
+   (location/level/time 1 for a female OT, cleared for a male OT), like the
+   reference's `force_crystal` logic.
+5. **Colosseum**: still a separate battle-engine project.
+6. **GBA-master on real hardware**: the mGBA bridge is GBA-master; the
+   reference's default is GBA-slave.  Normal 8-bit mode at 8192 bps is
+   ~1 ms/byte, matching the GB, and the software waits for the GB's ready line
+   before each transfer; a real-hardware test with the GBA as master is still
+   recommended.
+
 
 ---
 
-## 10. Phased roadmap
+## 10. Phased roadmap (status)
 
-### Phase 0 — Skeleton and data
-- `include/config/time_capsule.h`.
-- Slave SIO driver + queues + IRQ.
-- Loopback / simulated-peer tests.
-- Gen1 species, item and text tables.
+| Phase | Status |
+|---|---|
+| 0 — Skeleton and data | **Done** (polled SIO, generated tables, simulator) |
+| 1 — Handshake and detection | **Done** (0x01/0x61/0xD1/0x00, 0x75/0x76, Gen I) |
+| 2 — Party block and patch list | **Done** (444/418 payloads, patch list, empty mail) |
+| 3 — Trade menu | **Done** (offers 0x70+i/0x60+i, accept, success, re-exchange, exit) |
+| 4 — Full conversion | **Done** (items, EVs, PP, stats, exp, validation) |
+| 5 — NPC, maps and polish | **Done** (attendant, Trade Center warp, saves, messages) |
+| 6 — Colosseum | **Pending** (battle engine + 0x85/0x86 protocol) |
 
-### Phase 1 — Handshake and detection
-- `0x02` connection.
-- `0x60`/`0x61` detection.
-- Room selection `0xD1/0xD2` and `0xD4/0xD5`.
-- `0x75/0x76` and `0x60` checks.
-- Trace-based tests.
+Remaining work is concentrated in the “Still open” list of §9.  Colosseum is
+explicitly not part of this implementation; the NPC shows the “under
+adjustments” message.
 
-### Phase 2 — Party block and patch list
-- Gen II and Gen I serialisation.
-- Patch list.
-- Empty mail block.
-- GB `BufferTradeParties`.
-- Verify Crystal displays the GBA party.
-
-### Phase 3 — Trade menu
-- Offers `0x70+i`/`0x60+i`.
-- Accept/decline.
-- Animation and success byte.
-- Re-exchange.
-- Exit.
-
-### Phase 4 — Full conversion
-- Gen3 → Gen2/Gen1.
-- Gen2/Gen1 → Gen3.
-- Restrictions and messages.
-- Round-trip tests.
-
-### Phase 5 — NPC, maps and polish
-- 16 maps, script, texts.
-- Map states and exit.
-- Save and re-enter.
-- QA with Crystal and Red.
-
-### Phase 6 — Colosseum (optional)
-- Gen II engine.
-- `0x85/0x86` protocol + `0x80-0x8F` actions.
-- Battle UI.
-- Gen I engine (even more optional).
 
 ---
 
@@ -1497,13 +1632,13 @@ Without real SIO:
 
 ```
 CONNECTION
-  GB  -> 0x02 / 0x01 (alternates)
-  GBA -> 0x02 (always)
-  GB  -> 0x00 0x00
+  GBA -> 0x01 (internal-clock master request, repeated until 0x61)
+  GB  -> 0x02 / 0x01 (discovery probes, alternates)
+  GB  -> 0x61 (receptionist action 1 for the Trade Center)
 
 DETECTION
   Gen I  -> 0x60   ; GBA -> 0x60
-  Gen II -> 0x61   ; GBA -> 0x61
+  Gen II -> 0x61   ; GBA -> 0x01 until the next 0x61, then 0x61
   (force GSC Time Capsule mode: GBA -> 0x00)
 
 ROOM
@@ -1511,8 +1646,8 @@ ROOM
   Gen I : 0xD4 trade / 0xD5 colosseum
 
 PRE-TRADE
-  Gen II trade: 0x75, 0x76
-  Gen II battle: 0x85, 0x86
+  Gen II trade: 0x75 until 0x75, 0x75 until 0x00, then 0x76 until 0xFD
+  Gen II battle: 0x85, 0x86 (not implemented)
   Gen I: 0x60, 0x60
 
 BLOCKS
@@ -1527,8 +1662,9 @@ TRADE MENU
   idle: 0xFE
 
 SUCCESS
-  Gen II: 0x70+n (n=0 normal, 1 Mew, 2 Celebi), wait for echo
-  Gen I : 0x60
+  Gen II: 0x70+n (n=0 normal, 1 Mew, 2 Celebi); the trade is complete when the
+          GB starts its next CheckLinkTimeout (0x75)
+  Gen I : 0x60+n; then the GB returns with 0x60/0xFD
 
 EXIT
   Gen II: 0x7F
@@ -1542,6 +1678,7 @@ EXIT
 - `Pokemon-Gen3-to-Gen-X/source/sio_buffers.c`
 - `Pokemon-Gen3-to-Gen-X/source/gen_converter.c`
 - `Pokemon-Gen3-to-Gen-X/source/gen12_methods.c`
+- `Pokemon-Gen3-to-Gen-X/source/party_handler.c`
 - `Pokemon-Gen3-to-Gen-X/source/pid_iv_tid.c`
 - `Poke_Transporter_GB/source/link_handler.cpp`
 - `Poke_Transporter_GB/include/libraries/gba-link-connection/LinkSPI.hpp`
@@ -1556,3 +1693,8 @@ EXIT
 - `PokemonGB_Online_Trades_and_Battles/utilities/gsc_trading.py`
 - `PokemonGB_Online_Trades_and_Battles/utilities/gsc_battling.py`
 - PCCS: https://github.com/Striaton-Lab-Team/Pokemon-Community-Conversion-Standard
+
+Implementation files: `gb_protocol.c` (communicator.c), `gb_convert.c`
+(sio_buffers.c), `gb_mon.c` (gen_converter.c/gen12_methods.c/party_handler.c),
+`gb_link.c` (sio.c), `gb_trade_link.c` (main.c trade states).
+

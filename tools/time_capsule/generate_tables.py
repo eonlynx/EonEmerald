@@ -27,13 +27,11 @@ TABLES = {
     "gGen1ToNatSpecies": "gen1_to_3_conv_table.bin",
     "gGen3ToGen12TextInt": "text_gen3_to_gen12_int.bin",
     "gGen12ToGen3TextInt": "text_gen12_to_gen3_int.bin",
-    "gGen3ToGen12TextJp": "text_gen3_to_gen12_jp.bin",
-    "gGen12ToGen3TextJp": "text_gen12_to_gen3_jp.bin",
-    "gGen3ToGen2Items": "item_gen3_to_12.bin",
     "gGen1Types": "pokemon_types_gen1.bin",
     "gGen2GenderKinds": "pokemon_gender.bin",
     "gGen2BaseStats": "pokemon_stats.bin",
     "gGen1BaseStats": "pokemon_stats_gen1.bin",
+    "gGen12MovePp": "pokemon_moves_pp.bin",
 }
 
 

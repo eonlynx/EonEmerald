@@ -14,7 +14,6 @@
 extern bool8 gTimeCapsuleActive;
 extern u8 gTimeCapsuleGeneration;
 extern u8 gTimeCapsuleRoom;
-extern u8 gTimeCapsuleMode;
 
 void TimeCapsule_Confirm(void);
 void TimeCapsule_TryConnect(void);
