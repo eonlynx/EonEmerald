@@ -10,6 +10,7 @@ bool8 GbTrade_SendBlock(const void *src, u16 size);
 // It sends the success byte, waits for the GB echo, then queues the
 // re-exchange block.
 void GbTrade_ResetSuccess(void);
+void GbTrade_PrepareSave(void);
 bool8 GbTrade_FinishStep(void);
 
 void GbTrade_RequestExit(void);

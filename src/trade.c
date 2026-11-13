@@ -4725,7 +4725,9 @@ static void CB2_UpdateLinkTrade(void)
         {
             // The GB success handshake is sent after the save (see
             // CB2_SaveAndEndTrade), so the GB is not streaming while the GBA
-            // writes flash.
+            // writes flash.  Stop presenting the accept byte first: the GB's
+            // anti-cloning value 2 is the same byte as our accept (0x72).
+            GbTrade_PrepareSave();
             GbTrade_ResetSuccess();
             SetMainCallback2(CB2_TryLinkTradeEvolution);
         }

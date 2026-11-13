@@ -54,6 +54,12 @@ void GbTrade_ResetSuccess(void)
     sSuccessStarted = FALSE;
 }
 
+void GbTrade_PrepareSave(void)
+{
+    if (gTimeCapsuleActive)
+        GbProtocol_PauseForSave();
+}
+
 bool8 GbTrade_FinishStep(void)
 {
     if (!sSuccessStarted)

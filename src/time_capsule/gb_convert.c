@@ -1,12 +1,14 @@
-#include "global.h"
+﻿#include "global.h"
 #include "time_capsule.h"
 #include "time_capsule/gb_convert.h"
 #include "pokemon.h"
 #include "pokeball.h"
+#include "move.h"
 #include "link.h"
 #include "main.h"
 #include "random.h"
 #include "../data/time_capsule/tables.h"
+#include "../data/time_capsule/item_map.h"
 
 #if TIME_CAPSULE_DEBUG_LOG
 #include "gba/isagbprint.h"
@@ -159,134 +161,106 @@ static u8 ConvertTextGen12ToGen3(const u8 *src, u8 *dst, u8 maxLen)
 }
 
 // ---------------------------------------------------------------------------
-// Item mapping (v1: common items only; the full table is generated later)
+// Item mapping
 // ---------------------------------------------------------------------------
-
-static u8 ItemExpansionToGen3(u16 item)
-{
-    switch (item)
-    {
-    case ITEM_NONE:         return 0;
-    case ITEM_MASTER_BALL:  return 1;
-    case ITEM_ULTRA_BALL:   return 2;
-    case ITEM_GREAT_BALL:   return 3;
-    case ITEM_POKE_BALL:    return 4;
-    case ITEM_POTION:       return 13;
-    case ITEM_ANTIDOTE:     return 14;
-    case ITEM_BURN_HEAL:    return 15;
-    case ITEM_ICE_HEAL:     return 16;
-    case ITEM_AWAKENING:    return 17;
-    case ITEM_PARLYZ_HEAL:  return 18;
-    case ITEM_FULL_RESTORE: return 19;
-    case ITEM_MAX_POTION:   return 20;
-    case ITEM_HYPER_POTION: return 21;
-    case ITEM_SUPER_POTION: return 22;
-    case ITEM_FULL_HEAL:    return 23;
-    case ITEM_REVIVE:       return 24;
-    case ITEM_MAX_REVIVE:   return 25;
-    case ITEM_FRESH_WATER:  return 26;
-    case ITEM_SODA_POP:     return 27;
-    case ITEM_LEMONADE:     return 28;
-    case ITEM_MOOMOO_MILK:  return 29;
-    case ITEM_ETHER:        return 34;
-    case ITEM_MAX_ETHER:    return 35;
-    case ITEM_ELIXIR:       return 36;
-    case ITEM_MAX_ELIXIR:   return 37;
-    case ITEM_PP_UP:        return 31;
-    case ITEM_RARE_CANDY:   return 32;
-    default:                return 0;
-    }
-}
-
-static u16 ItemGen3ToExpansion(u8 item)
-{
-    switch (item)
-    {
-    case 0:  return ITEM_NONE;
-    case 1:  return ITEM_MASTER_BALL;
-    case 2:  return ITEM_ULTRA_BALL;
-    case 3:  return ITEM_GREAT_BALL;
-    case 4:  return ITEM_POKE_BALL;
-    case 13: return ITEM_POTION;
-    case 14: return ITEM_ANTIDOTE;
-    case 15: return ITEM_BURN_HEAL;
-    case 16: return ITEM_ICE_HEAL;
-    case 17: return ITEM_AWAKENING;
-    case 18: return ITEM_PARLYZ_HEAL;
-    case 19: return ITEM_FULL_RESTORE;
-    case 20: return ITEM_MAX_POTION;
-    case 21: return ITEM_HYPER_POTION;
-    case 22: return ITEM_SUPER_POTION;
-    case 23: return ITEM_FULL_HEAL;
-    case 24: return ITEM_REVIVE;
-    case 25: return ITEM_MAX_REVIVE;
-    case 26: return ITEM_FRESH_WATER;
-    case 27: return ITEM_SODA_POP;
-    case 28: return ITEM_LEMONADE;
-    case 29: return ITEM_MOOMOO_MILK;
-    case 34: return ITEM_ETHER;
-    case 35: return ITEM_MAX_ETHER;
-    case 36: return ITEM_ELIXIR;
-    case 37: return ITEM_MAX_ELIXIR;
-    case 31: return ITEM_PP_UP;
-    case 32: return ITEM_RARE_CANDY;
-    default: return ITEM_NONE;
-    }
-}
+// The expansion renumbers its items, so tools/time_capsule/generate_item_map.py
+// matches the expansion item names against the official Gen III names and
+// pre-applies the Pokemon-Gen3-to-Gen-X item tables (item_gen3_to_12.bin and
+// item_gen12_to_3.bin).  0xFE/0xFF mean "cannot be held in Gen I/II".
 
 static u8 ItemExpansionToGen2(u16 item)
 {
-    u8 gen3Item = ItemExpansionToGen3(item);
+    if (item >= ITEMS_COUNT)
+        return 0;
 
-    if (gen3Item >= ARRAY_COUNT(gGen3ToGen2Items))
+    item = gTimeCapsuleItemToGen2[item];
+    if (item == 0xFE || item == 0xFF)
         return 0;
-    if (gGen3ToGen2Items[gen3Item] == 0xFF || gGen3ToGen2Items[gen3Item] == 0xFE)
-        return 0;
-    return gGen3ToGen2Items[gen3Item];
+    return item;
 }
 
 static u16 ItemGen2ToExpansion(u8 item)
 {
-    u8 gen3Item;
-
-    // The Gen3->Gen2 table is small; search it for the Gen2 id.
-    for (gen3Item = 0; gen3Item < ARRAY_COUNT(gGen3ToGen2Items); gen3Item++)
-    {
-        if (gGen3ToGen2Items[gen3Item] == item)
-            return ItemGen3ToExpansion(gen3Item);
-    }
-    return ITEM_NONE;
+    return gTimeCapsuleItemFromGen2[item];
 }
 
 // ---------------------------------------------------------------------------
 // Stats
 // ---------------------------------------------------------------------------
 
+static u16 GetGen12StatExpContribution(u16 statExp)
+{
+    // Pokemon-Gen3-to-Gen-X uses ceil(sqrt(stat_exp)), clamped to 255.
+    u16 root = Isqrt(statExp);
+
+    if ((u32)root * root < statExp)
+        root++;
+    if (root >= 0x100)
+        root = 0xFF;
+    return root >> 2;
+}
+
 static u16 CalcGen12Stat(u16 base, u8 dv, u16 statExp, u8 level, bool8 isHp)
 {
     u16 stat = isHp ? (level + 10) : 5;
 
-    stat += ((base * 2 + dv) * level) / 100;
-    stat += ((Isqrt(statExp) / 4) * level) / 100;
+    stat += (((base + dv) * 2 + GetGen12StatExpContribution(statExp)) * level) / 100;
     return stat;
 }
 
-static u16 GetBaseHp(u16 species)
+// Gen I/II base stats, straight from Pokemon-Gen3-to-Gen-X's tables.  The
+// expansion's base stats are the current-generation values; the GB games use
+// their own tables, so the transferred Pokémon must be calculated with those.
+static u16 GetGen2BaseStat(u16 national, u8 index)
 {
-    return gSpeciesInfo[species].baseHP;
+    // Party stat order: HP, Atk, Def, Spe, SpA, SpD.
+    // Table order:       HP, Atk, Def, SpA, SpD, Spe.
+    static const u8 map[6] = {0, 1, 2, 5, 3, 4};
+
+    if (national > GB_LAST_GEN2_SPECIES)
+        national = 0;
+    return gGen2BaseStats[national * 6 + map[index]];
 }
 
-static u16 GetBaseStat(u16 species, u8 index, bool8 gen1)
+static u16 GetGen1BaseStat(u16 internal, u8 index)
 {
-    switch (index)
-    {
-    case 0: return gSpeciesInfo[species].baseHP;
-    case 1: return gSpeciesInfo[species].baseAttack;
-    case 2: return gSpeciesInfo[species].baseDefense;
-    case 3: return gSpeciesInfo[species].baseSpeed;
-    case 4: return gSpeciesInfo[species].baseSpAttack;
-    default: return gen1 ? gSpeciesInfo[species].baseSpAttack : gSpeciesInfo[species].baseSpDefense;
-    }
+    // Table order: HP, Atk, Def, Spe, Special.
+    if (internal > GB_LAST_GEN1_SPECIES)
+        internal = 0;
+    return gGen1BaseStats[internal * 5 + index];
+}
+
+// Gen III -> Gen I/II effort values.  Pokemon-Gen3-to-Gen-X collapses the
+// total effort into the same stat experience for every Gen I/II stat:
+//   total >= 510 -> 65535, else total * total / 4
+// It also intentionally zeroes the EVs in the other direction (Gen2 -> Gen3),
+// because a direct stat-exp conversion is atrocious for competitive play.
+static u16 GetGen2StatExpFromEvs(struct Pokemon *mon)
+{
+    u32 total = 0;
+    u8 i;
+
+    for (i = 0; i < 6; i++)
+        total += GetMonData(mon, MON_DATA_HP_EV + i);
+
+    if (total >= 510)
+        return 65535;
+    return (total * total) >> 2;
+}
+
+// Gen III -> Gen I/II PP: base PP plus 20% per PP Up, capped so the six-bit
+// Gen I/II PP field and the two PP-Up bits cannot overflow.
+static u8 GetGen12Pp(u16 move, u8 bonus)
+{
+    u16 base = GetMovePP(move);
+    u16 pp = base + (base / 5) * bonus;
+    u16 cap = 40 + 7 * bonus;
+
+    if (pp > cap)
+        pp = cap;
+    if (pp > 63)
+        pp = 63;
+    return pp;
 }
 
 // ---------------------------------------------------------------------------
@@ -313,6 +287,24 @@ static u32 GetGen12ExpWithNature(u16 species, u8 level, u8 nature)
     if (level == MAX_LEVEL)
         value = base;
     return value;
+}
+
+// Clamp the Gen I/II experience to the range of its level, exactly like
+// get_proper_exp_pure() in Pokemon-Gen3-to-Gen-X.  The remainder modulo 25 is
+// the nature the GB game stores there.
+static u32 ClampGen12Exp(u16 species, u8 level, u32 exp)
+{
+    u8 growth = gSpeciesInfo[species].growthRate;
+    u32 minExp = gExperienceTables[growth][level];
+    u32 maxExp = minExp;
+
+    if (level < MAX_LEVEL)
+        maxExp = gExperienceTables[growth][level + 1] - 1;
+    if (exp < minExp)
+        exp = minExp;
+    if (exp > maxExp)
+        exp = maxExp;
+    return exp;
 }
 
 static u8 GetNatureFromExp(u32 exp)
@@ -345,9 +337,12 @@ static u32 GenerateGen3Pid(u16 species, u8 gender, u8 nature, u8 unownLetter, u3
 static bool8 BuildGen2Mon(struct Pokemon *mon, u8 *dst)
 {
     u16 species = GetMonData(mon, MON_DATA_SPECIES);
+    // The wire format uses the National Dex number; the internal SPECIES_*
+    // constant is only used for the tables below.
+    u16 national = SpeciesToNationalPokedexNum(species);
     u16 moves[4] = {0};
     u8 pps[4] = {0};
-    u16 statExp[5];
+    u16 statExpValue;
     u8 atkDv, defDv, spaDv, speDv;
     u8 level, i, usedMoves = 0, ppBonuses;
     u32 otId, exp;
@@ -359,22 +354,23 @@ static bool8 BuildGen2Mon(struct Pokemon *mon, u8 *dst)
     u8 threshold;
     u8 pokerus;
 
-    if (species == SPECIES_NONE || species > GB_LAST_GEN2_SPECIES)
+    if (national == 0 || national > GB_LAST_GEN2_SPECIES)
         return FALSE;
-    if (isEgg && species > GB_LAST_GEN2_SPECIES)
+    if (isEgg && national > GB_LAST_GEN2_SPECIES)
         return FALSE;
 
     memset(dst, 0, GB_MON_SIZE_GEN2);
 
     // Species and item.
-    dst[0] = species;
+    dst[0] = national;
     dst[1] = ItemExpansionToGen2(GetMonData(mon, MON_DATA_HELD_ITEM));
 
     // Moves / PP.
+    ppBonuses = GetMonData(mon, MON_DATA_PP_BONUSES);
     for (i = 0; i < 4; i++)
     {
         u16 move = GetMonData(mon, MON_DATA_MOVE1 + i);
-        u8 j, duplicate = FALSE;
+        u8 j, duplicate = FALSE, bonus;
 
         if (move == MOVE_NONE || move > GB_LAST_GEN2_MOVE || move == GB_STRUGGLE)
             continue;
@@ -389,17 +385,17 @@ static bool8 BuildGen2Mon(struct Pokemon *mon, u8 *dst)
         if (duplicate)
             continue;
         moves[usedMoves] = move;
-        pps[usedMoves] = GetMonData(mon, MON_DATA_PP1 + i) & 0x3F;
+        bonus = (ppBonuses >> (2 * i)) & 3;
+        pps[usedMoves] = GetGen12Pp(move, bonus) | (bonus << 6);
         usedMoves++;
     }
     if (usedMoves == 0)
         return FALSE;
 
-    ppBonuses = GetMonData(mon, MON_DATA_PP_BONUSES);
     for (i = 0; i < usedMoves; i++)
     {
         dst[2 + i] = moves[i];
-        dst[23 + i] = pps[i] | (((ppBonuses >> (2 * i)) & 3) << 6);
+        dst[23 + i] = pps[i];
     }
 
     otId = GetMonData(mon, MON_DATA_OT_ID);
@@ -413,20 +409,14 @@ static bool8 BuildGen2Mon(struct Pokemon *mon, u8 *dst)
     if (isEgg)
         level = 5;
 
-    exp = GetGen12ExpWithNature(species, level, GetNature(mon));
+    exp = isEgg ? GetExpForLevel(species, 5)
+                : GetGen12ExpWithNature(species, level, GetNature(mon));
     WriteBe24(dst + 8, exp);
 
-    // Stat exp: statExp = EV^2.  Gen II has one Special stat.
-    statExp[0] = GetMonData(mon, MON_DATA_HP_EV);
-    statExp[1] = GetMonData(mon, MON_DATA_ATK_EV);
-    statExp[2] = GetMonData(mon, MON_DATA_DEF_EV);
-    statExp[3] = GetMonData(mon, MON_DATA_SPEED_EV);
-    statExp[4] = max(GetMonData(mon, MON_DATA_SPATK_EV), GetMonData(mon, MON_DATA_SPDEF_EV));
+    // Stat exp: the reference collapses the total effort into every stat.
+    statExpValue = GetGen2StatExpFromEvs(mon);
     for (i = 0; i < 5; i++)
-    {
-        statExp[i] = statExp[i] * statExp[i];
-        WriteBe16(dst + 11 + i * 2, statExp[i]);
-    }
+        WriteBe16(dst + 11 + i * 2, statExpValue);
 
     // DVs.
     atkDv = GetMonData(mon, MON_DATA_ATK_IV) >> 1;
@@ -514,7 +504,7 @@ static bool8 BuildGen2Mon(struct Pokemon *mon, u8 *dst)
     dst[28] = pokerus;
 
     dst[29] = 0x41; // caught time = 1, caught level = 1
-    dst[30] = 0x00;
+    dst[30] = ((GetMonData(mon, MON_DATA_OT_GENDER) & 1) << 7) | 1; // location 1
 
     dst[31] = level;
     status = GetMonData(mon, MON_DATA_STATUS);
@@ -524,13 +514,13 @@ static bool8 BuildGen2Mon(struct Pokemon *mon, u8 *dst)
     hp = isEgg ? 0 : GetMonData(mon, MON_DATA_HP);
     WriteBe16(dst + 34, hp);
 
-    // Gen II stats, computed from base stats + DVs + stat exp.
-    WriteBe16(dst + 36, CalcGen12Stat(GetBaseHp(species), GetGen2HpDv(atkDv, defDv, spaDv, speDv), statExp[0], level, TRUE));
-    WriteBe16(dst + 38, CalcGen12Stat(GetBaseStat(species, 1, FALSE), atkDv, statExp[1], level, FALSE));
-    WriteBe16(dst + 40, CalcGen12Stat(GetBaseStat(species, 2, FALSE), defDv, statExp[2], level, FALSE));
-    WriteBe16(dst + 42, CalcGen12Stat(GetBaseStat(species, 3, FALSE), speDv, statExp[3], level, FALSE));
-    WriteBe16(dst + 44, CalcGen12Stat(GetBaseStat(species, 4, FALSE), spaDv, statExp[4], level, FALSE));
-    WriteBe16(dst + 46, CalcGen12Stat(GetBaseStat(species, 5, FALSE), spaDv, statExp[4], level, FALSE));
+    // Gen II stats, computed from the Gen II base stats + DVs + stat exp.
+    WriteBe16(dst + 36, CalcGen12Stat(GetGen2BaseStat(national, 0), GetGen2HpDv(atkDv, defDv, spaDv, speDv), statExpValue, level, TRUE));
+    WriteBe16(dst + 38, CalcGen12Stat(GetGen2BaseStat(national, 1), atkDv, statExpValue, level, FALSE));
+    WriteBe16(dst + 40, CalcGen12Stat(GetGen2BaseStat(national, 2), defDv, statExpValue, level, FALSE));
+    WriteBe16(dst + 42, CalcGen12Stat(GetGen2BaseStat(national, 3), speDv, statExpValue, level, FALSE));
+    WriteBe16(dst + 44, CalcGen12Stat(GetGen2BaseStat(national, 4), spaDv, statExpValue, level, FALSE));
+    WriteBe16(dst + 46, CalcGen12Stat(GetGen2BaseStat(national, 5), spaDv, statExpValue, level, FALSE));
 
     return TRUE;
 }
@@ -538,10 +528,12 @@ static bool8 BuildGen2Mon(struct Pokemon *mon, u8 *dst)
 static bool8 BuildGen1Mon(struct Pokemon *mon, u8 *dst)
 {
     u16 species = GetMonData(mon, MON_DATA_SPECIES);
+    // The Gen I index table is indexed by the National Dex number.
+    u16 national = SpeciesToNationalPokedexNum(species);
     u16 internal;
     u16 moves[4] = {0};
     u8 pps[4] = {0};
-    u16 statExp[5];
+    u16 statExpValue;
     u8 atkDv, defDv, spaDv, speDv;
     u8 level, i, usedMoves = 0, ppBonuses;
     u32 otId, exp;
@@ -552,11 +544,11 @@ static bool8 BuildGen1Mon(struct Pokemon *mon, u8 *dst)
     u8 gender = GetMonGender(mon);
     u8 threshold;
 
-    if (species == SPECIES_NONE || species > GB_LAST_GEN1_SPECIES)
+    if (national == 0 || national > GB_LAST_GEN1_SPECIES)
         return FALSE;
     if (isEgg)
         return FALSE;
-    internal = gNatToGen1Species[species];
+    internal = gNatToGen1Species[national];
     if (internal == 0 || internal > GB_LAST_GEN1_SPECIES)
         return FALSE;
 
@@ -565,10 +557,11 @@ static bool8 BuildGen1Mon(struct Pokemon *mon, u8 *dst)
     dst[0] = internal;
 
     // Moves / PP.
+    ppBonuses = GetMonData(mon, MON_DATA_PP_BONUSES);
     for (i = 0; i < 4; i++)
     {
         u16 move = GetMonData(mon, MON_DATA_MOVE1 + i);
-        u8 j, duplicate = FALSE;
+        u8 j, duplicate = FALSE, bonus;
 
         if (move == MOVE_NONE || move > GB_LAST_GEN1_MOVE || move == GB_STRUGGLE)
             continue;
@@ -583,17 +576,17 @@ static bool8 BuildGen1Mon(struct Pokemon *mon, u8 *dst)
         if (duplicate)
             continue;
         moves[usedMoves] = move;
-        pps[usedMoves] = GetMonData(mon, MON_DATA_PP1 + i) & 0x3F;
+        bonus = (ppBonuses >> (2 * i)) & 3;
+        pps[usedMoves] = GetGen12Pp(move, bonus) | (bonus << 6);
         usedMoves++;
     }
     if (usedMoves == 0)
         return FALSE;
 
-    ppBonuses = GetMonData(mon, MON_DATA_PP_BONUSES);
     for (i = 0; i < usedMoves; i++)
     {
         dst[8 + i] = moves[i];
-        dst[29 + i] = pps[i] | (((ppBonuses >> (2 * i)) & 3) << 6);
+        dst[29 + i] = pps[i];
     }
 
     otId = GetMonData(mon, MON_DATA_OT_ID);
@@ -607,16 +600,10 @@ static bool8 BuildGen1Mon(struct Pokemon *mon, u8 *dst)
     exp = GetGen12ExpWithNature(species, level, GetNature(mon));
     WriteBe24(dst + 14, exp);
 
-    statExp[0] = GetMonData(mon, MON_DATA_HP_EV);
-    statExp[1] = GetMonData(mon, MON_DATA_ATK_EV);
-    statExp[2] = GetMonData(mon, MON_DATA_DEF_EV);
-    statExp[3] = GetMonData(mon, MON_DATA_SPEED_EV);
-    statExp[4] = max(GetMonData(mon, MON_DATA_SPATK_EV), GetMonData(mon, MON_DATA_SPDEF_EV));
+    // Stat exp: the reference collapses the total effort into every stat.
+    statExpValue = GetGen2StatExpFromEvs(mon);
     for (i = 0; i < 5; i++)
-    {
-        statExp[i] = statExp[i] * statExp[i];
-        WriteBe16(dst + 17 + i * 2, statExp[i]);
-    }
+        WriteBe16(dst + 17 + i * 2, statExpValue);
 
     atkDv = GetMonData(mon, MON_DATA_ATK_IV) >> 1;
     defDv = GetMonData(mon, MON_DATA_DEF_IV) >> 1;
@@ -666,11 +653,11 @@ static bool8 BuildGen1Mon(struct Pokemon *mon, u8 *dst)
     WriteBe16(dst + 1, hp);
 
     dst[33] = level;
-    WriteBe16(dst + 34, CalcGen12Stat(GetBaseHp(species), GetGen2HpDv(atkDv, defDv, spaDv, speDv), statExp[0], level, TRUE));
-    WriteBe16(dst + 36, CalcGen12Stat(GetBaseStat(species, 1, TRUE), atkDv, statExp[1], level, FALSE));
-    WriteBe16(dst + 38, CalcGen12Stat(GetBaseStat(species, 2, TRUE), defDv, statExp[2], level, FALSE));
-    WriteBe16(dst + 40, CalcGen12Stat(GetBaseStat(species, 3, TRUE), speDv, statExp[3], level, FALSE));
-    WriteBe16(dst + 42, CalcGen12Stat(GetBaseStat(species, 4, TRUE), spaDv, statExp[4], level, FALSE));
+    WriteBe16(dst + 34, CalcGen12Stat(GetGen1BaseStat(internal, 0), GetGen2HpDv(atkDv, defDv, spaDv, speDv), statExpValue, level, TRUE));
+    WriteBe16(dst + 36, CalcGen12Stat(GetGen1BaseStat(internal, 1), atkDv, statExpValue, level, FALSE));
+    WriteBe16(dst + 38, CalcGen12Stat(GetGen1BaseStat(internal, 2), defDv, statExpValue, level, FALSE));
+    WriteBe16(dst + 40, CalcGen12Stat(GetGen1BaseStat(internal, 3), speDv, statExpValue, level, FALSE));
+    WriteBe16(dst + 42, CalcGen12Stat(GetGen1BaseStat(internal, 4), spaDv, statExpValue, level, FALSE));
 
     return TRUE;
 }
@@ -679,52 +666,19 @@ static bool8 BuildGen1Mon(struct Pokemon *mon, u8 *dst)
 // Gen I/II -> Gen III
 // ---------------------------------------------------------------------------
 
-static u16 GetEvFromStatExp(u16 statExp)
-{
-    return (Isqrt(statExp) / 4) * 4;
-}
-
-static void CapEvs(u8 *evs)
-{
-    u16 total = 0;
-    u8 i;
-
-    for (i = 0; i < 6; i++)
-    {
-        if (evs[i] > 255)
-            evs[i] = 255;
-        total += evs[i];
-    }
-
-    while (total > 510)
-    {
-        u8 largest = 0;
-        for (i = 1; i < 6; i++)
-        {
-            if (evs[i] > evs[largest])
-                largest = i;
-        }
-        if (evs[largest] < 4)
-            break;
-        evs[largest] -= 4;
-        total -= 4;
-    }
-}
-
 static bool8 CreateMonFromGen2(const u8 *src, const u8 *otNameSrc, const u8 *nicknameSrc, bool8 isEgg, struct Pokemon *mon)
 {
-    u16 species = src[0];
+    u16 national = src[0];
+    u16 species;
     u16 moves[4];
     u8 pps[4];
     u16 otId;
     u32 exp;
-    u8 level, i, ppBonuses = 0;
+    u8 level, i, usedMoves = 0, ppBonuses = 0;
     u8 atkDv, defDv, spaDv, speDv;
     u8 hpDv, gender, nature, unownLetter = 0;
     bool8 shiny;
     u32 pid;
-    u8 evs[6];
-    u16 statExp[5];
     u8 name[POKEMON_NAME_LENGTH + 1];
     u8 ot[PLAYER_NAME_LENGTH + 1];
     u8 language = LANGUAGE_ENGLISH;
@@ -735,7 +689,11 @@ static bool8 CreateMonFromGen2(const u8 *src, const u8 *otNameSrc, const u8 *nic
     u32 hp = 0;
     u8 isEggFlag = isEgg;
 
-    if (species == SPECIES_NONE || species > GB_LAST_GEN2_SPECIES)
+    if (national == 0 || national > GB_LAST_GEN2_SPECIES)
+        return FALSE;
+    // The wire format carries the National Dex number.
+    species = NationalPokedexNumToSpecies(national);
+    if (species == SPECIES_NONE)
         return FALSE;
 
     level = src[31];
@@ -746,27 +704,34 @@ static bool8 CreateMonFromGen2(const u8 *src, const u8 *otNameSrc, const u8 *nic
 
     for (i = 0; i < 4; i++)
     {
-        moves[i] = src[2 + i];
-        pps[i] = src[23 + i] & 0x3F;
-        ppBonuses |= ((src[23 + i] >> 6) & 3) << (2 * i);
-        if (moves[i] == 0 || moves[i] > GB_LAST_GEN2_MOVE || moves[i] == GB_STRUGGLE)
-            moves[i] = 0;
+        u16 move = src[2 + i];
+        u8 j, duplicate = FALSE, bonus;
+
+        if (move == 0 || move > GB_LAST_GEN2_MOVE || move == GB_STRUGGLE)
+            continue;
+        for (j = 0; j < usedMoves; j++)
+        {
+            if (moves[j] == move)
+            {
+                duplicate = TRUE;
+                break;
+            }
+        }
+        if (duplicate)
+            continue;
+
+        moves[usedMoves] = move;
+        bonus = (src[23 + i] >> 6) & 3;
+        pps[usedMoves] = GetMovePP(move);
+        ppBonuses |= bonus << (2 * usedMoves);
+        usedMoves++;
     }
+    if (usedMoves == 0)
+        return FALSE;
 
     otId = ReadBe16(src + 6);
     exp = ReadBe24(src + 8);
     nature = GetNatureFromExp(exp);
-
-    for (i = 0; i < 5; i++)
-        statExp[i] = ReadBe16(src + 11 + i * 2);
-
-    evs[0] = GetEvFromStatExp(statExp[0]);
-    evs[1] = GetEvFromStatExp(statExp[1]);
-    evs[2] = GetEvFromStatExp(statExp[2]);
-    evs[3] = GetEvFromStatExp(statExp[3]);
-    evs[4] = GetEvFromStatExp(statExp[4]);
-    evs[5] = evs[4];
-    CapEvs(evs);
 
     atkDv = (ReadBe16(src + 21) >> 4) & 0xF;
     defDv = ReadBe16(src + 21) & 0xF;
@@ -805,16 +770,18 @@ static bool8 CreateMonFromGen2(const u8 *src, const u8 *otNameSrc, const u8 *nic
         SetMonData(mon, MON_DATA_SPDEF_IV, &iv);
     }
 
+    // The reference deliberately starts the received Pokémon with 0 EVs.
     for (i = 0; i < 6; i++)
-        SetMonData(mon, MON_DATA_HP_EV + i, &evs[i]);
-
-    for (i = 0; i < 4; i++)
     {
-        if (moves[i] != 0)
-        {
-            SetMonData(mon, MON_DATA_MOVE1 + i, &moves[i]);
-            SetMonData(mon, MON_DATA_PP1 + i, &pps[i]);
-        }
+        u8 zero = 0;
+
+        SetMonData(mon, MON_DATA_HP_EV + i, &zero);
+    }
+
+    for (i = 0; i < usedMoves; i++)
+    {
+        SetMonData(mon, MON_DATA_MOVE1 + i, &moves[i]);
+        SetMonData(mon, MON_DATA_PP1 + i, &pps[i]);
     }
     SetMonData(mon, MON_DATA_PP_BONUSES, &ppBonuses);
 
@@ -841,8 +808,8 @@ static bool8 CreateMonFromGen2(const u8 *src, const u8 *otNameSrc, const u8 *nic
     SetMonData(mon, MON_DATA_LANGUAGE, &language);
 
     {
-        u32 newExp = GetGen12ExpWithNature(species, isEgg ? 5 : level, nature);
         u8 newLevel = isEgg ? 5 : level;
+        u32 newExp = ClampGen12Exp(species, newLevel, exp);
 
         SetMonData(mon, MON_DATA_EXP, &newExp);
         SetMonData(mon, MON_DATA_LEVEL, &newLevel);
@@ -876,13 +843,11 @@ static bool8 CreateMonFromGen1(const u8 *src, const u8 *otNameSrc, const u8 *nic
     u8 pps[4];
     u16 otId;
     u32 exp;
-    u8 level, i, ppBonuses = 0;
+    u8 level, i, usedMoves = 0, ppBonuses = 0;
     u8 atkDv, defDv, spaDv, speDv;
     u8 hpDv, gender, nature;
     bool8 shiny;
     u32 pid;
-    u8 evs[6];
-    u16 statExp[5];
     u8 name[POKEMON_NAME_LENGTH + 1];
     u8 ot[PLAYER_NAME_LENGTH + 1];
     u8 language = LANGUAGE_ENGLISH;
@@ -896,6 +861,11 @@ static bool8 CreateMonFromGen1(const u8 *src, const u8 *otNameSrc, const u8 *nic
     species = gGen1ToNatSpecies[internal];
     if (species == 0 || species > GB_LAST_GEN1_SPECIES)
         return FALSE;
+    // gGen1ToNatSpecies gives the National Dex number; the rest of the
+    // conversion uses the internal SPECIES_* constant.
+    species = NationalPokedexNumToSpecies(species);
+    if (species == SPECIES_NONE)
+        return FALSE;
 
     level = src[33];
     if (level < 2)
@@ -905,27 +875,34 @@ static bool8 CreateMonFromGen1(const u8 *src, const u8 *otNameSrc, const u8 *nic
 
     for (i = 0; i < 4; i++)
     {
-        moves[i] = src[8 + i];
-        pps[i] = src[29 + i] & 0x3F;
-        ppBonuses |= ((src[29 + i] >> 6) & 3) << (2 * i);
-        if (moves[i] == 0 || moves[i] > GB_LAST_GEN1_MOVE || moves[i] == GB_STRUGGLE)
-            moves[i] = 0;
+        u16 move = src[8 + i];
+        u8 j, duplicate = FALSE, bonus;
+
+        if (move == 0 || move > GB_LAST_GEN1_MOVE || move == GB_STRUGGLE)
+            continue;
+        for (j = 0; j < usedMoves; j++)
+        {
+            if (moves[j] == move)
+            {
+                duplicate = TRUE;
+                break;
+            }
+        }
+        if (duplicate)
+            continue;
+
+        moves[usedMoves] = move;
+        bonus = (src[29 + i] >> 6) & 3;
+        pps[usedMoves] = GetMovePP(move);
+        ppBonuses |= bonus << (2 * usedMoves);
+        usedMoves++;
     }
+    if (usedMoves == 0)
+        return FALSE;
 
     otId = ReadBe16(src + 12);
     exp = ReadBe24(src + 14);
     nature = GetNatureFromExp(exp);
-
-    for (i = 0; i < 5; i++)
-        statExp[i] = ReadBe16(src + 17 + i * 2);
-
-    evs[0] = GetEvFromStatExp(statExp[0]);
-    evs[1] = GetEvFromStatExp(statExp[1]);
-    evs[2] = GetEvFromStatExp(statExp[2]);
-    evs[3] = GetEvFromStatExp(statExp[3]);
-    evs[4] = GetEvFromStatExp(statExp[4]);
-    evs[5] = evs[4];
-    CapEvs(evs);
 
     atkDv = (ReadBe16(src + 27) >> 4) & 0xF;
     defDv = ReadBe16(src + 27) & 0xF;
@@ -956,16 +933,18 @@ static bool8 CreateMonFromGen1(const u8 *src, const u8 *otNameSrc, const u8 *nic
         SetMonData(mon, MON_DATA_SPDEF_IV, &iv);
     }
 
+    // The reference deliberately starts the received Pokémon with 0 EVs.
     for (i = 0; i < 6; i++)
-        SetMonData(mon, MON_DATA_HP_EV + i, &evs[i]);
-
-    for (i = 0; i < 4; i++)
     {
-        if (moves[i] != 0)
-        {
-            SetMonData(mon, MON_DATA_MOVE1 + i, &moves[i]);
-            SetMonData(mon, MON_DATA_PP1 + i, &pps[i]);
-        }
+        u8 zero = 0;
+
+        SetMonData(mon, MON_DATA_HP_EV + i, &zero);
+    }
+
+    for (i = 0; i < usedMoves; i++)
+    {
+        SetMonData(mon, MON_DATA_MOVE1 + i, &moves[i]);
+        SetMonData(mon, MON_DATA_PP1 + i, &pps[i]);
     }
     SetMonData(mon, MON_DATA_PP_BONUSES, &ppBonuses);
 
@@ -1037,8 +1016,17 @@ static void BuildPatchList(u8 *data, u16 size, u8 *patch)
             patch[pos++] = (u8)((i - GB_PATCH_BASE) - (part ? GB_PATCH_PART_SIZE : 0) + 1);
         }
     }
-    if (pos < GB_PATCH_LIST_SIZE)
+    // The patch list is made of two parts (the patchable area is split in
+    // SERIAL_PATCH_DATA_SIZE bytes) and each one has to end with
+    // SERIAL_PATCH_LIST_PART_TERMINATOR (0xFF).  The GB keeps reading past the
+    // buffer when it does not find the second terminator, and then "patches"
+    // whatever it finds, which corrupts the party data it has just received
+    // (the nicknames are the last thing it reads).
+    while (part < 2 && pos < GB_PATCH_LIST_SIZE)
+    {
         patch[pos++] = 0xFF;
+        part++;
+    }
     while (pos < GB_PATCH_LIST_SIZE)
         patch[pos++] = 0;
 }
@@ -1104,7 +1092,9 @@ static u16 BuildPartyData(u8 gen, u8 *party, struct Pokemon *mons, u8 count)
 
         {
             struct Pokemon *mon = &mons[i];
-            u16 species = GetMonData(mon, MON_DATA_SPECIES);
+            // The Gen I/II games use the National Dex number, the expansion's
+            // MON_DATA_SPECIES is the internal SPECIES_* constant.
+            u16 species = SpeciesToNationalPokedexNum(GetMonData(mon, MON_DATA_SPECIES));
             bool8 isEgg = GetMonData(mon, MON_DATA_IS_EGG);
 
             if (gen == 1)
@@ -1327,12 +1317,18 @@ u8 GbConvert_CheckParty(u8 gen, u16 *arg1, u16 *arg2)
     {
         struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][i];
         u16 species = GetMonData(mon, MON_DATA_SPECIES);
+        u16 national = SpeciesToNationalPokedexNum(species);
         u8 mail = GetMonData(mon, MON_DATA_MAIL);
         bool8 isEgg = GetMonData(mon, MON_DATA_IS_EGG);
         u8 j;
 
         if (species == SPECIES_NONE)
             continue;
+
+        // Regional/alternative forms have no Gen I/II equivalent; only the
+        // default form of each species can be traded.
+        if (species != NationalPokedexNumToSpecies(national))
+            return TIME_CAPSULE_ERR_SPECIES;
 
         *arg1 = species;
 
@@ -1346,31 +1342,47 @@ u8 GbConvert_CheckParty(u8 gen, u16 *arg1, u16 *arg2)
         {
             if (isEgg)
                 return TIME_CAPSULE_ERR_EGG;
-            if (species > GB_LAST_GEN1_SPECIES || gNatToGen1Species[species] == 0)
+            if (species > GB_LAST_GEN1_SPECIES || gNatToGen1Species[national] == 0)
                 return TIME_CAPSULE_ERR_SPECIES;
         }
         else
         {
-            if (species > GB_LAST_GEN2_SPECIES)
+            if (national > GB_LAST_GEN2_SPECIES)
                 return TIME_CAPSULE_ERR_SPECIES;
         }
 
         for (j = 0; j < 4; j++)
         {
             u16 move = GetMonData(mon, MON_DATA_MOVE1 + j);
+            u16 limit = (gen == 1) ? GB_LAST_GEN1_MOVE : GB_LAST_GEN2_MOVE;
 
             if (move == 0)
                 continue;
-            if (gen == 1 && (move > GB_LAST_GEN1_MOVE || move == GB_STRUGGLE))
-            {
+            if (move <= limit && move != GB_STRUGGLE)
+                continue;
+
+            // The reference silently drops moves that do not exist in the
+            // target generation.  Only reject the Pokémon when none of its
+            // moves can be represented, otherwise the trade would fail for a
+            // single Hoenn move.
+            if (*arg2 == 0)
                 *arg2 = move;
-                return TIME_CAPSULE_ERR_MOVE;
-            }
-            if (gen == 2 && (move > GB_LAST_GEN2_MOVE || move == GB_STRUGGLE))
+        }
+
+        {
+            u8 validMoves = 0;
+            u16 limit = (gen == 1) ? GB_LAST_GEN1_MOVE : GB_LAST_GEN2_MOVE;
+
+            for (j = 0; j < 4; j++)
             {
-                *arg2 = move;
-                return TIME_CAPSULE_ERR_MOVE;
+                u16 move = GetMonData(mon, MON_DATA_MOVE1 + j);
+
+                if (move != 0 && move <= limit && move != GB_STRUGGLE)
+                    validMoves++;
             }
+
+            if (validMoves == 0)
+                return TIME_CAPSULE_ERR_MOVE;
         }
 
         // Female shiny with a 7:1 ratio cannot be represented in Gen II.
@@ -1394,3 +1406,5 @@ u8 GbConvert_CheckParty(u8 gen, u16 *arg1, u16 *arg2)
 
     return TIME_CAPSULE_OK;
 }
+
+

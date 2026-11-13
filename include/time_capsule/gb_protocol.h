@@ -33,4 +33,9 @@ bool8 GbProtocol_IsSuccessDone(void);
 void GbProtocol_StartReexchange(void);
 void GbProtocol_RequestExit(void);
 
+// Stop presenting a trade action while the GBA writes its save: the GB then
+// keeps waiting in its anti-cloning loop instead of mistaking the accept byte
+// (0x72) for its own success byte (2).
+void GbProtocol_PauseForSave(void);
+
 #endif // GUARD_TIME_CAPSULE_GB_PROTOCOL_H

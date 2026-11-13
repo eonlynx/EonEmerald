@@ -32,6 +32,8 @@ TABLES = {
     "gGen3ToGen2Items": "item_gen3_to_12.bin",
     "gGen1Types": "pokemon_types_gen1.bin",
     "gGen2GenderKinds": "pokemon_gender.bin",
+    "gGen2BaseStats": "pokemon_stats.bin",
+    "gGen1BaseStats": "pokemon_stats_gen1.bin",
 }
 
 
