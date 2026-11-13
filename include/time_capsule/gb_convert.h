@@ -30,6 +30,21 @@
 #define GB_GEN2_EGG_INDEX        0xFD
 #define GB_NO_MON                0xFF
 
+// Single source of truth for the party payload offsets.  The same table is
+// used by the builder and the parser; the Gen I and Gen II layouts only
+// differ in the mon size and the name/OT/nickname offsets.
+struct GbPartyLayout
+{
+    u16 dataSize;
+    u16 monSize;
+    u16 monOffset;
+    u16 otOffset;
+    u16 nickOffset;
+};
+
+extern const struct GbPartyLayout gGbPartyLayoutGen1;
+extern const struct GbPartyLayout gGbPartyLayoutGen2;
+
 // Builds the full outgoing block (RN + party + patch list + optional mail).
 // `out` must hold at least GB_BLOCK_TRADE_GEN2 bytes. Returns the block size.
 u16 GbConvert_BuildTradeBlock(u8 gen, u8 room, u8 *out);

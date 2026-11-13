@@ -111,13 +111,37 @@ static void ApplyPatchList(u8 *data, u16 size, const u8 *patch)
 // Party block building
 // ---------------------------------------------------------------------------
 
+const struct GbPartyLayout gGbPartyLayoutGen1 =
+{
+    .dataSize = GB_PARTY_DATA_GEN1,
+    .monSize = GB_MON_SIZE_GEN1,
+    .monOffset = 19,
+    .otOffset = 283,
+    .nickOffset = 349,
+};
+
+const struct GbPartyLayout gGbPartyLayoutGen2 =
+{
+    .dataSize = GB_PARTY_DATA_GEN2,
+    .monSize = GB_MON_SIZE_GEN2,
+    .monOffset = 21,
+    .otOffset = 309,
+    .nickOffset = 375,
+};
+
+static const struct GbPartyLayout *PartyLayout(u8 gen)
+{
+    return (gen == 1) ? &gGbPartyLayoutGen1 : &gGbPartyLayoutGen2;
+}
+
 static u16 BuildPartyData(u8 gen, u8 *party, struct Pokemon *mons, u8 count)
 {
-    u16 partySize = (gen == 1) ? GB_PARTY_DATA_GEN1 : GB_PARTY_DATA_GEN2;
-    u16 monSize = (gen == 1) ? GB_MON_SIZE_GEN1 : GB_MON_SIZE_GEN2;
-    u16 monOffset = (gen == 1) ? 19 : 21;
-    u16 otOffset = (gen == 1) ? 283 : 309;
-    u16 nickOffset = (gen == 1) ? 349 : 375;
+    const struct GbPartyLayout *layout = PartyLayout(gen);
+    u16 partySize = layout->dataSize;
+    u16 monSize = layout->monSize;
+    u16 monOffset = layout->monOffset;
+    u16 otOffset = layout->otOffset;
+    u16 nickOffset = layout->nickOffset;
     u8 i;
     u16 playerId = READ_OTID_FROM_SAVE & 0xFFFF;
     u8 name[16];
@@ -254,11 +278,12 @@ static u16 sPartnerTrainerId;
 
 bool8 GbConvert_ParseTradeBlock(u8 gen, u8 room, const u8 *in, u16 size)
 {
-    u16 partySize = (gen == 1) ? GB_PARTY_DATA_GEN1 : GB_PARTY_DATA_GEN2;
-    u16 monSize = (gen == 1) ? GB_MON_SIZE_GEN1 : GB_MON_SIZE_GEN2;
-    u16 monOffset = (gen == 1) ? 19 : 21;
-    u16 otOffset = (gen == 1) ? 283 : 309;
-    u16 nickOffset = (gen == 1) ? 349 : 375;
+    const struct GbPartyLayout *layout = PartyLayout(gen);
+    u16 partySize = layout->dataSize;
+    u16 monSize = layout->monSize;
+    u16 monOffset = layout->monOffset;
+    u16 otOffset = layout->otOffset;
+    u16 nickOffset = layout->nickOffset;
     u16 partyOffset = GB_RN_BLOCK_SIZE + GB_PARTY_PREAMBLE_SIZE;
     u16 patchOffset = partyOffset + partySize;
     u8 partyCopy[GB_PARTY_DATA_GEN2];

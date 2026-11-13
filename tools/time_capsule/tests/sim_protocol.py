@@ -52,6 +52,7 @@ class Gba:
         self.bc = 0
         self.base = 0
         self.syn = 0
+        self.syn_required = 6
         self.has_syn = False
         self.bcout = 0
         self.in_data = []
@@ -69,6 +70,8 @@ class Gba:
         self.last_cmd = None
         self.last_arg = None
         self.success_done = False
+        self.success_hold = 0
+        self.start_guard = 0
         self.accept_pending = False
         self.peer_confirmed = False
         self.ack_frames = 0
@@ -87,7 +90,7 @@ class Gba:
         if not self.has_syn:
             if self.syn >= 30:
                 self.syn = 30
-            if self.syn < 3:
+            if self.syn < self.syn_required:
                 if data != SEND_NO_INFO and data == SYN:
                     self.syn += 1
                 return SYN
@@ -106,6 +109,7 @@ class Gba:
                 self.size_idx += 1
                 self.has_syn = False
                 self.syn = 0
+                self.syn_required = 6 if self.size_idx == 1 else 3
                 self.bc = 0
                 self.bcout = 0
                 if self.size_idx >= 3:
@@ -203,6 +207,10 @@ class Gba:
             self.confirm_valid = True
             self.trade_state = 2
         elif cmd == LINKCMD_START_TRADE:
+            self.success_done = False
+            self.success_hold = 0
+            self.received_once = False
+            self.start_guard = 0
             self.trade_state = 5
             self.accept_pending = False
             self.peer_confirmed = False
@@ -253,6 +261,19 @@ class Gba:
         # ProcessByte() drops SERIAL_NO_DATA_BYTE before the trade-menu
         # handler, so a 0xFE must not advance any counter here either.
         if data == SEND_NO_INFO:
+            return
+
+        # A 0x75 while the success phase is active is the next
+        # CheckLinkTimeout.  Enter the start table, but guard the first 0x00:
+        # Crystal's previous acknowledge may still be in flight.
+        if self.trade_state == 5 and data == START:
+            self.success_done = True
+            self.success_hold = 0
+            self.sub = STA
+            self.idx = 0
+            self.start_guard = 1
+            self.trade_state = 0
+            self.tx = START
             return
 
         # The byte for this exchange belongs to the phase active before the
@@ -313,11 +334,15 @@ class Gba:
         elif self.trade_state == 2:
             self._get_accept(data)
         elif self.trade_state == 5:
-            if (data & 0xF0) == 0x70:
+            # Only our exact success byte completes the handshake.  Crystal's
+            # stale confirmation 0x72 must not be counted when the success
+            # value is 0 (the common case).
+            if data == (0x70 | self.success_value):
                 if not self.received_once:
                     self.received_once = True
                 else:
                     self.success_done = True
+                    self.success_hold = 20
 
     def process(self, data):
         if self.sub == ENT:
@@ -344,6 +369,24 @@ class Gba:
             self.tx = self.check_if_continue(data, self.enter_send,
                                              self.enter_recv, 4, WAI, START)
         elif self.sub == STA:
+            if self.start_guard:
+                if data == 0x76:
+                    self.start_guard = 0
+                    self.idx = 2
+                    self.tx = 0x76
+                    return
+                if data == START:
+                    if self.start_guard < 2:
+                        self.start_guard += 1
+                    self.tx = START
+                    return
+                if data == 0x00 and self.start_guard >= 2:
+                    self.start_guard = 0
+                    self.idx = 1
+                    # fall through and let the table consume the real ack
+                else:
+                    self.tx = START
+                    return
             self.tx = self.check_if_continue(data, self.start_send,
                                              self.start_recv, 5, SYN_ST,
                                              SEND_NO_INFO)
@@ -351,6 +394,7 @@ class Gba:
             self.base = 0
             self.has_syn = False
             self.syn = 0
+            self.syn_required = 3
             self.bc = 0
             self.bcout = 0
             self.size_idx = 0
@@ -716,6 +760,56 @@ def test_success_handshake():
     return ok
 
 
+def test_post_trade_reexchange():
+    """Stale accept/ack bytes must not skip Crystal's action 5 handshake."""
+    gba = Gba()
+    gba.sub = DON
+    gba.send_trade_command(LINKCMD_START_TRADE, 0)
+
+    # The success phase starts at LINKCMD_START_TRADE, while Crystal may still
+    # be finishing its confirmation exchange.  0x72 is the accept byte, not
+    # the anti-cloning value (0 here), so it must not complete the handshake.
+    gba.process(0x72)
+    gba.process(0x72)
+    stale_ok = not gba.success_done
+
+    # The real success exchange (0x70) is still accepted after the sync delay.
+    for _ in range(3):
+        gba.process(0x00)
+    gba.process(0x70)
+    gba.process(0x70)
+    success_ok = gba.success_done
+
+    # Fallback path: Crystal starts CheckLinkTimeout while we were still in
+    # the success phase.  A stale 0x00 from its acknowledge phase must not
+    # advance the start table to 0x76; two action-5 bytes are required.
+    gba = Gba()
+    gba.sub = DON
+    gba.trade_state = 5
+    gba.process(START)
+    entered = (gba.sub == STA and gba.start_guard == 1
+               and gba.idx == 0 and gba.tx == START)
+    gba.process(0x00)
+    stale_ack_ok = (gba.start_guard == 1 and gba.idx == 0 and gba.tx == START)
+    gba.process(START)
+    second_75 = (gba.start_guard == 2 and gba.tx == START)
+    gba.process(0x00)
+    ack_ok = (gba.start_guard == 0 and gba.idx == 2 and gba.tx == 0x76)
+    # Crystal action 6 sends 0x76; the table already presents 0x76 while it
+    # waits for the block preamble.  The first 0xFD moves it to the stream.
+    gba.process(0x76)
+    action6_ok = (gba.idx == 2 and gba.tx == 0x76)
+    gba.process(SYN)
+    stream_ok = (gba.sub == SYN_ST and gba.tx == SEND_NO_INFO)
+
+    ok = (stale_ok and success_ok and entered and stale_ack_ok and second_75
+          and ack_ok and action6_ok and stream_ok)
+    print("post-trade: stale=%s success=%s entry=%s stale_ack=%s 75=%s ack=%s action6=%s stream=%s %s" %
+          (stale_ok, success_ok, entered, stale_ack_ok, second_75, ack_ok,
+           action6_ok, stream_ok, "OK" if ok else "FAIL"))
+    return ok
+
+
 def test_chunks():
     gba = Gba()
     gba.sub = PAR
@@ -868,6 +962,7 @@ def main():
     ok = test_cancel_wins() and ok
     ok = test_trade_orderings() and ok
     ok = test_success_handshake() and ok
+    ok = test_post_trade_reexchange() and ok
     ok = test_chunks() and ok
     if not ok:
         print("PROTOCOL SIMULATION FAILED")

@@ -65,6 +65,17 @@ the GB's `0x00` acknowledgement of action 5, not after receiving the GB's own
 `0x76`.  `CheckLinkTimeout_Gen2` reads the previous exchange's byte, so the
 latter loses the race and Crystal reports "Too much time has elapsed.".
 
+The same one-byte delay exists after the trade.  The GBA enters the
+anti-cloning success phase at the start of its trade animation (after the
+trade menu has stored the final selection), presents only the exact `0x70|n`
+success byte, and keeps it for twenty frames after the second sighting.
+Crystal's animation can be shorter than Emerald's; starting the success phase
+at the end of the GBA animation instead lets Crystal read the old `0x72` accept
+byte as its success value and save before the GBA ever sees `0x70`.  When the
+`CheckLinkTimeout` `0x75` arrives while the success phase is still active, a
+guard ignores the stale `0x00` acknowledge until two action-5 bytes have been
+seen.
+
 ---
 
 ## 0. Design decisions (summary)
@@ -481,6 +492,16 @@ Therefore the GBA must start each block with the correct `0xFD` bytes.
 `0xFE` means “no data”: **it must never appear as real data**. That is what the
 **patch list** is for.
 
+The GBA's SYN phase counts the GB's preamble bytes and only starts sending the
+payload after the real preamble.  The first chunk keeps the reference's
+three-byte minimum (the start table and the SYN state already consume the first
+two FD bytes of Crystal's seven-byte RN preamble).  The party chunk requires
+its full six bytes, so an idle `0x00` after a partial preamble cannot start the
+next chunk early; the patch chunk uses its three bytes.  `StartReexchange` also
+stops and restarts the SIO transfer, like the reference's
+`stop_transfer`/`start_transfer`, so a stale armed byte from the previous block
+is not counted as the first byte of the next one.
+
 #### Sizes and timings
 
 | Block | Gen II | Gen I |
@@ -772,13 +793,13 @@ After the trade animation, GSC sends a check byte:
 
 If the value is not `0`, GSC **repeats until it receives exactly the same
 byte**. The GBA must do the same: send `0x70 + n` and treat **two sightings of
-a `0x7X` byte** as the success handshake being complete, exactly like the
+that exact byte** as the success handshake being complete, exactly like the
 reference's `get_success()`.
 
 `0x75` is **not** part of that wait: it is the next `CheckLinkTimeout_Gen2`,
 i.e. the start of the post-trade re-exchange.
 
-**Order matters.** GSC does, in this order:
+**Order and timing matter.** GSC does, in this order:
 
 1. animation ends;
 2. anti-cloning success exchange;
@@ -787,18 +808,32 @@ i.e. the start of the post-trade re-exchange.
    party block exchange.
 
 The GBA must match that order.  Starting the success exchange only after the
-GBA save (the previous implementation) makes our `0x70` arrive when GSC is
-already in `CheckLinkTimeout_Gen2`; its action-5 check reads `0x76`/`0x70`
-instead of `0x75` and reports **“Too much time has elapsed.”**  The current
-flow is:
+GBA animation (the previous implementation) is too late when Crystal's
+animation is shorter: Crystal's success exchange reads the GBA's **old 0x72
+accept byte**, treats it as the success value, and goes to `SaveAfterLinkTrade`
+before the GBA presents `0x70`.  The GBA then sends `0x70` during Crystal's
+save, never sees a success byte, and finally mistakes the next `0x75` for the
+success acknowledgement.
 
-- `CB2_UpdateLinkTrade` starts the success exchange immediately after
-  `TradeMons()` (`GbTrade_StartSuccess`);
-- `CB2_TryLinkTradeEvolution` waits for two sightings (`GbTrade_IsSuccessDone`)
-  before evolving;
-- then it starts the re-exchange (`GbTrade_StartReexchange`) **before** the
-  GBA save.  The link task keeps answering `0x75`/`0x76` and streaming the next
-  party block during the evolution and the flash save, so GSC never times out.
+The current flow is:
+
+- `CB2_UpdateLinkTrade` enters the success phase at the **start** of the
+  animation (after `CB_WaitToStartTrade` has stored the final selection in
+  `gSelectedTradeMonPositions`), so the success byte is on the wire for the
+  whole trade animation;
+- only the **exact** success byte (`0x70|n`) completes the handshake, so the
+  stale `0x72` from the confirmation exchange is ignored;
+- after the second sighting the protocol keeps presenting the success byte for
+  `GB_SUCCESS_HOLD_FRAMES` (20) frames, which covers Crystal's ten receive and
+  ten acknowledge frames and prevents a `0x75` from overwriting its
+  `wOtherPlayerLinkAction`;
+- `CB2_TryLinkTradeEvolution` waits for `GbTrade_IsSuccessDone()`, starts the
+  re-exchange (`GbTrade_StartReexchange`) before the GBA save, then evolves and
+  saves while the link task keeps answering.
+
+`GbProtocol_StartSuccess()` is idempotent: `CB2_UpdateLinkTrade` also calls it
+at the start of the animation as a defensive ensure, but it must not reset an
+already-completed handshake.
 
 The GB link task must stay alive through the animation, the evolution and the
 save.  `CB2_UpdateLinkTrade`, `CB2_TryLinkTradeEvolution` and
@@ -825,6 +860,22 @@ The GBA must:
 3. stream it when the GB asks for it;
 4. return to the trade menu.
 
+For Gen II the re-exchange starts with a fresh `CheckLinkTimeout_Gen2`, not a
+full room handshake.  The GBA therefore enters the start table directly at its
+first entry (`0x75`), rather than restarting with `0x01`.  Crystal sends
+action 5 (`0x75`) for ten receive frames and then twenty `0x00` acknowledge
+frames; the table changes to `0x76` only after a real acknowledge.
+
+There is one timing hazard at this transition.  If the `0x75` arrives while
+the GBA was still in the success phase, Crystal's last `0x00` acknowledge of
+the success exchange can still be in flight.  Accepting that stale `0x00` as
+the action-5 acknowledgement makes the GBA present `0x76` too early; Crystal's
+action-5 check then reads `0x76`, fails, and reports “Too much time has
+elapsed.”.  `sStartReexchangeGuard` prevents this: after the fallback `0x75`,
+the GBA ignores `0x00` until it has seen **two** `0x75` bytes (or until
+Crystal has already moved on to `0x76`).  `tools/time_capsule/tests/sim_protocol.py`
+covers the stale-ack case.
+
 ### 3.12 Exit
 
 - Gen II: the menu sends `0x7F`; when both send `0x7F`, GSC leaves
@@ -833,6 +884,17 @@ The GBA must:
 
 The GBA waits for the echo and then stops the GB session
 (`GbLink_Shutdown`), returning to the map with the normal warp.
+
+`0x7F` can arrive while the GBA trade menu is idle (`TC_TRADE_NO_INFO`), not
+only during a selection.  It is therefore handled at the top of
+`TcProcessTradeMenu` as well as in `TcGetOffer`: the GBA records
+`sPeerExited`, enters `GB_STATE_EXIT` and closes the menu.  If Crystal has
+already gone back to the Cable Club receptionist, it starts probing with
+`0x00`/`0x01`/`0x02` instead of echoing `0x7F`; `GB_STATE_EXIT` treats those
+bytes (after a short grace period) and the exit timeout
+(`GB_EXIT_TIMEOUT`, 60 frames) as a completed session, so the GBA does not sit
+on “waiting for your friend to finish”.  The post-trade standby is 60 frames
+and the save screen timers are shortened accordingly.
 
 ### 3.13 Timeouts
 

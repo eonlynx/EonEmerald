@@ -1425,7 +1425,7 @@ static void CB1_UpdateLink(void)
         // The other game left the trade room (or the player asked it to
         // leave): the Gen I/II exit byte is being exchanged, so the trade
         // menu has to be closed.
-        if (GbProtocol_IsExiting())
+        if (GbProtocol_IsExiting() || GbProtocol_PeerLeft())
         {
             sTradeMenu->callbackId = CB_INIT_EXIT_CANCELED_TRADE;
             return;
@@ -4542,6 +4542,13 @@ static void CB2_AfterTradeEvolution(void)
 static void CB2_TryLinkTradeEvolution(void)
 {
     u32 evoTarget;
+
+    // The animation callback may have been the only place that re-created the
+    // task after a ResetTasks().  Keep the GB link alive while we wait for the
+    // success handshake and during the evolution scene.
+    if (gTimeCapsuleActive)
+        TimeCapsule_EnsureLinkTask();
+
     switch (gMain.state)
     {
     case 0:
@@ -4782,7 +4789,16 @@ void CreateInGameTradePokemon(void)
 static void CB2_UpdateLinkTrade(void)
 {
     if (gTimeCapsuleActive)
+    {
         TimeCapsule_EnsureLinkTask();
+        // Start the anti-cloning exchange as soon as the animation begins,
+        // not when it ends.  Crystal's animation can be shorter than ours: by
+        // the time ours finishes, its success exchange has already read our
+        // old 0x72 accept byte, completed, and moved on to SaveAfterLinkTrade.
+        // Our 0x70 then arrives during its save and the handshake is missed.
+        if (GbProtocol_GetGeneration() == TIME_CAPSULE_GEN_2)
+            GbTrade_StartSuccess();
+    }
 
     if (DoTradeAnim() == TRUE)
     {
@@ -4791,12 +4807,10 @@ static void CB2_UpdateLinkTrade(void)
         TradeMons(gSelectedTradeMonPositions[TRADE_PLAYER], gSelectedTradeMonPositions[TRADE_PARTNER] % PARTY_SIZE);
         if (gTimeCapsuleActive)
         {
-            // Crystal performs its anti-cloning success exchange immediately
-            // after the animation, then saves.  Start ours now for the same
-            // reason: if we save first, Crystal is already in its next
-            // CheckLinkTimeout when the 0x70 finally arrives and reports
-            // "too much time has elapsed".
-            GbTrade_StartSuccess();
+            // Gen I has no anti-cloning exchange: its 0x60/0xFD re-exchange
+            // starts only after the animation, so present the sync byte now.
+            if (GbProtocol_GetGeneration() != TIME_CAPSULE_GEN_2)
+                GbTrade_StartSuccess();
             SetMainCallback2(CB2_TryLinkTradeEvolution);
         }
         else
@@ -4846,6 +4860,12 @@ static void CB2_WaitTradeComplete(void)
 
 static void CB2_SaveAndEndTrade(void)
 {
+    // Keep the protocol pumped during the "communication standby" delay and
+    // the flash save; Crystal is already waiting in CheckLinkTimeout or the
+    // next block exchange.
+    if (gTimeCapsuleActive)
+        TimeCapsule_EnsureLinkTask();
+
     switch (gMain.state)
     {
     case 0:
@@ -4859,7 +4879,7 @@ static void CB2_SaveAndEndTrade(void)
         sTradeAnim->timer = 0;
         break;
     case 100:
-        if (++sTradeAnim->timer > 180)
+        if (++sTradeAnim->timer > 60)
         {
             gMain.state = 101;
             sTradeAnim->timer = 0;
@@ -4910,7 +4930,7 @@ static void CB2_SaveAndEndTrade(void)
         sTradeAnim->timer = 0;
         break;
     case 40:
-        if (++sTradeAnim->timer > 50)
+        if (++sTradeAnim->timer > 30)
         {
             if (GetMultiplayerId() == 0)
                 sTradeAnim->timer = Random() % 30;
@@ -4938,7 +4958,7 @@ static void CB2_SaveAndEndTrade(void)
         }
         break;
     case 5:
-        if (++sTradeAnim->timer > 60)
+        if (++sTradeAnim->timer > 30)
         {
             gMain.state++;
             SetTradeLinkStandbyCallback(2);

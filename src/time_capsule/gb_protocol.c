@@ -105,7 +105,12 @@ enum
 
 #define GB_BULK_TIMEOUT       3600
 #define GB_SUCCESS_TIMEOUT    3600
-#define GB_EXIT_TIMEOUT       180
+#define GB_EXIT_TIMEOUT       60
+// Crystal's success WaitLinkTransfer does ten receive frames and ten
+// acknowledge frames after it detects our byte.  Keep presenting the success
+// byte for that long before starting the next CheckLinkTimeout, otherwise a
+// 0x75 can overwrite its wOtherPlayerLinkAction (important for Mew/Celebi).
+#define GB_SUCCESS_HOLD_FRAMES 20
 // Non-0xFE bytes Crystal may send while it is still acknowledging the
 // selection.  24 covers ten receive + ten acknowledge frames plus margin.
 #define GB_SELECT_ACK_TIMEOUT 24
@@ -163,6 +168,7 @@ static EWRAM_DATA u16 sBasePos;
 static EWRAM_DATA u16 sBufferCounter;    // also check_if_continue's index
 static EWRAM_DATA u16 sBufferCounterOut;
 static EWRAM_DATA u8 sSynTransmitted;
+static EWRAM_DATA u8 sSynRequired;
 static EWRAM_DATA bool8 sHasTransmittedSyn;
 
 // Start-trade tables (master entity of communicator.c).  The room byte is
@@ -229,7 +235,13 @@ static void TcSetConfirmOut(u8 value)
 static EWRAM_DATA u8 sSuccessValue; // anti-cloning nybble, not the full byte
 static EWRAM_DATA bool8 sSuccessPrepared;
 static EWRAM_DATA bool8 sSuccessDone;
+static EWRAM_DATA u8 sSuccessHoldFrames;
 static EWRAM_DATA bool8 sReexchangeStarted;
+// When the 0x75 that starts the next CheckLinkTimeout arrives while the
+// success phase was still active, Crystal's previous 0x00 acknowledge may
+// still be in flight.  Require two action-5 bytes before accepting the 0x00
+// that advances the start table to 0x76.
+static EWRAM_DATA u8 sStartReexchangeGuard;
 static EWRAM_DATA u16 sSuccessWaitFrames;
 static EWRAM_DATA u8 sExitValue;
 
@@ -439,7 +451,18 @@ static bool8 TcParseReceivedBlock(void)
 static void TcResetTransferBetweenSync(void)
 {
     sHasTransmittedSyn = FALSE;
+    // The first chunk keeps the reference's three-byte minimum: the start
+    // table and the START_TRADE_SYN state already consume the first two FD
+    // bytes of Crystal's RN preamble.  The party chunk uses its real six-byte
+    // preamble, so an idle 0x00 after a partial preamble cannot start the
+    // next chunk early.  The patch chunk keeps the reference's three bytes.
     sSynTransmitted = 0;
+    if (sSizesIndex == 0)
+        sSynRequired = MIN_WAIT_FOR_SYN;
+    else if (sSizesIndex == 1)
+        sSynRequired = GB_PARTY_PREAMBLE_SIZE;
+    else
+        sSynRequired = GB_PATCH_PREAMBLE_SIZE;
     sBufferCounter = 0;
     sBufferCounterOut = 0;
 }
@@ -447,8 +470,8 @@ static void TcResetTransferBetweenSync(void)
 static void TcInitTransferData(void)
 {
     sBasePos = 0;
-    TcResetTransferBetweenSync();
     sSizesIndex = 0;
+    TcResetTransferBetweenSync();
     sStartState = TC_START_PAR;
     sNoDataFrames = 0;
 }
@@ -482,7 +505,7 @@ static u8 TcCommunicateBuffer(u8 data)
         if (sSynTransmitted >= MAX_WAIT_FOR_SYN)
             sSynTransmitted = MAX_WAIT_FOR_SYN;
 
-        if (sSynTransmitted < MIN_WAIT_FOR_SYN)
+        if (sSynTransmitted < sSynRequired)
         {
             if (data != SEND_NO_INFO && data == SYNCHRONIZE_BYTE)
                 sSynTransmitted++;
@@ -511,6 +534,10 @@ static u8 TcCommunicateBuffer(u8 data)
             sBasePos += sSizes[sSizesIndex];
             sSizesIndex++;
             TcResetTransferBetweenSync();
+#if TIME_CAPSULE_DEBUG_LOG
+            DebugPrintfLevel(MGBA_LOG_DEBUG, "TC chunk done: next=%u base=%u rx=%02X syn=%u/%u",
+                             sSizesIndex, sBasePos, data, sSynTransmitted, sSynRequired);
+#endif
 
             if (sSizesIndex >= TC_MAX_CHUNKS)
             {
@@ -650,25 +677,42 @@ static void TcGetSuccess(u8 data)
 {
     u8 base = TradeBase();
 
-    if ((data & 0xF0) == (base & 0xF0))
+    if (sGen == TIME_CAPSULE_GEN_1)
     {
-        // The GB repeats its anti-cloning byte until it receives ours.  Two
-        // sightings mean the success exchange is complete (this is exactly
-        // what the reference's get_success() does).  0x75 is the next
-        // CheckLinkTimeout, not part of this handshake; waiting for it here
-        // can leave Emerald on the black save screen forever.
-        if (sGen == TIME_CAPSULE_GEN_1)
+        // Gen I has no anti-cloning exchange.  After its animation it starts
+        // the re-exchange with 0x60, which is the signal that we may evolve
+        // and save.
+        if ((data & 0xF0) == (base & 0xF0))
         {
             sSuccessDone = TRUE;
+            sSuccessHoldFrames = 0;
             sReexchangeStarted = FALSE;
         }
-        else if (!sReceivedOnce)
+        return;
+    }
+
+    // Both sides derive the anti-cloning nybble from the same two traded
+    // mons, so only our exact success byte completes the handshake.  This is
+    // deliberately stricter than the reference's high-nibble test: after the
+    // confirmation exchange Crystal sends 0x72 (accept), and that stale byte
+    // must not be mistaken for the post-animation success exchange.
+    if (data == (base | sSuccessValue))
+    {
+        if (!sReceivedOnce)
         {
             sReceivedOnce = TRUE;
         }
         else
         {
+            // Crystal still has ten receive and ten acknowledge frames to
+            // run.  Do not let the caller switch the wire to 0x75 until they
+            // are over; wOtherPlayerLinkAction would be overwritten.
             sSuccessDone = TRUE;
+            sSuccessHoldFrames = GB_SUCCESS_HOLD_FRAMES;
+#if TIME_CAPSULE_DEBUG_LOG
+            DebugPrintfLevel(MGBA_LOG_DEBUG, "TC post: success seen value=%u hold=%u",
+                             sSuccessValue, sSuccessHoldFrames);
+#endif
         }
     }
 }
@@ -713,19 +757,39 @@ static void TcProcessTradeMenu(u8 data)
         return;
     }
 
+    // The other game left the trade room.  This can arrive while the menu is
+    // idle (NO_INFO), not only during a selection, so it has to be handled
+    // here as well as in TcGetOffer.  Without this the GBA keeps the menu open
+    // and later waits forever for an echo after its own exit.
+    if (data == base + CANCEL_VALUE)
+    {
+        sPeerExited = TRUE;
+        sExitValue = data;
+        sTxByte = data;
+        sState = GB_STATE_EXIT;
+        sFrameCounter = 0;
+        return;
+    }
+
     // After the trade the GB saves and jumps straight back into
     // Gen2ToGen2LinkComms, i.e. into a new CheckLinkTimeout_Gen2.  A 0x75
     // while we are presenting the anti-cloning byte can only be that
     // re-handshake (the success byte itself is 0x70..0x72).  This is the
-    // definitive "the other side received our byte and saved" signal.
+    // fallback for a success exchange we did not observe (for example because
+    // it happened while the trade animation was still using the accept byte).
     if (sTradingState == TC_TRADE_HAVE_SUCCESS && data == START_TRADE_BYTE_GEN2)
     {
         sSuccessDone = TRUE;
+        sSuccessHoldFrames = 0;
         sReexchangeStarted = TRUE;
         sStartState = TC_START_STA;
         sBufferCounter = 0;
+        sStartReexchangeGuard = 1;
         sTradingState = TC_TRADE_NO_INFO;
         sTxByte = START_TRADE_BYTE_GEN2;
+#if TIME_CAPSULE_DEBUG_LOG
+        DebugPrintfLevel(MGBA_LOG_DEBUG, "TC post: 0x75 in success -> guarded start table");
+#endif
         return;
     }
 
@@ -975,6 +1039,42 @@ static void TcProcessGen2(u8 data)
         break;
 
     case TC_START_STA:
+        if (sStartReexchangeGuard)
+        {
+            // Entered from the success fallback.  Crystal's previous 0x00
+            // acknowledge can still be in flight, so do not treat the first
+            // 0x00 as the action-5 acknowledgement.  Wait for the action-5
+            // bytes to repeat (or for an already-started action 6) first.
+            if (data == 0x76)
+            {
+                sStartReexchangeGuard = 0;
+                sBufferCounter = 2;
+                sTxByte = 0x76;
+                break;
+            }
+
+            if (data == START_TRADE_BYTE_GEN2)
+            {
+                if (sStartReexchangeGuard < 2)
+                    sStartReexchangeGuard++;
+                sTxByte = START_TRADE_BYTE_GEN2;
+                break;
+            }
+
+            if (data == 0x00 && sStartReexchangeGuard >= 2)
+            {
+                // This is the real action-5 acknowledge.  Count the action-5
+                // byte we already saw and let the table advance to 0x76.
+                sStartReexchangeGuard = 0;
+                sBufferCounter = 1;
+            }
+            else
+            {
+                sTxByte = START_TRADE_BYTE_GEN2;
+                break;
+            }
+        }
+
         if (sBufferCounter < 2 && IsRoomSyncByte(data))
         {
             // The GB retried Link_EnsureSync (0xD0/0xD4) before offering
@@ -1297,8 +1397,13 @@ static void ProcessByteInner(u8 byte)
         break;
 
     case GB_STATE_EXIT:
-        if (byte == sExitValue)
+        if (byte == sExitValue
+         || (sFrameCounter > 10 && (byte == 0x00 || byte == 0x01 || byte == 0x02)))
         {
+            // The peer echoed our exit byte, acknowledged it with 0x00, or
+            // has already gone back to the Cable Club receptionist and is
+            // probing with 0x01/0x02.  Any of these means the link session is
+            // over; do not wait for a 0x7F that will never arrive.
             sFinished = TRUE;
             GbLink_Shutdown();
             sState = GB_STATE_DONE;
@@ -1439,6 +1544,8 @@ void GbProtocol_Init(u8 room)
     sPeerExited = FALSE;
     sNoDataFrames = 0;
     sSuccessDone = FALSE;
+    sSuccessHoldFrames = 0;
+    sStartReexchangeGuard = 0;
     sSuccessValue = 0;
     sSuccessPrepared = FALSE;
     sTradingState = TC_TRADE_NO_INFO;
@@ -1465,6 +1572,10 @@ void GbProtocol_Init(u8 room)
 
     GbLink_Init();
 
+#if TIME_CAPSULE_DEBUG_LOG
+    DebugPrintfLevel(MGBA_LOG_DEBUG, "TC build: posttrade-2 %s %s", __DATE__, __TIME__);
+#endif
+
     // Ask the GB to use the external clock, so the GBA stays the clock
     // master (Poke_Transporter_GB does the same: outData = 0x01).
     sTxByte = 0x01;
@@ -1488,6 +1599,11 @@ void GbProtocol_Update(void)
 
     sFrameCounter++;
 
+    // Hold the success byte for the rest of Crystal's receive/acknowledge
+    // frames before the caller starts the next CheckLinkTimeout.
+    if (sSuccessHoldFrames)
+        sSuccessHoldFrames--;
+
     // The trade is complete when the GB starts its next CheckLinkTimeout.
     // If it never comes back (for example the player turned the GB off right
     // after saving), release the GBA trade animation instead of hanging.
@@ -1496,6 +1612,7 @@ void GbProtocol_Update(void)
         if (++sSuccessWaitFrames > GB_SUCCESS_TIMEOUT)
         {
             sSuccessDone = TRUE;
+            sSuccessHoldFrames = 0;
             sReexchangeStarted = FALSE;
         }
     }
@@ -1729,16 +1846,12 @@ void GbProtocol_SendTradeCommand(u16 cmd, u16 arg)
         break;
 
     case LINKCMD_START_TRADE:
-        // The trade animation is about to start.  Capture the anti-cloning
-        // nybble now: the reference computes it before swapping the mons
-        // (prepare_gen23_success), while the GBA trade code swaps them when
-        // the animation ends.  The byte itself is only presented after the
-        // animation, like the GB's LinkTrade.
-        if (!sSuccessPrepared)
-        {
-            sSuccessPrepared = TRUE;
-            TcComputeSuccessValue();
-        }
+        // The success nybble is prepared when the trade menu has stored the
+        // final selections (CB_WaitToStartTrade), not here: this command is
+        // queued as soon as both players confirm, before the menu writes
+        // gSelectedTradeMonPositions.  Preparing it from stale positions
+        // would send 0x70 for a Mew/Celebi trade.
+        sSuccessPrepared = FALSE;
         sAcceptPending = FALSE;
         sPeerConfirmed = FALSE;
         sSelectionHoldFrames = 0;
@@ -1793,8 +1906,25 @@ void GbProtocol_StartSuccess(void)
     if (!sSuccessPrepared)
         TcComputeSuccessValue();
 
+    // The protocol may already have entered this phase at the start of the
+    // trade animation, the 0x75 fallback may already have started the
+    // re-exchange, or the next block stream may even be running (if Crystal
+    // finished its save before our animation ended).  Do not wipe the
+    // sightings / start table just because the animation callback calls us
+    // again on the next frame.
+    if (sStartState != TC_START_DON
+     || sTradingState == TC_TRADE_HAVE_SUCCESS
+     || sReexchangeStarted)
+    {
+        if (sStartState == TC_START_DON && sTradingState == TC_TRADE_HAVE_SUCCESS)
+            sTxByte = base | sSuccessValue;
+        return;
+    }
+
     sSuccessDone = FALSE;
+    sSuccessHoldFrames = 0;
     sReexchangeStarted = FALSE;
+    sStartReexchangeGuard = 0;
     sSuccessWaitFrames = 0;
     sTradingState = TC_TRADE_HAVE_SUCCESS;
     sReceivedOnce = FALSE;
@@ -1805,11 +1935,14 @@ void GbProtocol_StartSuccess(void)
     TcClearConfirmOut();
     sSynTransmitted = 0;
     sTxByte = base | sSuccessValue;
+#if TIME_CAPSULE_DEBUG_LOG
+    DebugPrintfLevel(MGBA_LOG_DEBUG, "TC post: success start value=%u tx=%02X", sSuccessValue, sTxByte);
+#endif
 }
 
 bool8 GbProtocol_IsSuccessDone(void)
 {
-    return sSuccessDone;
+    return sSuccessDone && sSuccessHoldFrames == 0;
 }
 
 void GbProtocol_StartReexchange(void)
@@ -1839,11 +1972,17 @@ void GbProtocol_StartReexchange(void)
         return;
     }
 
-    // The GB jumps straight from its save back into Gen2ToGen2LinkComms, so
-    // this is a complete re-handshake, not just another block.  If the 0x75
-    // that announced the re-exchange was already caught, keep the STA phase
-    // (and answer it with 0x75); otherwise the reference restarts its master
-    // routine with ENTER_TRADE_MASTER (0x01) and answers the 0x75 later.
+    // Crystal jumps straight from its save back into Gen2ToGen2LinkComms, i.e.
+    // into CheckLinkTimeout_Gen2 and then the next block exchange.  Present
+    // 0x75 immediately: Crystal's action-5 timeout is only a few frames, and
+    // it ignores anything that is not 0x7X while it waits.
+    //
+    // Drop any half-finished SIO transfer (the reference stops and restarts
+    // its transfer at this point).  A stale armed byte from the previous
+    // block would otherwise be counted as the first byte of the next one.
+    GbLink_Shutdown();
+    GbLink_Init();
+
     TcSetSizes();
     TcBuildOutBuffer();
 
@@ -1855,6 +1994,7 @@ void GbProtocol_StartReexchange(void)
     sTradingState = TC_TRADE_NO_INFO;
     sPartyReady = FALSE;
     sSuccessDone = FALSE;
+    sSuccessHoldFrames = 0;
     sSuccessPrepared = FALSE;
     sReceivedOnce = FALSE;
     sLastPeerAction = 0xFF;
@@ -1863,19 +2003,17 @@ void GbProtocol_StartReexchange(void)
     sSelectionHoldFrames = 0;
     sState = GB_STATE_GEN2;
 
-    if (sReexchangeStarted)
-    {
-        sStartState = TC_START_STA;
-        sBufferCounter = 0;
-        sTxByte = START_TRADE_BYTE_GEN2;
-    }
-    else
-    {
-        sStartState = TC_START_UNK;
-        sBufferCounter = 0;
-        sTxByte = 0x01;
-    }
+    if (!sReexchangeStarted)
+        sStartReexchangeGuard = 0;
+    sStartState = TC_START_STA;
+    sBufferCounter = 0;
+    sTxByte = START_TRADE_BYTE_GEN2;
     sReexchangeStarted = FALSE;
+
+#if TIME_CAPSULE_DEBUG_LOG
+    DebugPrintfLevel(MGBA_LOG_DEBUG, "TC post: reexchange start guard=%u tx=%02X",
+                     sStartReexchangeGuard, sTxByte);
+#endif
 
     sFrameCounter = 0;
     sNoDataFrames = 0;
