@@ -3,8 +3,13 @@
 
 // Time Capsule (GBA <-> Gen I/II link) configuration.
 
-// Debug logging of TX/RX bytes. Keep FALSE for release builds.
+// Debug logging of TX/RX bytes. Enabled in development builds, disabled by
+// `make release` (NDEBUG).
+#ifndef NDEBUG
 #define TIME_CAPSULE_DEBUG_LOG             TRUE
+#else
+#define TIME_CAPSULE_DEBUG_LOG             FALSE
+#endif
 
 // Met location used for Pokémon received from the past.
 #define TIME_CAPSULE_DEFAULT_MET_LOCATION  0xFE // METLOC_IN_GAME_TRADE

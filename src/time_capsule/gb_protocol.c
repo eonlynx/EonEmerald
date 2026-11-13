@@ -79,6 +79,8 @@ enum
     TC_TRADE_NO_INFO = 0,
     TC_TRADE_HAVE_OFFER,
     TC_TRADE_HAVE_ACCEPT,
+    TC_TRADE_WAIT_ACK,
+    TC_TRADE_WAIT_CONFIRM,
     TC_TRADE_HAVE_SUCCESS,
 };
 
@@ -104,6 +106,11 @@ enum
 #define GB_BULK_TIMEOUT       3600
 #define GB_SUCCESS_TIMEOUT    3600
 #define GB_EXIT_TIMEOUT       180
+// Non-0xFE bytes Crystal may send while it is still acknowledging the
+// selection.  24 covers ten receive + ten acknowledge frames plus margin.
+#define GB_SELECT_ACK_TIMEOUT 24
+// Frames the error state stays on screen before shutting the link down.
+#define GB_ERROR_DISPLAY_FRAMES 30
 
 // ---------------------------------------------------------------------------
 // Faithful Gen II protocol constants and tables.
@@ -183,12 +190,41 @@ static EWRAM_DATA u16 sBulkCount;
 
 // Trade menu (port of get_offer/get_accept/get_success).
 static EWRAM_DATA u8 sTradingState;
-static EWRAM_DATA u8 sTradeOfferOut;
+// Each phase owns its own output value.  They are never shared: the party
+// slot used during the selection must not be visible as a confirmation
+// answer (0x70 is a valid slot and also a valid "accept" to Crystal).
+static EWRAM_DATA u8 sSelectionOut;   // our party slot during selection
+static EWRAM_DATA u8 sConfirmOut;     // ACCEPT_VALUE / DECLINE_VALUE
+static EWRAM_DATA bool8 sConfirmOutValid;
 static EWRAM_DATA bool8 sReceivedOnce;
 static EWRAM_DATA u8 sLastPeerAction;
 static EWRAM_DATA u16 sTradeCmd;
 static EWRAM_DATA u16 sTradeArg;
 static EWRAM_DATA bool8 sHasTradeCmd;
+// The selection exchange has to finish before we may present an accept:
+// Crystal records the last 0x7X byte it reads there as our party slot.
+static EWRAM_DATA bool8 sAcceptPending;
+// Crystal may confirm before the GBA player does; remember it, because the
+// GB stops repeating 0x72 as soon as its own confirmation exchange ends.
+static EWRAM_DATA bool8 sPeerConfirmed;
+static EWRAM_DATA u8 sAckWaitFrames;
+// Keep the selection offer on the wire for one more full frame after it has
+// been detected.  Crystal's main loop samples hSerialReceive once per frame;
+// the detection itself only proves that its offer arrived, not that it has
+// already sampled ours.
+static EWRAM_DATA u8 sSelectionHoldFrames;
+
+static void TcClearConfirmOut(void)
+{
+    sConfirmOut = DECLINE_VALUE;
+    sConfirmOutValid = FALSE;
+}
+
+static void TcSetConfirmOut(u8 value)
+{
+    sConfirmOut = value;
+    sConfirmOutValid = TRUE;
+}
 
 static EWRAM_DATA u8 sSuccessValue; // anti-cloning nybble, not the full byte
 static EWRAM_DATA bool8 sSuccessPrepared;
@@ -205,6 +241,91 @@ static u8 TradeBase(void)
 {
     return (sGen == TIME_CAPSULE_GEN_1) ? 0x60 : 0x70;
 }
+
+// Single source of truth for the byte the GBA presents in each trade-menu
+// phase.  Keeping this derived from the phase (instead of reusing one
+// "trade offer" variable) is what prevents the selection slot from being
+// sent as a confirmation answer: 0x70 means "first Pokémon" while selecting
+// and "accept" while confirming.
+static u8 TcTradeTxByte(void)
+{
+    u8 base = TradeBase();
+
+    if (sState == GB_STATE_EXIT)
+        return sExitValue;
+
+    switch (sTradingState)
+    {
+    case TC_TRADE_HAVE_OFFER:
+        return base + sSelectionOut;
+    case TC_TRADE_WAIT_ACK:
+        return SEND_NO_INFO;
+    case TC_TRADE_WAIT_CONFIRM:
+    case TC_TRADE_HAVE_ACCEPT:
+        return sConfirmOutValid ? base + sConfirmOut : SEND_NO_INFO;
+    case TC_TRADE_HAVE_SUCCESS:
+        return base | sSuccessValue;
+    default:
+        return SEND_NO_INFO;
+    }
+}
+
+// Executable version of the receive table in the research document.  A byte
+// is only interpreted by the phase that owns it; anything else is ignored.
+static bool8 TcPhaseAccepts(u8 data)
+{
+    u8 base = TradeBase();
+
+    switch (sTradingState)
+    {
+    case TC_TRADE_HAVE_OFFER:
+        return (data >= base && data < base + GB_PARTY_SIZE)
+            || data == base + CANCEL_VALUE;
+    case TC_TRADE_WAIT_ACK:
+        return data == 0x00;
+    case TC_TRADE_WAIT_CONFIRM:
+    case TC_TRADE_HAVE_ACCEPT:
+        return data == base + DECLINE_VALUE || data == base + ACCEPT_VALUE;
+    case TC_TRADE_HAVE_SUCCESS:
+        return (data & 0xF0) == (base & 0xF0);
+    default:
+        return FALSE;
+    }
+}
+
+// The wire byte must follow the trade phase on every transfer, not only when
+// a non-0xFE byte arrives.  Otherwise a phase change with no further input
+// leaves the previous phase's byte on the wire: Crystal's confirmation
+// WaitLinkTransfer reads the last received byte and would accept a stale
+// selection slot (0x70..0x75) as its answer.
+static void TcRefreshTradeTxByte(void)
+{
+    u8 base = TradeBase();
+
+    if (sState == GB_STATE_EXIT)
+    {
+        sTxByte = sExitValue;
+        return;
+    }
+
+    if (sState != GB_STATE_GEN2 || sStartState != TC_START_DON)
+        return;
+
+    if (sSelectionHoldFrames
+     && (sTradingState == TC_TRADE_HAVE_OFFER
+      || sTradingState == TC_TRADE_WAIT_ACK))
+    {
+        sTxByte = base + sSelectionOut;
+        return;
+    }
+
+    if (sTradingState == TC_TRADE_HAVE_OFFER
+     && sSynTransmitted < MIN_WAIT_FOR_SYN)
+        sTxByte = SEND_NO_INFO;
+    else
+        sTxByte = TcTradeTxByte();
+}
+
 
 // Any 0xD0..0xDF byte is a room-sync byte (Link_EnsureSync): the GB only
 // checks the high nibble, and it uses 0xD0 for the Time Capsule room and 0xD4
@@ -299,6 +420,9 @@ static bool8 TcParseReceivedBlock(void)
     sTradingState = TC_TRADE_NO_INFO;
     sReceivedOnce = FALSE;
     sLastPeerAction = 0xFF;
+    sAcceptPending = FALSE;
+    sPeerConfirmed = FALSE;
+    sSelectionHoldFrames = 0;
     sSynTransmitted = 0;
 
 #if TIME_CAPSULE_DEBUG_LOG
@@ -428,7 +552,7 @@ static void TcReportTradeCommand(u8 byte, u16 cmd, u16 arg)
 #endif
 }
 
-static u8 TcGetOffer(u8 data)
+static void TcGetOffer(u8 data)
 {
     u8 base = TradeBase();
     u8 limit = base + GB_PARTY_SIZE;
@@ -457,18 +581,35 @@ static u8 TcGetOffer(u8 data)
                     sTxByte = data;
                     sState = GB_STATE_EXIT;
                     sFrameCounter = 0;
-                    return data;
+                    return;
                 }
                 TcReportTradeCommand(data, LINKCMD_READY_TO_TRADE, data - base);
+                // The selection phase is over; its debounce byte must not
+                // hide Crystal's later 0x72 confirmation (the same value as
+                // its slot-2 offer).  Start the ack/confirm phase fresh.
+                sLastPeerAction = 0xFF;
+                sReceivedOnce = FALSE;
+                // Gen II still has to acknowledge the selection (ten 0x00
+                // frames).  Keep our party slot on the wire for one more full
+                // frame so Crystal's main loop can sample it, then switch to
+                // 0xFE: keeping it during the confirmation would be read as
+                // an accept.  Gen I has no such phase.
+                if (sGen == TIME_CAPSULE_GEN_2)
+                {
+                    sTradingState = TC_TRADE_WAIT_ACK;
+                    sAckWaitFrames = 0;
+                    sSelectionHoldFrames = 1;
+                    TcClearConfirmOut();
+                    return;
+                }
+
                 sTradingState = TC_TRADE_NO_INFO;
             }
         }
     }
-
-    return base + sTradeOfferOut;
 }
 
-static u8 TcGetAccept(u8 data)
+static void TcGetAccept(u8 data)
 {
     u8 base = TradeBase();
 
@@ -484,52 +625,70 @@ static u8 TcGetAccept(u8 data)
             {
                 sReceivedOnce = FALSE;
 
-                if (data == base + ACCEPT_VALUE)
+                if (data == base + ACCEPT_VALUE
+                 && sConfirmOutValid
+                 && sConfirmOut == ACCEPT_VALUE)
+                {
                     TcReportTradeCommand(data, LINKCMD_INIT_BLOCK, 0);
+                }
                 else
+                {
+                    // The GB declined, or we had already declined: keep the
+                    // decline value so the GB cannot start a trade this side
+                    // did not accept.
+                    TcSetConfirmOut(DECLINE_VALUE);
                     TcReportTradeCommand(data, LINKCMD_READY_CANCEL_TRADE, 0);
+                }
 
                 sTradingState = TC_TRADE_NO_INFO;
             }
         }
     }
-
-    return base + sTradeOfferOut;
 }
 
-static u8 TcGetSuccess(u8 data)
+static void TcGetSuccess(u8 data)
 {
     u8 base = TradeBase();
 
     if ((data & 0xF0) == (base & 0xF0))
     {
-        // The GB is still sending its anti-cloning byte, so it has not
-        // received ours yet or is still saving.  Keep presenting ours; the
-        // trade is only complete when the GB starts the next block exchange
-        // (CheckLinkTimeout_Gen2's 0x75 for Gen II, or the 0x60/0xFD stream
-        // for Gen I, which never verifies the byte).
-        sReceivedOnce = TRUE;
-
+        // The GB repeats its anti-cloning byte until it receives ours.  Two
+        // sightings mean the success exchange is complete (this is exactly
+        // what the reference's get_success() does).  0x75 is the next
+        // CheckLinkTimeout, not part of this handshake; waiting for it here
+        // can leave Emerald on the black save screen forever.
         if (sGen == TIME_CAPSULE_GEN_1)
         {
             sSuccessDone = TRUE;
             sReexchangeStarted = FALSE;
         }
+        else if (!sReceivedOnce)
+        {
+            sReceivedOnce = TRUE;
+        }
+        else
+        {
+            sSuccessDone = TRUE;
+        }
     }
-
-    return base | sSuccessValue;
 }
 
 static void TcProcessTradeMenu(u8 data)
 {
+    u8 base = TradeBase();
+
     // A restarted link (the GB went back to the Cable Club receptionist)
-    // presents 0x61 / the room byte again.  0x71/0x72 are ambiguous with
-    // offers/accepts, so only 0x61 and the 0xD0 room byte restart here.
-    if (sGen == TIME_CAPSULE_GEN_2 && data == 0x61)
+    // presents 0x61/0x62 / the room byte again.  0x71/0x72 are ambiguous with
+    // offers/accepts, so only 0x61, 0x62 and the 0xD0 room byte restart here.
+    if (sGen == TIME_CAPSULE_GEN_2 && (data == 0x61 || data == 0x62))
     {
         sStartState = TC_START_ENT;
         sBufferCounter = 0;
         sPartyReady = FALSE;
+        sTradingState = TC_TRADE_NO_INFO;
+        sAcceptPending = FALSE;
+        sPeerConfirmed = FALSE;
+        sSelectionHoldFrames = 0;
         sTxByte = 0x01;
         return;
     }
@@ -546,6 +705,10 @@ static void TcProcessTradeMenu(u8 data)
         sBufferCounter = 2;
         sPartyReady = FALSE;
         sLinkEstablished = TRUE;
+        sTradingState = TC_TRADE_NO_INFO;
+        sAcceptPending = FALSE;
+        sPeerConfirmed = FALSE;
+        sSelectionHoldFrames = 0;
         sTxByte = data;
         return;
     }
@@ -566,26 +729,115 @@ static void TcProcessTradeMenu(u8 data)
         return;
     }
 
+    // The byte clocked in this exchange belongs to the phase that was active
+    // before the handlers below run.  The handlers only change the phase;
+    // the next exchange automatically presents the new phase's byte.  This
+    // is the same one-byte delay as communicator.c and it means a value can
+    // never be interpreted under the wrong phase.
+    if (sTradingState == TC_TRADE_HAVE_OFFER
+     && sSynTransmitted < MIN_WAIT_FOR_SYN)
+        sTxByte = SEND_NO_INFO;
+    else
+        sTxByte = TcTradeTxByte();
+
+    // Crystal acknowledges the selection with ten 0x00 frames.  Our offer
+    // was presented until this phase; from now on TcTradeTxByte() returns
+    // 0xFE, so the selection slot cannot leak into Crystal's confirmation.
+    if (sTradingState == TC_TRADE_WAIT_ACK)
+    {
+        bool8 ackOver = FALSE;
+
+        // Only 0x00 is meaningful in this phase: it is Crystal's selection
+        // acknowledge.  0x7X bytes here are its repeated selection offer and
+        // must not be interpreted as a confirmation (0x72 is also slot 2).
+        if (data == 0x00)
+        {
+            ackOver = TRUE;
+        }
+        else if (++sAckWaitFrames > GB_SELECT_ACK_TIMEOUT)
+        {
+            // The 0x00 ack was missed (or the GB is unusually slow).  Move
+            // on; a confirmation that is already repeating will be picked up
+            // by the WAIT_CONFIRM handler on the next byte.
+            ackOver = TRUE;
+        }
+
+        if (ackOver)
+        {
+            sTradingState = TC_TRADE_WAIT_CONFIRM;
+            sLastPeerAction = 0xFF;
+            sReceivedOnce = FALSE;
+
+            if (sAcceptPending)
+            {
+                sAcceptPending = FALSE;
+                TcSetConfirmOut(ACCEPT_VALUE);
+                sTradingState = TC_TRADE_HAVE_ACCEPT;
+
+                if (sPeerConfirmed)
+                    TcReportTradeCommand(base + ACCEPT_VALUE, LINKCMD_INIT_BLOCK, 0);
+            }
+        }
+        return;
+    }
+
+    if (sTradingState == TC_TRADE_WAIT_CONFIRM)
+    {
+        // Crystal's cancel must win over a simultaneous local accept: if we
+        // answered 0x72, Crystal's WaitLinkTransfer would read it as "yes"
+        // even though its player pressed NO.
+        if (data == base + DECLINE_VALUE)
+        {
+            // Crystal's player canceled its confirmation.  Answer with the
+            // same decline so its WaitLinkTransfer exits.
+            TcReportTradeCommand(data, LINKCMD_READY_CANCEL_TRADE, 0);
+            TcSetConfirmOut(DECLINE_VALUE);
+            sAcceptPending = FALSE;
+            sTradingState = TC_TRADE_HAVE_ACCEPT;
+            return;
+        }
+
+        if (sAcceptPending)
+        {
+            sAcceptPending = FALSE;
+            TcSetConfirmOut(ACCEPT_VALUE);
+            sTradingState = TC_TRADE_HAVE_ACCEPT;
+
+            if (sPeerConfirmed)
+                TcReportTradeCommand(base + ACCEPT_VALUE, LINKCMD_INIT_BLOCK, 0);
+            return;
+        }
+
+        if (data == base + ACCEPT_VALUE)
+            sPeerConfirmed = TRUE;
+
+        // 0xFE is ignored by WaitLinkTransfer; Crystal keeps waiting for this
+        // player's answer instead of starting a trade on its own.
+        return;
+    }
+
     if (sSynTransmitted < MIN_WAIT_FOR_SYN)
     {
         sSynTransmitted++;
-        sTxByte = SEND_NO_INFO;
         return;
     }
+
+    // Phase-scoped receive: the table above is the contract.
+    if (!TcPhaseAccepts(data))
+        return;
 
     switch (sTradingState)
     {
     case TC_TRADE_HAVE_OFFER:
-        sTxByte = TcGetOffer(data);
+        TcGetOffer(data);
         break;
     case TC_TRADE_HAVE_ACCEPT:
-        sTxByte = TcGetAccept(data);
+        TcGetAccept(data);
         break;
     case TC_TRADE_HAVE_SUCCESS:
-        sTxByte = TcGetSuccess(data);
+        TcGetSuccess(data);
         break;
     default:
-        sTxByte = SEND_NO_INFO;
         break;
     }
 }
@@ -897,6 +1149,9 @@ static bool8 ParseBulk(void)
     sTradingState = TC_TRADE_NO_INFO;
     sReceivedOnce = FALSE;
     sLastPeerAction = 0xFF;
+    sAcceptPending = FALSE;
+    sPeerConfirmed = FALSE;
+    sSelectionHoldFrames = 0;
     sSynTransmitted = 0;
     sState = GB_STATE_GEN2;
     sFrameCounter = 0;
@@ -1187,9 +1442,13 @@ void GbProtocol_Init(u8 room)
     sSuccessValue = 0;
     sSuccessPrepared = FALSE;
     sTradingState = TC_TRADE_NO_INFO;
-    sTradeOfferOut = 0;
+    sSelectionOut = 0;
+    TcClearConfirmOut();
     sReceivedOnce = FALSE;
     sLastPeerAction = 0xFF;
+    sAcceptPending = FALSE;
+    sPeerConfirmed = FALSE;
+    sSelectionHoldFrames = 0;
     sStartState = TC_START_UNK;
     sBufferCounter = 0;
     sSizesIndex = 0;
@@ -1250,13 +1509,18 @@ void GbProtocol_Update(void)
     if ((sFrameCounter % 60) == 0)
     {
         GbLink_LogDebug();
-        DebugPrintfLevel(MGBA_LOG_DEBUG, "TC proto: state=%u gen=%u sub=%u trade=%u tx=%02X bc=%u sz=%u off=%u",
+        DebugPrintfLevel(MGBA_LOG_DEBUG, "TC proto: state=%u gen=%u sub=%u trade=%u tx=%02X bc=%u sz=%u sel=%u conf=%u/%u",
                          sState, sGen, sStartState, sTradingState, sTxByte,
                          sBufferCounter,
                          (sSizesIndex < TC_MAX_CHUNKS) ? sSizes[sSizesIndex] : 0,
-                         sTradeOfferOut);
+                         sSelectionOut, sConfirmOutValid, sConfirmOut);
     }
 #endif
+
+    // One full frame of selection hold: the offer stays on the wire for the
+    // rest of the current frame, then the refresh switches to the new phase.
+    if (sSelectionHoldFrames)
+        sSelectionHoldFrames--;
 
     // The master clocks itself; one byte per ~14 scanlines, sixteen per frame.
     for (i = 0; i < GB_LINK_BYTES_FRAME; i++)
@@ -1272,6 +1536,11 @@ void GbProtocol_Update(void)
             // blindly would let us run many bytes ahead and lose the answer.
             if (!GbLink_WaitPeerReady(GB_LINK_READY_LINES))
                 break;
+
+            // Re-derive the trade-menu byte from the current phase on every
+            // transfer.  This is what prevents a stale selection/accept byte
+            // from remaining on the wire while the other side is silent.
+            TcRefreshTradeTxByte();
 
             GbLink_WaitLines(GB_LINK_PACE_LINES);
             GbLink_Start(sTxByte);
@@ -1299,7 +1568,7 @@ void GbProtocol_Update(void)
         break;
 
     case GB_STATE_ERROR:
-        if (sFrameCounter > 30)
+        if (sFrameCounter > GB_ERROR_DISPLAY_FRAMES)
         {
             sFinished = TRUE;
             GbLink_Shutdown();
@@ -1381,13 +1650,6 @@ void GbProtocol_SendTradeCommand(u16 cmd, u16 arg)
 {
     u8 base = TradeBase();
 
-    // A new command of ours restarts the peer debounce and the "space things
-    // out" counter, exactly like try_to_offer()/try_to_accept_offer()/
-    // try_to_success() in communicator.c.
-    sReceivedOnce = FALSE;
-    sLastPeerAction = 0xFF;
-    sSynTransmitted = 0;
-
 #if TIME_CAPSULE_DEBUG_LOG
     DebugPrintfLevel(MGBA_LOG_DEBUG, "TC trade: cmd=%u arg=%u state=%u", cmd, arg, sTradingState);
 #endif
@@ -1395,31 +1657,73 @@ void GbProtocol_SendTradeCommand(u16 cmd, u16 arg)
     switch (cmd)
     {
     case LINKCMD_READY_TO_TRADE:
-        sTradeOfferOut = arg & 0xF;
+        // Start of the selection exchange.  A new offer restarts the peer
+        // debounce and the "space things out" counter, exactly like
+        // try_to_offer() in communicator.c.  Only the selection output is
+        // set here; the confirmation output is explicitly invalid.
+        sReceivedOnce = FALSE;
+        sLastPeerAction = 0xFF;
+        sSynTransmitted = 0;
+        sAcceptPending = FALSE;
+        sPeerConfirmed = FALSE;
+        sSelectionHoldFrames = 0;
+        sSelectionOut = arg & 0xF;
+        TcClearConfirmOut();
         sTradingState = TC_TRADE_HAVE_OFFER;
-        sTxByte = base + sTradeOfferOut;
         break;
 
     case LINKCMD_INIT_BLOCK:
-        sTradeOfferOut = ACCEPT_VALUE;
+        // Our player accepted.  The selection exchange may still be running
+        // (HAVE_OFFER) or Crystal may still be acknowledging it (WAIT_ACK).
+        // Keep the selection phase on the wire until it finishes; 0x72 is
+        // presented afterwards.  Sending it early would make Crystal record
+        // 0x72 (accept) as our party slot.
+        if (sTradingState == TC_TRADE_HAVE_OFFER
+         || sTradingState == TC_TRADE_WAIT_ACK
+         || sTradingState == TC_TRADE_WAIT_CONFIRM)
+        {
+            sAcceptPending = TRUE;
+            break;
+        }
+
+        sReceivedOnce = FALSE;
+        sLastPeerAction = 0xFF;
+        sSynTransmitted = 0;
+        TcSetConfirmOut(ACCEPT_VALUE);
         sTradingState = TC_TRADE_HAVE_ACCEPT;
-        sTxByte = base + sTradeOfferOut;
+
+        if (sPeerConfirmed)
+        {
+            // Crystal already confirmed; the GB may have stopped repeating
+            // 0x72, so tell the menu immediately.
+            TcReportTradeCommand(base + ACCEPT_VALUE, LINKCMD_INIT_BLOCK, 0);
+        }
         break;
 
     case LINKCMD_READY_CANCEL_TRADE:
     case LINKCMD_PLAYER_CANCEL_TRADE:
     case LINKCMD_PARTNER_CANCEL_TRADE:
-        sTradeOfferOut = DECLINE_VALUE;
+        sReceivedOnce = FALSE;
+        sLastPeerAction = 0xFF;
+        sSynTransmitted = 0;
+        sAcceptPending = FALSE;
+        sPeerConfirmed = FALSE;
+        sSelectionHoldFrames = 0;
+        TcSetConfirmOut(DECLINE_VALUE);
         sTradingState = TC_TRADE_HAVE_ACCEPT;
-        sTxByte = base + sTradeOfferOut;
         break;
 
     case LINKCMD_REQUEST_CANCEL:
     case LINKCMD_BOTH_CANCEL_TRADE:
-        sTradeOfferOut = CANCEL_VALUE;
+        sReceivedOnce = FALSE;
+        sLastPeerAction = 0xFF;
+        sSynTransmitted = 0;
+        sAcceptPending = FALSE;
+        sPeerConfirmed = FALSE;
+        sSelectionHoldFrames = 0;
+        TcClearConfirmOut();
         sTradingState = TC_TRADE_HAVE_OFFER;
         sExitValue = base + CANCEL_VALUE;
-        sTxByte = sExitValue;
         sState = GB_STATE_EXIT;
         sFrameCounter = 0;
         break;
@@ -1435,6 +1739,9 @@ void GbProtocol_SendTradeCommand(u16 cmd, u16 arg)
             sSuccessPrepared = TRUE;
             TcComputeSuccessValue();
         }
+        sAcceptPending = FALSE;
+        sPeerConfirmed = FALSE;
+        sSelectionHoldFrames = 0;
         break;
 
     case LINKCMD_READY_FINISH_TRADE:
@@ -1442,8 +1749,20 @@ void GbProtocol_SendTradeCommand(u16 cmd, u16 arg)
         break;
 
     default:
+        // SET_MONS_TO_TRADE and the other menu-only commands have no Gen I/II
+        // wire representation.  They must not reset the peer debounce (a
+        // 0x72 offer followed by a 0x72 confirm is a legitimate sequence) or
+        // clear a confirmation that is already in progress.
         break;
     }
+
+    // The wire byte is always derived from the phase that is now active.
+    sTxByte = TcTradeTxByte();
+
+#if TIME_CAPSULE_DEBUG_LOG
+    DebugPrintfLevel(MGBA_LOG_DEBUG, "TC trade: -> state=%u tx=%02X acceptPending=%u peerConfirmed=%u",
+                     sTradingState, sTxByte, sAcceptPending, sPeerConfirmed);
+#endif
 }
 
 static void TcComputeSuccessValue(void)
@@ -1477,10 +1796,13 @@ void GbProtocol_StartSuccess(void)
     sSuccessDone = FALSE;
     sReexchangeStarted = FALSE;
     sSuccessWaitFrames = 0;
-    sTradeOfferOut = sSuccessValue;
     sTradingState = TC_TRADE_HAVE_SUCCESS;
     sReceivedOnce = FALSE;
     sLastPeerAction = 0xFF;
+    sAcceptPending = FALSE;
+    sPeerConfirmed = FALSE;
+    sSelectionHoldFrames = 0;
+    TcClearConfirmOut();
     sSynTransmitted = 0;
     sTxByte = base | sSuccessValue;
 }
@@ -1494,7 +1816,6 @@ void GbProtocol_StartReexchange(void)
 {
     if (!sActive || sState == GB_STATE_DONE)
         return;
-
     if (sGen == TIME_CAPSULE_GEN_1)
     {
         // gen1_to_gen1 has no CheckLinkTimeout: after saving, the GB jumps
@@ -1509,6 +1830,9 @@ void GbProtocol_StartReexchange(void)
         sSuccessPrepared = FALSE;
         sReceivedOnce = FALSE;
         sLastPeerAction = 0xFF;
+        sAcceptPending = FALSE;
+        sPeerConfirmed = FALSE;
+        sSelectionHoldFrames = 0;
         sTxByte = SEND_NO_INFO;
         sFrameCounter = 0;
         sNoDataFrames = 0;
@@ -1534,6 +1858,9 @@ void GbProtocol_StartReexchange(void)
     sSuccessPrepared = FALSE;
     sReceivedOnce = FALSE;
     sLastPeerAction = 0xFF;
+    sAcceptPending = FALSE;
+    sPeerConfirmed = FALSE;
+    sSelectionHoldFrames = 0;
     sState = GB_STATE_GEN2;
 
     if (sReexchangeStarted)
@@ -1554,6 +1881,21 @@ void GbProtocol_StartReexchange(void)
     sNoDataFrames = 0;
 }
 
+// Rebuild the outgoing party block after a local evolution.  The re-exchange
+// handshake may already be running; only rebuild while the block stream has
+// not started (STA/UNK), otherwise the buffer is in use.
+void GbProtocol_RebuildOutBufferIfIdle(void)
+{
+    if (!sActive || sState != GB_STATE_GEN2)
+        return;
+
+    if (sStartState == TC_START_PAR)
+        return;
+
+    TcSetSizes();
+    TcBuildOutBuffer();
+}
+
 void GbProtocol_RequestExit(void)
 {
     u8 base = TradeBase();
@@ -1562,16 +1904,6 @@ void GbProtocol_RequestExit(void)
     sTxByte = sExitValue;
     sState = GB_STATE_EXIT;
     sFrameCounter = 0;
-}
-
-void GbProtocol_PauseForSave(void)
-{
-    if (sState == GB_STATE_GEN2 && sStartState == TC_START_DON)
-    {
-        sTradingState = TC_TRADE_NO_INFO;
-        sTxByte = SEND_NO_INFO;
-        sHasTradeCmd = FALSE;
-    }
 }
 
 

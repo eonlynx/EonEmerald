@@ -889,7 +889,14 @@ static void CB2_ReturnToTradeMenu(void)
         break;
     case 22:
         if (!gPaletteFade.active)
+        {
+            // The summary screen is allowed to replace callback2, but the
+            // trade menu still needs its link pump callback.
+            gMain.callback1 = CB1_UpdateLink;
+            if (gTimeCapsuleActive)
+                TimeCapsule_EnsureLinkTask();
             SetMainCallback2(CB2_TradeMenu);
+        }
         break;
     }
 
@@ -967,6 +974,13 @@ static void CB_StartLinkTrade(void)
 
 static void CB2_TradeMenu(void)
 {
+    // The menu can be rebuilt after a summary screen (CB2_ReturnToTradeMenu),
+    // and InitTradeMenu() calls ResetTasks(): that kills the GB link task.
+    // Re-ensure it here, once per menu frame, so no callback transition can
+    // leave Crystal without a clock while the menu waits for input.
+    if (gTimeCapsuleActive)
+        TimeCapsule_EnsureLinkTask();
+
     RunTradeMenuCallback();
     DoQueuedActions();
 
@@ -1417,6 +1431,14 @@ static void CB1_UpdateLink(void)
             return;
         }
 
+        // The link died (cable pulled / GB powered off) or the exit already
+        // completed.  Do not leave the menu waiting forever on "standby".
+        if (GbProtocol_IsError() || GbProtocol_IsFinished())
+        {
+            sTradeMenu->callbackId = CB_INIT_EXIT_CANCELED_TRADE;
+            return;
+        }
+
         if ((status = _GetBlockReceivedStatus()))
             Leader_ReadLinkBuffer(0, status);
         Leader_HandleCommunication();
@@ -1480,7 +1502,20 @@ static void SetReadyToTrade(void)
     PrintTradeMessage(MSG_STANDBY);
     sTradeMenu->callbackId = CB_IDLE;
 
-    if (GetMultiplayerId() == 1)
+    if (gTimeCapsuleActive)
+    {
+        // Against a Gen I/II game the GBA is the link leader, but it still has
+        // to present its own offer (0x70 | index).  The Gen II trade menu
+        // waits for the leader's offer before it shows the confirm screen;
+        // the normal Cable Club leader only sets STATUS_READY and relies on
+        // the follower's READY_TO_TRADE, so that path never sends anything.
+        u16 data[2];
+        data[0] = LINKCMD_READY_TO_TRADE;
+        data[1] = sTradeMenu->cursorPosition;
+        GbTrade_SendBlock(data, sizeof(data));
+        sTradeMenu->playerSelectStatus = STATUS_READY;
+    }
+    else if (GetMultiplayerId() == 1)
     {
         // Communicate to the link leader that we're ready to trade
         SetLinkData(LINKCMD_READY_TO_TRADE, sTradeMenu->cursorPosition);
@@ -2873,6 +2908,13 @@ void CB2_LinkTrade(void)
         sTradeAnim = AllocZeroed(sizeof(*sTradeAnim));
         AllocateMonSpritesGfx();
         ResetTasks();
+        if (gTimeCapsuleActive)
+        {
+            // ResetTasks() also killed the GB link task created while the
+            // trade menu was buffering the parties.  The animation, the save
+            // and the post-trade success/re-exchange still need it.
+            TimeCapsule_EnsureLinkTask();
+        }
         ResetSpriteData();
         FreeAllSpritePalettes();
         SetVBlankCallback(VBlankCB_TradeAnim);
@@ -4485,17 +4527,40 @@ static bool8 DoTradeAnim_Wireless(void)
 
 // Try to evolve a Pokémon received in a link trade
 // In-game trades resolve evolution during the trade sequence, in STATE_TRY_EVOLUTION
+static void CB2_AfterTradeEvolution(void)
+{
+    // The re-exchange block was built before the local trade evolution.  If
+    // the block stream has not started yet, rebuild it from the evolved party.
+    if (gTimeCapsuleActive)
+    {
+        GbTrade_RebuildOutBuffer();
+        TimeCapsule_EnsureLinkTask();
+    }
+    SetMainCallback2(CB2_SaveAndEndTrade);
+}
+
 static void CB2_TryLinkTradeEvolution(void)
 {
     u32 evoTarget;
     switch (gMain.state)
     {
     case 0:
-        gMain.state = 4;
+        gMain.state = gTimeCapsuleActive ? 3 : 4;
         gSoftResetDisabled = TRUE;
         break;
+    case 3:
+        // Match Crystal's order: finish the anti-cloning exchange first,
+        // then start the next CheckLinkTimeout/block exchange, and only then
+        // save.  The link task keeps answering while the evolution and the
+        // save run, so Crystal never times out waiting for us.
+        if (gTimeCapsuleActive && !GbTrade_IsSuccessDone())
+            break;
+        if (gTimeCapsuleActive)
+            GbTrade_StartReexchange();
+        gMain.state = 4;
+        break;
     case 4:
-        gCB2_AfterEvolution = CB2_SaveAndEndTrade;
+        gCB2_AfterEvolution = gTimeCapsuleActive ? CB2_AfterTradeEvolution : CB2_SaveAndEndTrade;
         evoTarget = GetEvolutionTargetSpecies(&gParties[B_TRAINER_PLAYER][gSelectedTradeMonPositions[TRADE_PLAYER]], EVO_MODE_TRADE, ITEM_NONE, &gParties[B_TRAINER_OPPONENT_A][gSelectedTradeMonPositions[TRADE_PARTNER] % PARTY_SIZE], NULL, CHECK_EVO);
         if (evoTarget != SPECIES_NONE)
         {
@@ -4716,6 +4781,9 @@ void CreateInGameTradePokemon(void)
 
 static void CB2_UpdateLinkTrade(void)
 {
+    if (gTimeCapsuleActive)
+        TimeCapsule_EnsureLinkTask();
+
     if (DoTradeAnim() == TRUE)
     {
         DestroySprite(&gSprites[sTradeAnim->monSpriteIds[TRADE_PLAYER]]);
@@ -4723,12 +4791,12 @@ static void CB2_UpdateLinkTrade(void)
         TradeMons(gSelectedTradeMonPositions[TRADE_PLAYER], gSelectedTradeMonPositions[TRADE_PARTNER] % PARTY_SIZE);
         if (gTimeCapsuleActive)
         {
-            // The GB success handshake is sent after the save (see
-            // CB2_SaveAndEndTrade), so the GB is not streaming while the GBA
-            // writes flash.  Stop presenting the accept byte first: the GB's
-            // anti-cloning value 2 is the same byte as our accept (0x72).
-            GbTrade_PrepareSave();
-            GbTrade_ResetSuccess();
+            // Crystal performs its anti-cloning success exchange immediately
+            // after the animation, then saves.  Start ours now for the same
+            // reason: if we save first, Crystal is already in its next
+            // CheckLinkTimeout when the 0x70 finally arrives and reports
+            // "too much time has elapsed".
+            GbTrade_StartSuccess();
             SetMainCallback2(CB2_TryLinkTradeEvolution);
         }
         else
@@ -4903,11 +4971,13 @@ static void CB2_SaveAndEndTrade(void)
     case 9:
         if (gTimeCapsuleActive)
         {
-            if (GbTrade_FinishStep())
-            {
-                gSoftResetDisabled = FALSE;
-                SetMainCallback2(CB2_FreeTradeAnim);
-            }
+            // The success handshake and the next CheckLinkTimeout were
+            // already started before the save (CB2_TryLinkTradeEvolution).
+            // Keep the link task alive until the end of the save, then
+            // return to the trade menu; the re-exchange continues there.
+            TimeCapsule_EnsureLinkTask();
+            gSoftResetDisabled = FALSE;
+            SetMainCallback2(CB2_FreeTradeAnim);
         }
         else if (gWirelessCommType && gMain.savedCallback == CB2_StartCreateTradeMenu)
         {

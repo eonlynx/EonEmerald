@@ -30,7 +30,7 @@ The Trade Center is implemented and matches the reference projects:
 | Pokémon conversion / validation | `src/time_capsule/gb_mon.c` | `gen_converter.c`, `gen12_methods.c`, `party_handler.c` |
 | Low-level GBA SIO | `src/time_capsule/gb_link.c` | `sio.c`, Poke_Transporter_GB `link_handler.cpp` |
 | Trade menu ↔ GBA `trade.c` | `src/time_capsule/gb_trade_link.c` | `main.c` trade menu states |
-| Generated tables | `src/data/time_capsule/tables.h`, `item_map.h` | `data/*.bin` |
+| Generated tables | `src/data/time_capsule/tables.h`, `src/time_capsule/gb_tables.c`, `item_map.h` | `data/*.bin` |
 | Table generators | `tools/time_capsule/generate_tables.py`, `generate_item_map.py` | — |
 | Protocol simulator | `tools/time_capsule/tests/sim_protocol.py` | — |
 
@@ -653,6 +653,113 @@ The GBA must send `0xFE` while the player has not chosen anything. The GB
 repeats its byte until it receives a byte with the correct high nibble, so the
 menu is not time-critical.
 
+#### Confirmation order and the 0x71/0x72 ambiguity
+
+Crystal records the last `0x7X` byte it reads during its selection exchange as
+the partner's party slot, and on its confirmation screen it treats `0x71` as
+cancel and every other `0x7X` as accept.  The GBA therefore uses two waiting
+states:
+
+- The detection exchange is the **last** one that presents our offer.  As soon
+  as the partner's offer has been seen twice, switch the wire to `0xFE`.  If
+  the offer (`0x70+slot`) stayed on the wire, Crystal's confirmation exchange
+  would read it as an accept and start the trade before the GBA player has
+  confirmed.  This was the cause of the "Crystal trades alone" bug: the log
+  showed `0x70` being clocked while the GBA was still in `WAIT_ACK`.
+- `TC_TRADE_WAIT_ACK`: both offers are known, but Crystal is still in its ten
+  receive + ten acknowledge selection frames.  Send `0xFE` and hold any early
+  GBA confirmation (`sAcceptPending`) until the first `0x00` acknowledge,
+  then switch to `TC_TRADE_WAIT_CONFIRM`.  In this phase **only `0x00` is
+  meaningful**: the repeated `0x7X` is still Crystal's selection byte and is
+  ignored, so a `0x72` here cannot be mistaken for an accept.  If the `0x00`
+  is lost, the bounded byte counter moves on to the confirmation phase, where
+  the repeated answer is picked up normally.
+- `TC_TRADE_WAIT_CONFIRM`: send `0xFE`, which `WaitLinkTransfer` ignores.
+  Crystal may confirm first (`0x72`); remember it (`sPeerConfirmed`) and keep
+  waiting.  When our player confirms, send `0x72` and report the partner
+  confirmation immediately.  A Crystal cancel (`0x71`) is answered with
+  `0x71`.  Only `0x71`/`0x72` are valid answers in this phase.
+
+`sLastPeerAction`/`sReceivedOnce` must be reset when the phase changes: a
+Crystal offer for slot 2 is `0x72`, the same value as its accept, so a stale
+debounce would hide the confirmation forever.
+
+The receive side is phase-scoped as strictly as the send side:
+
+| Phase | Accepted bytes |
+|---|---|
+| Selection | `0x70..0x75` (slot), `0x7F` (exit) |
+| Selection acknowledge | `0x00` only |
+| Confirmation | `0x71` (cancel), `0x72` (accept) |
+| Success | any `0x7X` (anti-cloning byte) |
+
+`TcPhaseAccepts()` is the executable version of this table: it is the single
+gate before a byte reaches the phase handler.  `TcTradeTxByte()` is its send
+counterpart.
+
+`GbTrade_RebuildOutBuffer()` is called after a local trade evolution; it
+rebuilds the next party block from the evolved party, but only while the block
+stream has not started (`TC_START_STA`/`TC_START_UNK`).
+
+`SET_MONS_TO_TRADE` (and the other menu-only link commands) must not touch the
+Gen I/II trade state: it is not a wire action.  Resetting the debounce or
+clearing `sPeerConfirmed` there can lose an accept that Crystal has already
+sent.
+
+The output values are also separated by phase, not stored in one shared
+"trade offer" variable:
+
+| Phase | State variable | TX byte |
+|---|---|---|
+| Selection | `sSelectionOut` (party slot) | `0x70+slot` |
+| Selection acknowledge | — | `0xFE` |
+| Confirmation | `sConfirmOut` (accepted/declined) | `0x70+answer` or `0xFE` |
+| Success | `sSuccessValue` (anti-cloning nybble) | `0x70+nybble` |
+
+`TcTradeTxByte()` is the only place that turns a phase into a wire byte; the
+inbound handlers only change the phase.  It is also re-evaluated before **every**
+SIO transfer (`TcRefreshTradeTxByte()`), not only when a non-`0xFE` byte is
+received.  This matters because Crystal's `WaitLinkTransfer` inspects the last
+received byte when it starts the confirmation exchange: if the GB goes silent
+after the selection, a stale `0x7X` left on the wire would be read as the
+answer and Crystal would accept without the GBA player confirming.
+
+This is what guarantees that the selection slot cannot be emitted as a
+confirmation answer, and it mirrors the one-byte delay of the reference's
+`get_offer`/`get_accept` functions.
+
+This covers all four orderings (GBA/Crystal select first, GBA/Crystal confirm
+first) and both dangerous slots (1 and 2); the protocol simulator tests them
+explicitly, including Crystal entering its confirmation screen while the GBA
+is still in `WAIT_ACK`.
+
+The same value has different meanings depending on the phase, so the handlers
+are selected by `sStartState` (enter/start/block/menu) and `sTradingState`
+(menu sub-state), never by a global byte map:
+
+| Phase | `0x70..0x75` | `0x75/0x76` | `0xFD` | `0xFE` |
+|---|---|---|---|---|
+| Receptionist / enter | — | `0x75` starts CheckLinkTimeout | — | idle |
+| Start-trade table | — | `0x75/0x76` handshake | — | idle |
+| Block exchange | party data | party data | chunk preamble | escaped data (patch list) |
+| Trade menu selection | `0x70+slot` offer | — | — | idle |
+| Trade menu confirm | `0x71` decline, `0x72` accept | — | — | idle |
+| Success | `0x70..0x72` anti-cloning | `0x75` next CheckLinkTimeout | — | idle |
+
+In particular `0x71` is a valid party slot during selection but a cancel on
+the confirmation screen, and `0x75` is both the start-trade handshake and the
+post-trade re-exchange.  The GBA never sends an offer while waiting for the
+player's confirmation: `TcGetOffer` reports the partner's offer and moves to
+`TC_TRADE_NO_INFO`, which presents `0xFE`; `TcGetAccept` only interprets
+`0x71/0x72` after our player has confirmed.
+
+The GB is allowed to answer with delay: `0xFE` is ignored by both
+`WaitLinkTransfer` and `CheckLinkTimeout_Gen2`, and the GBA has no timeout
+during discovery, the room handshake or the trade menu.  The GB link task is
+kept alive through the animation and flash save exactly like the normal Cable
+Club keeps its link task alive in `trade.c` (`CB2_LinkTrade` /
+`CB2_SaveAndEndTrade`); the only bounded phase is the streaming block.
+
 ### 3.10 Post-trade confirmation and anti-cloning
 
 #### Gen II
@@ -664,8 +771,39 @@ After the trade animation, GSC sends a check byte:
 - `0x72` if either is Celebi.
 
 If the value is not `0`, GSC **repeats until it receives exactly the same
-byte**. The GBA must do the same: send `0x70 + n` and wait for `0x70 + n`
-(if `n != 0`). This is the Mew/Celebi anti-cloning check.
+byte**. The GBA must do the same: send `0x70 + n` and treat **two sightings of
+a `0x7X` byte** as the success handshake being complete, exactly like the
+reference's `get_success()`.
+
+`0x75` is **not** part of that wait: it is the next `CheckLinkTimeout_Gen2`,
+i.e. the start of the post-trade re-exchange.
+
+**Order matters.** GSC does, in this order:
+
+1. animation ends;
+2. anti-cloning success exchange;
+3. `SaveAfterLinkTrade`;
+4. `jp Gen2ToGen2LinkComms` → `CheckLinkTimeout_Gen2` (0x75/0x76) and the next
+   party block exchange.
+
+The GBA must match that order.  Starting the success exchange only after the
+GBA save (the previous implementation) makes our `0x70` arrive when GSC is
+already in `CheckLinkTimeout_Gen2`; its action-5 check reads `0x76`/`0x70`
+instead of `0x75` and reports **“Too much time has elapsed.”**  The current
+flow is:
+
+- `CB2_UpdateLinkTrade` starts the success exchange immediately after
+  `TradeMons()` (`GbTrade_StartSuccess`);
+- `CB2_TryLinkTradeEvolution` waits for two sightings (`GbTrade_IsSuccessDone`)
+  before evolving;
+- then it starts the re-exchange (`GbTrade_StartReexchange`) **before** the
+  GBA save.  The link task keeps answering `0x75`/`0x76` and streaming the next
+  party block during the evolution and the flash save, so GSC never times out.
+
+The GB link task must stay alive through the animation, the evolution and the
+save.  `CB2_UpdateLinkTrade`, `CB2_TryLinkTradeEvolution` and
+`CB2_SaveAndEndTrade` call `TimeCapsule_EnsureLinkTask()`, because
+`CB2_LinkTrade()`/`ResetTasks()` and the menu rebuilds destroy it.
 
 #### Gen I
 
@@ -721,6 +859,12 @@ Crystal was still discovering/saving and Emerald showed its link error before
 the room was reached, and the 3600-frame room-wait guard fired while the GB
 player had not pressed A yet.  The GBA must therefore wait in those phases.
 Only the block stream, where both sides are actively sending, is bounded.
+
+The mGBA GB driver also has a watchdog for the armed `SB` byte.  It is **60 s**
+rather than the initial 2 s: the 2 s timeout fired while the GBA was still
+initialising the trade menu and cleared an armed byte, losing one exchange and
+leaving the two counters out of phase.  The watchdog is only a last-resort
+cable check; the games' own link timeouts remain the protocol timers.
 
 
 ---
@@ -1257,9 +1401,9 @@ The implementation uses a small adapter instead of duplicating `trade.c`:
 // include/time_capsule/gb_trade_link.h
 void GbTrade_Update(void);
 bool8 GbTrade_SendBlock(const void *src, u16 size);
-void GbTrade_ResetSuccess(void);
-void GbTrade_PrepareSave(void);
-bool8 GbTrade_FinishStep(void);
+void GbTrade_StartSuccess(void);
+bool8 GbTrade_IsSuccessDone(void);
+void GbTrade_StartReexchange(void);
 void GbTrade_RequestExit(void);
 ```
 
@@ -1269,9 +1413,12 @@ void GbTrade_RequestExit(void);
 - `GbTrade_SendBlock` translates `LINKCMD_*` into `0x70+idx` / `0x71` / `0x72` /
   `0x7F` (or `0x60+` for Gen I), and fills `gBlockRecvBuffer[0]` with the
   player's own command (the leader reads its own slot back).
-- `GbTrade_PrepareSave` pauses the stream (`0xFE`) before the GBA flash write.
-- `GbTrade_FinishStep` sends the anti-cloning byte after the save and waits for
-  the GB's next `CheckLinkTimeout` (`0x75`), then queues the re-exchange block.
+- `GbTrade_StartSuccess` starts the anti-cloning exchange right after the trade
+  animation, matching GSC's order.
+- `GbTrade_IsSuccessDone` is polled before evolving/saving.
+- `GbTrade_StartReexchange` starts `CheckLinkTimeout_Gen2` and rebuilds the next
+  party block **before** the GBA flash save; the link task keeps servicing it
+  while the save runs.
 
 Concrete points touched in `src/trade.c`:
 
@@ -1280,10 +1427,12 @@ Concrete points touched in `src/trade.c`:
 | `CB2_CreateTradeMenu` | In GB mode, skip `OpenLink`/`Task_WaitForLinkPlayerConnection`; `gMain.state = 6`. |
 | `BufferTradeParties` | In GB mode, wait for `GbProtocol_IsReady()` and use the party already parsed by `GbConvert_ParseTradeBlock`. |
 | `CB1_UpdateLink` | In GB mode, call `GbTrade_Update()`; close the menu when `GbProtocol_IsExiting()`. |
+| `SetReadyToTrade` | In GB mode, send `LINKCMD_READY_TO_TRADE` with the cursor (the normal Cable Club leader never sends it, so the GB would wait forever for the leader's offer). |
 | `Leader_ReadLinkBuffer` | Unchanged: the adapter fills `gBlockRecvBuffer[1]` with `LINKCMD_*`. |
-| `CB2_UpdateLinkTrade` | In GB mode, call `GbTrade_PrepareSave()` before the evolution/save callback. |
-| `CB2_SaveAndEndTrade` | In GB mode, `GbTrade_FinishStep()` sends the success byte and waits for the re-exchange. |
-| `CB2_FreeTradeAnim` | Returns to the normal trade menu; the GB re-sends its block. |
+| `CB2_UpdateLinkTrade` | In GB mode, start the success exchange immediately after `TradeMons()`. |
+| `CB2_TryLinkTradeEvolution` | In GB mode, wait for `GbTrade_IsSuccessDone()`, then start the re-exchange before the evolution/save. |
+| `CB2_SaveAndEndTrade` | In GB mode, keep the link task alive during the flash save; the success/re-exchange were already started. |
+| `CB2_FreeTradeAnim` | Returns to the normal trade menu; the re-exchange completes there or during the save. |
 
 
 #### Trade menu bytes (Gen I/II)
@@ -1392,7 +1541,7 @@ partner. No real GBA session is needed.
 
 ### 6.9 Saving and session order
 
-Recommended order to prevent the GB from streaming while the GBA writes flash:
+Required order to keep GSC's post-trade `CheckLinkTimeout_Gen2` alive:
 
 1. handshake + detection + room selection;
 2. check party compatibility;
@@ -1401,21 +1550,26 @@ Recommended order to prevent the GB from streaming while the GBA writes flash:
 5. the player sits → initial RN + party + patch list + mail exchange;
 6. trade menu (offers/accept);
 7. animation;
-8. **save the GBA before sending the success byte**;
-9. send `0x70+n` / `0x60` and wait for the GB's;
-10. re-exchange the party;
-11. return to the menu or exit.
+8. **success exchange immediately after the animation**, before the GBA save;
+9. start the re-exchange (`CheckLinkTimeout_Gen2` + next party block) **before**
+   the evolution/save;
+10. evolve and save while the link task answers `0x75`/`0x76` and streams the
+    next block;
+11. return to the menu.
 
-This way, when the GB returns to `Gen2ToGen2LinkComms` /
-`CableClub_DoBattleOrTradeAgain`, the GBA already has the TX buffer ready and
-is not writing flash.
+GSC saves and then immediately starts the next `CheckLinkTimeout_Gen2`.
+Saving before our success byte makes that handshake late and produces “Too
+much time has elapsed.” on the GB.  Starting the re-exchange before the save
+also means the GB's next party block is already being serviced while the GBA
+writes flash.
 
 ### 6.10 Configuration
 
 `include/config/time_capsule.h`:
 
 ```c
-#define TIME_CAPSULE_DEBUG_LOG           TRUE
+// TRUE in development builds, FALSE under `make release` (NDEBUG).
+#define TIME_CAPSULE_DEBUG_LOG           (!defined(NDEBUG))
 #define TIME_CAPSULE_DEFAULT_MET_LOCATION METLOC_IN_GAME_TRADE
 #define TIME_CAPSULE_PARTNER_IS_FEMALE   FALSE
 ```

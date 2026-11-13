@@ -8,8 +8,6 @@
 // trade.c still uses LINKCMD_* commands and gBlockRecvBuffer; this file
 // translates them to/from the Gen I/II trade-menu bytes.
 
-static EWRAM_DATA bool8 sSuccessStarted;
-
 void GbTrade_Update(void)
 {
     if (!gTimeCapsuleActive)
@@ -49,32 +47,27 @@ bool8 GbTrade_SendBlock(const void *src, u16 size)
     return TRUE;
 }
 
-void GbTrade_ResetSuccess(void)
-{
-    sSuccessStarted = FALSE;
-}
-
-void GbTrade_PrepareSave(void)
+void GbTrade_StartSuccess(void)
 {
     if (gTimeCapsuleActive)
-        GbProtocol_PauseForSave();
+        GbProtocol_StartSuccess();
 }
 
-bool8 GbTrade_FinishStep(void)
+bool8 GbTrade_IsSuccessDone(void)
 {
-    if (!sSuccessStarted)
-    {
-        GbProtocol_StartSuccess();
-        sSuccessStarted = TRUE;
-        return FALSE;
-    }
+    return GbProtocol_IsSuccessDone();
+}
 
-    if (!GbProtocol_IsSuccessDone())
-        return FALSE;
+void GbTrade_StartReexchange(void)
+{
+    if (gTimeCapsuleActive)
+        GbProtocol_StartReexchange();
+}
 
-    GbProtocol_StartReexchange();
-    sSuccessStarted = FALSE;
-    return TRUE;
+void GbTrade_RebuildOutBuffer(void)
+{
+    if (gTimeCapsuleActive)
+        GbProtocol_RebuildOutBufferIfIdle();
 }
 
 void GbTrade_RequestExit(void)

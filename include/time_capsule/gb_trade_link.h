@@ -6,12 +6,15 @@
 void GbTrade_Update(void);
 bool8 GbTrade_SendBlock(const void *src, u16 size);
 
-// Post-trade: pause the stream and save first, then call this every frame
-// until it returns TRUE.  It sends the success byte after the save, waits for
-// the GB to start its next block exchange, then queues the re-exchange block.
-void GbTrade_ResetSuccess(void);
-void GbTrade_PrepareSave(void);
-bool8 GbTrade_FinishStep(void);
+// Post-trade sequence, matching Crystal's order:
+//   animation -> success handshake -> save -> next LinkTrade
+// The success handshake must start as soon as the animation ends, not after
+// the GBA save, or Crystal is already in its next CheckLinkTimeout when our
+// 0x70 arrives and reports "too much time has elapsed".
+void GbTrade_StartSuccess(void);
+bool8 GbTrade_IsSuccessDone(void);
+void GbTrade_StartReexchange(void);
+void GbTrade_RebuildOutBuffer(void);
 
 void GbTrade_RequestExit(void);
 
