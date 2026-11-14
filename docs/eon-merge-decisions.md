@@ -65,13 +65,19 @@ so they are explicit and reviewable.
 - EonEmerald species base data (stats, types, abilities, wild held items) via diff against its pret base.
 - Gen 3 level-up learnsets converted to `struct LevelUpMove` in `gen_3.h`.
 - Common UI strings from EonEmerald overlaid onto expansion's `strings.c`.
+- TM/HM and tutor compatibility ported through expansion's learnset helper:
+  - Eon `TUTOR_MOVE_*` script ids converted to `MOVE_*`.
+  - Eon TM/tutor compatibility stored in `tools/learnset_helpers/porymoves_files/custom.json`.
+  - `teachable_learnsets.h` regenerated; Mew remains expansion's intentional special case.
+- Hold-to-use second registered item QoL, including `registeredLongItem` in `SaveBlock1`, tap/hold detection and the Tap/Hold bag submenu.
+- Missing Eon symbols restored: `gText_YouAlreadyHaveThis` and the Endure TM (`ITEM_TM_ENDURE`).
 
 ## Pending / review
 
-- TM/HM and tutor compatibility: expansion generates `teachable_learnsets.h` with `tools/learnset_helpers/teachable.py`,
-  while EonEmerald used separate TM/HM and tutor tables plus `TUTOR_MOVE_*` scripts. This needs a dedicated port.
-- Remaining EonEmerald code tweaks (QoL, battle, menus) onto expansion code.
+- EonEmerald's `battle_util.c` custom ability behavior (Permafrost, Rock Body, Galvanized, Rain Dish/Hydration/Natural Cure tweaks) was written for the old engine and must be reimplemented against expansion's ability system, not copied directly.
+- Shop/TM sale behavior (`POCKET_KEY_ITEMS`/berries sold-out checks, limited TM sales) needs adapting to expansion's rewritten shop code.
 - EonEmerald evolutions other than Link Stone, Battle Frontier data, and remaining data tables where they differ.
 - Full effects for the custom abilities currently aliased to Flash Fire / Sturdy / Fur Coat.
 - Review default configs (`B_*`, `I_*`, `P_*`, `OW_*`) so EonEmerald remains the default experience while expansion features stay available.
 - EonEmerald-only strings that expansion moved to other files (not added blindly to avoid duplicate labels).
+- Graphical/data tweaks where expansion reorganized the target files (shop UI, battle background palettes, Frontier mons).
