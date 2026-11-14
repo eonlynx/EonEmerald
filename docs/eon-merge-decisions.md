@@ -116,6 +116,13 @@ A full per-file inventory of the original 205 merge conflicts is in
   keeping the per-move physical/special split.
 - Missing `gPokedexCaughtScreen_Pal` definition and valid icons for Eon room keys and Endure TM.
 - Eon battle menu casing (`Fight`, `Type/`, `Wally`).
+- Kanto gym leader / Elite Four overworld graphics restored for the preserved Eon maps
+  (graphics IDs, pics, palettes, pic tables, graphics info, pointers and palette tags).
+- Manual-merge regressions fixed:
+  - Cut/Rock Smash/Strength/Waterfall/Dive check the party move and execute the field effect.
+  - Battle Frontier tutors set `VAR_0x8005` to the correct move and Endure has its proper text.
+  - Wattson gives the Basement Key again and Rustboro gives the Exp. Share.
+  - `SwitchMonAbility` is implemented and registered for the Fallarbor ability switcher.
 
 ## Pending / review
 
@@ -146,8 +153,12 @@ A full per-file inventory of the original 205 merge conflicts is in
   monster sets.
 - **Eon-only strings.** 286 Eon `gText_*` symbols are absent from current `src/strings.c`, but
   none are referenced by the current tree. Add only when restoring specific Eon text.
-- **Object-event and overworld graphics data** from the `THEIRS` list: verify Eon custom OW
-  sprites and any follower assets still referenced by preserved Eon maps/scripts.
+- **Object-event and overworld graphics data** from the `THEIRS` list: Kanto leader gfx are
+  restored and all map-referenced `OBJ_EVENT_GFX_*` symbols now resolve. Continue auditing
+  custom follower/overworld assets that may only be referenced from C code.
+- **`TryChangeDeoxysForm`** is referenced only by `data/scripts/change_deoxys_form.inc`, which is
+  not included by `data/event_scripts.s`. The special was also absent from Eon's source, so the
+  file remains dead unless it is wired into a map later.
 
 ### Lower priority
 
