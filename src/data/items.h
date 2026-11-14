@@ -14140,6 +14140,8 @@ const struct Item gItemsInfo[] =
         .pocket = POCKET_KEY_ITEMS,
         .type = ITEM_USE_BAG_MENU,
         .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+        .iconPic = gItemIcon_KeyToRoom1,
+        .iconPalette = gItemIconPalette_Key,
     },
 
     [ITEM_ROOM_2_KEY] =
@@ -14154,6 +14156,8 @@ const struct Item gItemsInfo[] =
         .pocket = POCKET_KEY_ITEMS,
         .type = ITEM_USE_BAG_MENU,
         .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+        .iconPic = gItemIcon_KeyToRoom2,
+        .iconPalette = gItemIconPalette_Key,
     },
 
     [ITEM_ROOM_4_KEY] =
@@ -14168,6 +14172,8 @@ const struct Item gItemsInfo[] =
         .pocket = POCKET_KEY_ITEMS,
         .type = ITEM_USE_BAG_MENU,
         .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+        .iconPic = gItemIcon_KeyToRoom4,
+        .iconPalette = gItemIconPalette_Key,
     },
 
     [ITEM_ROOM_6_KEY] =
@@ -14182,6 +14188,8 @@ const struct Item gItemsInfo[] =
         .pocket = POCKET_KEY_ITEMS,
         .type = ITEM_USE_BAG_MENU,
         .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+        .iconPic = gItemIcon_KeyToRoom6,
+        .iconPalette = gItemIconPalette_Key,
     },
 
     [ITEM_TM_ENDURE] =
@@ -14196,6 +14204,8 @@ const struct Item gItemsInfo[] =
         .type = ITEM_USE_PARTY_MENU,
         .fieldUseFunc = ItemUseOutOfBattle_TMHM,
         .secondaryId = MOVE_ENDURE,
+        .iconPic = gItemIcon_TM,
+        .iconPalette = gItemIconPalette_NormalTMHM,
     },
 
 };
