@@ -71,6 +71,9 @@ so they are explicit and reviewable.
   - `teachable_learnsets.h` regenerated; Mew remains expansion's intentional special case.
 - Hold-to-use second registered item QoL, including `registeredLongItem` in `SaveBlock1`, tap/hold detection and the Tap/Hold bag submenu.
 - Missing Eon symbols restored: `gText_YouAlreadyHaveThis` and the Endure TM (`ITEM_TM_ENDURE`).
+- Battle Frontier monster sets: all 882 Eon slots converted to expansion `TrainerMon`, with Eon held items and EV spreads.
+- TM sales limited in shops like Eon: owned TMs/HMs show as sold out and use the single-purchase prompt.
+- Eon/Gen 3 defaults for breeding, EV cap, TM literacy, legendary IVs and single-use TMs.
 
 ## Pending / review
 
