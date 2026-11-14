@@ -2,7 +2,8 @@
 #define GUARD_CONFIG_OVERWORLD_H
 
 // Movement config
-#define OW_RUNNING_INDOORS          GEN_LATEST  // In Gen4+, players are allowed to run indoors.
+#define OW_RUNNING_INDOORS          GEN_3       // In Gen4+, players are allowed to run indoors.
+#define OW_RUNNING_INDOORS_GEN_3    TRUE        // If TRUE, running indoors is allowed even when OW_RUNNING_INDOORS is GEN_3. Set FALSE to respect each map's allow_running flag (vanilla Gen 3).
 #define SLOW_MOVEMENT_ON_STAIRS     FALSE       // If enabled, the player will move slower up/down stairs like in FR
 
 // Other settings
