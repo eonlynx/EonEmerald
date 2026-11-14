@@ -1004,7 +1004,9 @@
 #define ITEM_ROOM_4_KEY 833
 #define ITEM_ROOM_6_KEY 834
 
-#define ITEMS_COUNT 835
+#define ITEM_TM_ENDURE 835
+
+#define ITEMS_COUNT 836
 #define ITEM_FIELD_ARROW ITEMS_COUNT
 
 // A special item id associated with "Cancel"/"Exit" etc. in a list of items or decorations

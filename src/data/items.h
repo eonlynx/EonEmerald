@@ -14184,4 +14184,18 @@ const struct Item gItemsInfo[] =
         .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
     },
 
+    [ITEM_TM_ENDURE] =
+    {
+        .name = _("TM Endure"),
+        .price = 15000,
+        .description = COMPOUND_STRING(
+            "Teaches Endure to a\n"
+            "compatible Pok�mon."),
+        .importance = 1,
+        .pocket = POCKET_TM_HM,
+        .type = ITEM_USE_PARTY_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_TMHM,
+        .secondaryId = MOVE_ENDURE,
+    },
+
 };
