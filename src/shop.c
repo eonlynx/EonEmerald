@@ -110,6 +110,17 @@ static EWRAM_DATA struct ShopData *sShopData = NULL;
 static EWRAM_DATA struct ListMenuItem *sListMenuItems = NULL;
 static EWRAM_DATA u8 (*sItemNames)[ITEM_NAME_LENGTH + 2] = {0};
 static EWRAM_DATA u8 sPurchaseHistoryId = 0;
+
+// EonEmerald: TMs, key items and berries are single-purchase items.
+static bool32 IsSinglePurchaseItem(u16 itemId)
+{
+    u8 pocket = ItemId_GetPocket(itemId);
+
+    return ItemId_GetImportance(itemId)
+        || pocket == POCKET_TM_HM
+        || pocket == POCKET_KEY_ITEMS
+        || pocket == POCKET_BERRIES;
+}
 EWRAM_DATA struct ItemSlot gMartPurchaseHistory[SMARTSHOPPER_NUM_ITEMS] = {0};
 
 static void Task_ShopMenu(u8 taskId);
@@ -641,7 +652,7 @@ static void BuyMenuPrintPriceInList(u8 windowId, u32 itemId, u8 y)
                 6);
         }
 
-        if ((ItemId_GetImportance(itemId) || ItemId_GetPocket(itemId) == POCKET_TM_HM) && (CheckBagHasItem(itemId, 1) || CheckPCHasItem(itemId, 1)))
+        if (IsSinglePurchaseItem(itemId) && (CheckBagHasItem(itemId, 1) || CheckPCHasItem(itemId, 1)))
             StringCopy(gStringVar4, gText_SoldOut);
         else
             StringExpandPlaceholders(gStringVar4, gText_PokedollarVar1);
@@ -1003,7 +1014,9 @@ static void Task_BuyMenu(u8 taskId)
             else
                 sShopData->totalCost = gDecorations[itemId].price;
 
-            if ((ItemId_GetImportance(itemId) || ItemId_GetPocket(itemId) == POCKET_TM_HM) && (CheckBagHasItem(itemId, 1) || CheckPCHasItem(itemId, 1)))
+            if (IsSinglePurchaseItem(itemId) && CheckBagHasItem(itemId, 1))
+                BuyMenuDisplayMessage(taskId, gText_YouAlreadyHaveThis, BuyMenuReturnToItemList);
+            else if (IsSinglePurchaseItem(itemId) && CheckPCHasItem(itemId, 1))
                 BuyMenuDisplayMessage(taskId, gText_ThatItemIsSoldOut, BuyMenuReturnToItemList);
             else if (!IsEnoughMoney(&gSaveBlock1Ptr->money, sShopData->totalCost))
             {
@@ -1014,7 +1027,7 @@ static void Task_BuyMenu(u8 taskId)
                 if (sMartInfo.martType == MART_TYPE_NORMAL)
                 {
                     CopyItemName(itemId, gStringVar1);
-                    if (ItemId_GetImportance(itemId) || ItemId_GetPocket(itemId) == POCKET_TM_HM)
+                    if (IsSinglePurchaseItem(itemId))
                     {
                         ConvertIntToDecimalStringN(gStringVar2, sShopData->totalCost, STR_CONV_MODE_LEFT_ALIGN, 6);
                         StringExpandPlaceholders(gStringVar4, gText_YouWantedVar1ThatllBeVar2);

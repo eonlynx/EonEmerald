@@ -2365,6 +2365,9 @@ u8 DoBattlerEndTurnEffects(void)
                   && ability != ABILITY_SNOW_CLOAK
                   && ability != ABILITY_OVERCOAT
                   && ability != ABILITY_ICE_BODY
+                  && ability != ABILITY_PERMAFROST
+                  && ability != ABILITY_ROCK_BODY
+                  && ability != ABILITY_GALVANIZED
                   && !(gStatuses3[battler] & (STATUS3_UNDERGROUND | STATUS3_UNDERWATER))
                   && GetBattlerHoldEffect(battler, TRUE) != HOLD_EFFECT_SAFETY_GOGGLES)
             {
@@ -4181,6 +4184,10 @@ u32 CanAbilityBlockMove(u32 battlerAtk, u32 battlerDef, u32 move, u32 abilityDef
         if (gMovesInfo[move].soundMove && !(GetBattlerMoveTargetType(battlerAtk, move) & MOVE_TARGET_USER))
             effect = MOVE_BLOCKED_BY_SOUNDPROOF_OR_BULLETPROOF;
         break;
+    case ABILITY_PERMAFROST:
+        if (GetMoveType(move) == TYPE_FIRE && !(GetBattlerMoveTargetType(battlerAtk, move) & MOVE_TARGET_USER))
+            effect = MOVE_BLOCKED_BY_SOUNDPROOF_OR_BULLETPROOF;
+        break;
     case ABILITY_BULLETPROOF:
         if (gMovesInfo[move].ballisticMove)
             effect = MOVE_BLOCKED_BY_SOUNDPROOF_OR_BULLETPROOF;
@@ -4249,6 +4256,10 @@ u32 CanAbilityAbsorbMove(u32 battlerAtk, u32 battlerDef, u32 abilityDef, u32 mov
         break;
     case ABILITY_EARTH_EATER:
         if (moveType == TYPE_GROUND)
+            effect = MOVE_ABSORBED_BY_DRAIN_HP_ABILITY;
+        break;
+    case ABILITY_ROCK_BODY:
+        if (moveType == TYPE_ROCK)
             effect = MOVE_ABSORBED_BY_DRAIN_HP_ABILITY;
         break;
     case ABILITY_MOTOR_DRIVE:
@@ -5211,14 +5222,43 @@ u32 AbilityBattleEffects(u32 caseID, u32 battler, u32 ability, u32 special, u32 
             case ABILITY_DRY_SKIN:
                 if (IsBattlerWeatherAffected(battler, B_WEATHER_SUN))
                     goto SOLAR_POWER_HP_DROP;
-            // Dry Skin works similarly to Rain Dish in Rain
-            case ABILITY_RAIN_DISH:
                 if (IsBattlerWeatherAffected(battler, B_WEATHER_RAIN)
                  && !BATTLER_MAX_HP(battler)
                  && !(gStatuses3[battler] & STATUS3_HEAL_BLOCK))
                 {
                     BattleScriptPushCursorAndCallback(BattleScript_RainDishActivates);
-                    gBattleMoveDamage = GetNonDynamaxMaxHP(battler) / (gLastUsedAbility == ABILITY_RAIN_DISH ? 16 : 8);
+                    gBattleMoveDamage = GetNonDynamaxMaxHP(battler) / 8;
+                    if (gBattleMoveDamage == 0)
+                        gBattleMoveDamage = 1;
+                    gBattleMoveDamage *= -1;
+                    effect++;
+                }
+                break;
+            // EonEmerald: Rain Dish heals HP and cures status in rain, like Hydration.
+            case ABILITY_RAIN_DISH:
+                if (IsBattlerWeatherAffected(battler, B_WEATHER_RAIN)
+                 && gBattleMons[battler].status1 & STATUS1_ANY)
+                {
+                    goto ABILITY_HEAL_MON_STATUS;
+                }
+                if (IsBattlerWeatherAffected(battler, B_WEATHER_RAIN)
+                 && !BATTLER_MAX_HP(battler)
+                 && !(gStatuses3[battler] & STATUS3_HEAL_BLOCK))
+                {
+                    BattleScriptPushCursorAndCallback(BattleScript_RainDishActivates);
+                    gBattleMoveDamage = GetNonDynamaxMaxHP(battler) / 16;
+                    if (gBattleMoveDamage == 0)
+                        gBattleMoveDamage = 1;
+                    gBattleMoveDamage *= -1;
+                    effect++;
+                }
+                break;
+            case ABILITY_NATURAL_CURE:
+                if (!BATTLER_MAX_HP(battler)
+                 && !(gStatuses3[battler] & STATUS3_HEAL_BLOCK))
+                {
+                    BattleScriptPushCursorAndCallback(BattleScript_RainDishActivates);
+                    gBattleMoveDamage = GetNonDynamaxMaxHP(battler) / 32;
                     if (gBattleMoveDamage == 0)
                         gBattleMoveDamage = 1;
                     gBattleMoveDamage *= -1;
@@ -5935,6 +5975,24 @@ u32 AbilityBattleEffects(u32 caseID, u32 battler, u32 ability, u32 special, u32 
                 effect++;
             }
             break;
+        case ABILITY_PERMAFROST:
+            if (!(gMoveResultFlags & MOVE_RESULT_NO_EFFECT)
+             && IsBattlerAlive(gBattlerAttacker)
+             && !gProtectStructs[gBattlerAttacker].confusionSelfDmg
+             && GetBattlerHoldEffect(gBattlerAttacker, TRUE) != HOLD_EFFECT_PROTECTIVE_PADS
+             && IsMoveMakingContact(move, gBattlerAttacker)
+             && TARGET_TURN_DAMAGED
+             && CanBeFrozen(gBattlerAttacker)
+             && (B_ABILITY_TRIGGER_CHANCE >= GEN_4 ? RandomPercentage(RNG_STATIC, 30) : RandomChance(RNG_STATIC, 1, 3)))
+            {
+                gBattleScripting.moveEffect = MOVE_EFFECT_AFFECTS_USER | MOVE_EFFECT_FREEZE;
+                PREPARE_ABILITY_BUFFER(gBattleTextBuff1, gLastUsedAbility);
+                BattleScriptPushCursor();
+                gBattlescriptCurrInstr = BattleScript_AbilityStatusEffect;
+                gHitMarker |= HITMARKER_STATUS_ABILITY_EFFECT;
+                effect++;
+            }
+            break;
         case ABILITY_CUTE_CHARM:
             if (!(gMoveResultFlags & MOVE_RESULT_NO_EFFECT)
              && IsBattlerAlive(gBattlerAttacker)
@@ -6304,6 +6362,7 @@ u32 AbilityBattleEffects(u32 caseID, u32 battler, u32 ability, u32 special, u32 
                 break;
             case ABILITY_WATER_VEIL:
             case ABILITY_WATER_BUBBLE:
+            case ABILITY_PERMAFROST:
                 if (gBattleMons[battler].status1 & STATUS1_BURN)
                 {
                     StringCopy(gBattleTextBuff1, gStatusConditionString_BurnJpn);
@@ -6746,6 +6805,7 @@ bool32 CanBeBurned(u32 battler, u32 ability)
      || gBattleMons[battler].status1 & STATUS1_ANY
      || ability == ABILITY_WATER_VEIL
      || ability == ABILITY_WATER_BUBBLE
+     || ability == ABILITY_PERMAFROST
      || ability == ABILITY_COMATOSE
      || ability == ABILITY_THERMAL_EXCHANGE
      || ability == ABILITY_PURIFYING_SALT
@@ -10205,6 +10265,10 @@ static inline uq4_12_t GetDefenderAbilitiesModifier(u32 move, u32 moveType, u32 
         if (IS_MOVE_SPECIAL(move))
             return UQ_4_12(0.5);
         break;
+    case ABILITY_GALVANIZED:
+        if (IS_MOVE_PHYSICAL(move))
+            return UQ_4_12(0.7);
+        break;
     }
     return UQ_4_12(1.0);
 }
@@ -10706,8 +10770,10 @@ uq4_12_t GetOverworldTypeEffectiveness(struct Pokemon *mon, u8 moveType)
             MulByTypeEffectiveness(&modifier, MOVE_POUND, moveType, 0, type2, 0, FALSE);
 
         if ((modifier <= UQ_4_12(1.0)  &&  abilityDef == ABILITY_WONDER_GUARD)
-         || (moveType == TYPE_FIRE     &&  abilityDef == ABILITY_FLASH_FIRE)
+         || (moveType == TYPE_FIRE     && (abilityDef == ABILITY_FLASH_FIRE
+                                       ||  abilityDef == ABILITY_PERMAFROST))
          || (moveType == TYPE_GRASS    &&  abilityDef == ABILITY_SAP_SIPPER)
+         || (moveType == TYPE_ROCK     &&  abilityDef == ABILITY_ROCK_BODY)
          || (moveType == TYPE_GROUND   && (abilityDef == ABILITY_LEVITATE
                                        ||  abilityDef == ABILITY_EARTH_EATER))
          || (moveType == TYPE_WATER    && (abilityDef == ABILITY_WATER_ABSORB

@@ -2408,4 +2408,29 @@ const struct Ability gAbilitiesInfo[ABILITIES_COUNT] =
         .cantBeSwapped = TRUE,
         .cantBeTraced = TRUE,
     },
+
+    // EonEmerald custom abilities.
+    [ABILITY_PERMAFROST] =
+    {
+        .name = _("Frost Body"),
+        .description = COMPOUND_STRING("Fire immunity. May freeze on contact."),
+        .aiRating = 8,
+        .breakable = TRUE,
+    },
+
+    [ABILITY_ROCK_BODY] =
+    {
+        .name = _("Rock Body"),
+        .description = COMPOUND_STRING("Absorbs Rock moves to restore HP."),
+        .aiRating = 8,
+        .breakable = TRUE,
+    },
+
+    [ABILITY_GALVANIZED] =
+    {
+        .name = _("Chrome Body"),
+        .description = COMPOUND_STRING("Takes 30% less physical damage."),
+        .aiRating = 7,
+        .breakable = TRUE,
+    },
 };

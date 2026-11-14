@@ -830,6 +830,9 @@ static s32 AI_CheckBadMove(u32 battlerAtk, u32 battlerDef, u32 move, s32 score)
             case ABILITY_CLEAR_BODY:
             case ABILITY_FULL_METAL_BODY:
             case ABILITY_WHITE_SMOKE:
+            case ABILITY_PERMAFROST:
+            case ABILITY_ROCK_BODY:
+            case ABILITY_GALVANIZED:
                 if (IsStatLoweringEffect(moveEffect))
                     RETURN_SCORE_MINUS(10);
                 break;

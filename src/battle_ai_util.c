@@ -1723,15 +1723,24 @@ void ProtectChecks(u32 battlerAtk, u32 battlerDef, u32 move, u32 predictedMove, 
         ADJUST_SCORE_PTR(DECENT_EFFECT);
 }
 
+// EonEmerald: abilities that inherit Clear Body's stat-loss protection.
+static bool32 AI_AbilityPreventsStatLoss(u32 ability)
+{
+    return ability == ABILITY_CLEAR_BODY
+        || ability == ABILITY_FULL_METAL_BODY
+        || ability == ABILITY_WHITE_SMOKE
+        || ability == ABILITY_PERMAFROST
+        || ability == ABILITY_ROCK_BODY
+        || ability == ABILITY_GALVANIZED;
+}
+
 // stat stages
 bool32 ShouldLowerStat(u32 battler, u32 battlerAbility, u32 stat)
 {
     if (gBattleMons[battler].statStages[stat] > MIN_STAT_STAGE && battlerAbility != ABILITY_CONTRARY)
     {
         if (AI_DATA->holdEffects[battler] == HOLD_EFFECT_CLEAR_AMULET
-         || battlerAbility == ABILITY_CLEAR_BODY
-         || battlerAbility == ABILITY_WHITE_SMOKE
-         || battlerAbility == ABILITY_FULL_METAL_BODY)
+         || AI_AbilityPreventsStatLoss(battlerAbility))
             return FALSE;
 
         switch (stat)
@@ -1819,9 +1828,7 @@ bool32 ShouldLowerAttack(u32 battlerAtk, u32 battlerDef, u32 defAbility)
     if (gBattleMons[battlerDef].statStages[STAT_ATK] > 4
       && HasMoveWithCategory(battlerDef, DAMAGE_CATEGORY_PHYSICAL)
       && defAbility != ABILITY_CONTRARY
-      && defAbility != ABILITY_CLEAR_BODY
-      && defAbility != ABILITY_WHITE_SMOKE
-      && defAbility != ABILITY_FULL_METAL_BODY
+      && !AI_AbilityPreventsStatLoss(defAbility)
       && defAbility != ABILITY_HYPER_CUTTER
       && AI_DATA->holdEffects[battlerDef] != HOLD_EFFECT_CLEAR_AMULET)
         return TRUE;
@@ -1838,9 +1845,7 @@ bool32 ShouldLowerDefense(u32 battlerAtk, u32 battlerDef, u32 defAbility)
     if (gBattleMons[battlerDef].statStages[STAT_DEF] > 4
       && HasMoveWithCategory(battlerAtk, DAMAGE_CATEGORY_PHYSICAL)
       && defAbility != ABILITY_CONTRARY
-      && defAbility != ABILITY_CLEAR_BODY
-      && defAbility != ABILITY_WHITE_SMOKE
-      && defAbility != ABILITY_FULL_METAL_BODY
+      && !AI_AbilityPreventsStatLoss(defAbility)
       && defAbility != ABILITY_BIG_PECKS
       && AI_DATA->holdEffects[battlerDef] != HOLD_EFFECT_CLEAR_AMULET)
         return TRUE;
@@ -1850,9 +1855,7 @@ bool32 ShouldLowerDefense(u32 battlerAtk, u32 battlerDef, u32 defAbility)
 bool32 ShouldLowerSpeed(u32 battlerAtk, u32 battlerDef, u32 defAbility)
 {
     if (defAbility == ABILITY_CONTRARY
-     || defAbility == ABILITY_CLEAR_BODY
-     || defAbility == ABILITY_FULL_METAL_BODY
-     || defAbility == ABILITY_WHITE_SMOKE
+     || AI_AbilityPreventsStatLoss(defAbility)
      || AI_DATA->holdEffects[battlerDef] == HOLD_EFFECT_CLEAR_AMULET)
         return FALSE;
 
@@ -1869,9 +1872,7 @@ bool32 ShouldLowerSpAtk(u32 battlerAtk, u32 battlerDef, u32 defAbility)
     if (gBattleMons[battlerDef].statStages[STAT_SPATK] > 4
       && HasMoveWithCategory(battlerDef, DAMAGE_CATEGORY_SPECIAL)
       && defAbility != ABILITY_CONTRARY
-      && defAbility != ABILITY_CLEAR_BODY
-      && defAbility != ABILITY_FULL_METAL_BODY
-      && defAbility != ABILITY_WHITE_SMOKE
+      && !AI_AbilityPreventsStatLoss(defAbility)
       && AI_DATA->holdEffects[battlerDef] != HOLD_EFFECT_CLEAR_AMULET)
         return TRUE;
     return FALSE;
@@ -1887,9 +1888,7 @@ bool32 ShouldLowerSpDef(u32 battlerAtk, u32 battlerDef, u32 defAbility)
     if (gBattleMons[battlerDef].statStages[STAT_SPDEF] > 4
       && HasMoveWithCategory(battlerAtk, DAMAGE_CATEGORY_SPECIAL)
       && defAbility != ABILITY_CONTRARY
-      && defAbility != ABILITY_CLEAR_BODY
-      && defAbility != ABILITY_FULL_METAL_BODY
-      && defAbility != ABILITY_WHITE_SMOKE
+      && !AI_AbilityPreventsStatLoss(defAbility)
       && AI_DATA->holdEffects[battlerDef] != HOLD_EFFECT_CLEAR_AMULET)
         return TRUE;
     return FALSE;
@@ -1903,9 +1902,7 @@ bool32 ShouldLowerAccuracy(u32 battlerAtk, u32 battlerDef, u32 defAbility)
         return FALSE; // Don't bother lowering stats if can kill enemy.
 
     if (defAbility != ABILITY_CONTRARY
-      && defAbility != ABILITY_CLEAR_BODY
-      && defAbility != ABILITY_WHITE_SMOKE
-      && defAbility != ABILITY_FULL_METAL_BODY
+      && !AI_AbilityPreventsStatLoss(defAbility)
       && defAbility != ABILITY_KEEN_EYE
       && defAbility != ABILITY_MINDS_EYE
       && (B_ILLUMINATE_EFFECT >= GEN_9 && defAbility != ABILITY_ILLUMINATE)
@@ -1923,9 +1920,7 @@ bool32 ShouldLowerEvasion(u32 battlerAtk, u32 battlerDef, u32 defAbility)
 
     if (gBattleMons[battlerDef].statStages[STAT_EVASION] > DEFAULT_STAT_STAGE
       && defAbility != ABILITY_CONTRARY
-      && defAbility != ABILITY_CLEAR_BODY
-      && defAbility != ABILITY_FULL_METAL_BODY
-      && defAbility != ABILITY_WHITE_SMOKE
+      && !AI_AbilityPreventsStatLoss(defAbility)
       && AI_DATA->holdEffects[battlerDef] != HOLD_EFFECT_CLEAR_AMULET)
         return TRUE;
     return FALSE;
@@ -4056,9 +4051,7 @@ bool32 AI_ShouldSpicyExtract(u32 battlerAtk, u32 battlerAtkPartner, u32 move, st
      || HasMoveEffect(BATTLE_OPPOSITE(battlerAtkPartner), EFFECT_FOUL_PLAY))
         return FALSE;
 
-    preventsStatLoss = (partnerAbility == ABILITY_CLEAR_BODY
-                     || partnerAbility == ABILITY_FULL_METAL_BODY
-                     || partnerAbility == ABILITY_WHITE_SMOKE
+    preventsStatLoss = (AI_AbilityPreventsStatLoss(partnerAbility)
                      || partnerHoldEffect == HOLD_EFFECT_CLEAR_AMULET);
 
     switch (gMovesInfo[aiData->partnerMove].effect)

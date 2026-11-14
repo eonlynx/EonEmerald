@@ -5542,6 +5542,9 @@ static void Cmd_playstatchangeanimation(void)
                         && ability != ABILITY_CLEAR_BODY
                         && ability != ABILITY_FULL_METAL_BODY
                         && ability != ABILITY_WHITE_SMOKE
+                        && ability != ABILITY_PERMAFROST
+                        && ability != ABILITY_ROCK_BODY
+                        && ability != ABILITY_GALVANIZED
                         && !((ability == ABILITY_KEEN_EYE || ability == ABILITY_MINDS_EYE) && currStat == STAT_ACC)
                         && !(B_ILLUMINATE_EFFECT >= GEN_9 && ability == ABILITY_ILLUMINATE && currStat == STAT_ACC)
                         && !(ability == ABILITY_HYPER_CUTTER && currStat == STAT_ATK)
@@ -16161,6 +16164,9 @@ static bool8 CanAbilityPreventStatLoss(u16 abilityDef)
     case ABILITY_CLEAR_BODY:
     case ABILITY_FULL_METAL_BODY:
     case ABILITY_WHITE_SMOKE:
+    case ABILITY_PERMAFROST:
+    case ABILITY_ROCK_BODY:
+    case ABILITY_GALVANIZED:
         return TRUE;
     }
     return FALSE;
