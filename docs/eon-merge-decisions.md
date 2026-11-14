@@ -38,6 +38,29 @@ A full per-file inventory of the original 205 merge conflicts is in
 - `ITEM_COMBAT_VEST` ("Bulwark Vest") and `ITEM_LINK_STONE` are separate items.
 - Link Stone was also added as an alternative to Linking Cord for trade evolutions.
 - Abandoned Ship room keys were restored as key items.
+- Eon shop behavior is restored: TMs/HMs, key items and berries are single-purchase.
+  Owned items show as sold out; bag-owned items use `gText_YouAlreadyHaveThis`.
+- Eon item and TM prices were ported for every item shared with Eon (325 price lines).
+- Item configs were set to Eon/Gen 3 behavior: Gen 3 healing values, 100 EV vitamin cap,
+  20% type-boost items, half sell value, held Exp. Share, non-key Escape Rope/fossils,
+  Gen 3 repel/fishing rules and the old Premier Ball bonus.
+- Eon Oran Berry heals 20 HP when held and Quick Claw has a 30% activation rate.
+- Eon repurposed several old items into effects that expansion now has as separate modern
+  items (Power Herb, Covert Cloak, Eviolite, Focus Sash, Loaded Dice, Leech/Boxing Glove).
+  Those modern expansion items are kept instead of duplicating the effect on the old item.
+
+## Battle configs
+
+- Core battle mechanics were aligned with Eon's Gen 3 engine: critical hits, paralysis,
+  confusion, multi-hit distribution, damage formulas, EXP gain, weather duration, balls,
+  turn order, status timing and similar `B_*` settings.
+- `B_UPDATED_TYPE_MATCHUPS == GEN_5` reproduces Eon's type chart (including Fairy and
+  Ghost/Dark vs Steel) and was verified against Eon's `gTypeEffectiveness` table.
+- `B_PHYSICAL_SPECIAL_SPLIT` deliberately remains modern (`GEN_LATEST`) because Eon's
+  own move table has per-move physical/special categories rather than Gen 3 type-based ones.
+- `B_UPDATED_MOVE_DATA`, `B_UPDATED_MOVE_TYPES`, `B_UPDATED_MOVE_FLAGS`,
+  `B_UPDATED_ABILITY_DATA`, `B_METRONOME_MOVES` and `B_NATURE_POWER_MOVES` remain modern
+  until Eon's move/ability data is audited and ported move by move.
 
 ## Graphics
 
@@ -59,11 +82,14 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Real EonEmerald changes versus its pret base were ported into expansion's `species_info/gen_*_families.h` files
   (base stats, types, abilities, wild held items and related base data).
 - `P_UPDATED_*` defaults are aligned with EonEmerald/Gen 3 behavior instead of expansion's Gen 9 defaults.
-- EonEmerald's custom abilities are currently mapped as follows until their effects are ported:
-  - `ABILITY_PERMAFROST` -> `ABILITY_FLASH_FIRE`
-  - `ABILITY_ROCK_BODY` -> `ABILITY_STURDY`
-  - `ABILITY_GALVANIZED` -> `ABILITY_FUR_COAT`
-  The original names/effects are recorded here so they can be restored properly later.
+- EonEmerald's custom abilities now have real expansion IDs and effects (no aliases):
+  - `ABILITY_PERMAFROST` (311, "Frost Body"): Fire immunity, burn immunity, hail immunity,
+    Clear Body-style stat-loss protection, and a 1/3 contact freeze chance.
+  - `ABILITY_ROCK_BODY` (312, "Rock Body"): absorbs Rock moves to restore 1/4 HP,
+    hail immunity, and Clear Body-style stat-loss protection.
+  - `ABILITY_GALVANIZED` (313, "Chrome Body"): 30% reduction to physical damage,
+    hail immunity, and Clear Body-style stat-loss protection.
+- `ABILITIES_COUNT_EON` is 314; all expansion ability arrays and the ROM header use it.
 
 ## Completed ports
 
@@ -82,13 +108,54 @@ A full per-file inventory of the original 205 merge conflicts is in
 - TM sales limited in shops like Eon: owned TMs/HMs show as sold out and use the single-purchase prompt.
 - Eon/Gen 3 defaults for breeding, EV cap, TM literacy, legendary IVs and single-use TMs.
 - Eon egg-hatch QoL (faster Flame Body/Magma Armor) and Poke Doll trainer-approach suppression.
+- Real custom ability effects and IDs (Frost Body, Rock Body, Chrome Body) plus Eon's Rain Dish
+  status cure and Natural Cure 1/32 end-turn healing.
+- Eon shop single-purchase rules for TMs/HMs, berries and key items.
+- Eon item/TM prices and Gen 3 item config defaults.
+- Gen 3 battle config sweep, verified Eon type chart (`B_UPDATED_TYPE_MATCHUPS GEN_5`), while
+  keeping the per-move physical/special split.
+- Missing `gPokedexCaughtScreen_Pal` definition and valid icons for Eon room keys and Endure TM.
+- Eon battle menu casing (`Fight`, `Type/`, `Wally`).
 
 ## Pending / review
 
-- EonEmerald's `battle_util.c` custom ability behavior (Permafrost, Rock Body, Galvanized, Rain Dish/Hydration/Natural Cure tweaks) was written for the old engine and must be reimplemented against expansion's ability system, not copied directly.
-- Shop/TM sale behavior (`POCKET_KEY_ITEMS`/berries sold-out checks, limited TM sales) needs adapting to expansion's rewritten shop code.
-- EonEmerald evolutions other than Link Stone, Battle Frontier data, and remaining data tables where they differ.
-- Full effects for the custom abilities currently aliased to Flash Fire / Sturdy / Fur Coat.
-- Review default configs (`B_*`, `I_*`, `P_*`, `OW_*`) so EonEmerald remains the default experience while expansion features stay available.
-- EonEmerald-only strings that expansion moved to other files (not added blindly to avoid duplicate labels).
-- Graphical/data tweaks where expansion reorganized the target files (shop UI, battle background palettes, Frontier mons).
+### High priority
+
+- **Eon move data audit.** 351 shared moves still differ from Eon in power, accuracy, PP, type,
+  category, target or priority (e.g. Eon's buffed Absorb/Aurora Beam/Dragon Breath and its
+  per-move PSS assignments). Do not blindly overwrite expansion data; review in batches because
+  Eon also contains quirks such as Arm Thrust priority 1 and special Fire Punch.
+- **Eon conditional PSS.** Eon's `src/pokemon.c` changes move categories for specific species
+  (Breloom/Bullet Seed, Togetic/Clefable/Tri Attack, several Ghost users, Hitmonchan/Medicham
+  elemental punches, etc.). Expansion has no per-species category override; decide whether to
+  implement it in the damage-calc path.
+- **Remaining `battle_script_commands.c` / `battle_util.c` Eon effects** not covered by the
+  custom abilities: move effects, item effects, weather damage exceptions, EXP distribution,
+  trainer money and Pickup tables.
+- **`battle_main.c` Eon trainer party generation and turn-order changes.** Verify the converted
+  `trainers.party` data already covers Eon's party construction rules; port anything missing.
+
+### Medium priority
+
+- **Eon ability-data audit** (`B_UPDATED_ABILITY_DATA` still modern) and remaining Eon ability
+  buffs not ported: Overgrow/Blaze/Torrent/Liquid Ooze/Thick Fat home-field effects from the old
+  engine.
+- **Eon battle messages** not ported because expansion reorganized the string table: whiteout
+  money/panic text, Exp. All message, and Eon's snow/hail wording. No broken references currently.
+- **Battle Frontier exchange corner / reward prices** and other Frontier data beyond the 882
+  monster sets.
+- **Eon-only strings.** 286 Eon `gText_*` symbols are absent from current `src/strings.c`, but
+  none are referenced by the current tree. Add only when restoring specific Eon text.
+- **Object-event and overworld graphics data** from the `THEIRS` list: verify Eon custom OW
+  sprites and any follower assets still referenced by preserved Eon maps/scripts.
+
+### Lower priority
+
+- **Review the 35 `OURS` files** (mostly graphics, map scripts and assets) for expansion-side
+  changes that should be merged while keeping Eon assets.
+- **`m4a.c` / DNS day-night music.** Eon's m4a diff has identical branches and `src/dns.c` is
+  currently unused dead code, so it was not wired in.
+- **Eon repurposed old items.** Effects like Power Herb, Covert Cloak, Eviolite, Focus Sash and
+  Loaded Dice already exist as separate expansion items; decide whether old items should also be
+  renamed/repurposed instead of only keeping the modern versions.
+- **`hns/master` merge** once the current port branch is stable.
