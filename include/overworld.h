@@ -155,6 +155,7 @@ bool32 Overworld_RecvKeysFromLinkIsRunning(void);
 bool32 Overworld_SendKeysToLinkIsRunning(void);
 bool32 IsSendingKeysOverCable(void);
 void ClearLinkPlayerObjectEvents(void);
+bool8 IsKantoSeviiSurfMap(void);
 
 // Item Description Headers
 enum ItemObtainFlags
