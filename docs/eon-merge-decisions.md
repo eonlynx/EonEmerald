@@ -110,6 +110,9 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Eon egg-hatch QoL (faster Flame Body/Magma Armor) and Poke Doll trainer-approach suppression.
 - Real custom ability effects and IDs (Frost Body, Rock Body, Chrome Body) plus Eon's Rain Dish
   status cure and Natural Cure 1/32 end-turn healing.
+- Eon ability buffs: Overgrow heals above half HP, Blaze burns on contact and blocks freeze,
+  Torrent/Liquid Ooze heal in rain, Liquid Ooze absorbs Poison moves, and Thick Fat/Snow Warning
+  grant Eon's hail healing and Dewgong/Seel status cure.
 - Eon shop single-purchase rules for TMs/HMs, berries and key items.
 - Eon item/TM prices and Gen 3 item config defaults.
 - Gen 3 battle config sweep, verified Eon type chart (`B_UPDATED_TYPE_MATCHUPS GEN_5`), while
@@ -147,9 +150,8 @@ A full per-file inventory of the original 205 merge conflicts is in
 
 ### Medium priority
 
-- **Eon ability-data audit** (`B_UPDATED_ABILITY_DATA` still modern) and remaining Eon ability
-  buffs not ported: Overgrow/Blaze/Torrent/Liquid Ooze/Thick Fat home-field effects from the old
-  engine.
+- **Eon ability-data flags audit** (`B_UPDATED_ABILITY_DATA` still modern). The old engine's
+  Overgrow/Blaze/Torrent/Liquid Ooze/Thick Fat/Snow Warning buffs are now ported.
 - **Eon battle messages** not ported because expansion reorganized the string table: whiteout
   money/panic text, Exp. All message, and Eon's snow/hail wording. No broken references currently.
 - **Eon party-menu QoL** (nickname and move-relearner entries directly in the party menu, SELECT
