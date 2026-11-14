@@ -435,6 +435,21 @@ const struct TrainerSprite gTrainerSprites[] =
     TRAINER_SPRITE(TRAINER_PIC_LEAF, gTrainerFrontPic_Leaf, gTrainerPalette_Leaf),
     TRAINER_SPRITE(TRAINER_PIC_RS_BRENDAN, gTrainerFrontPic_RubySapphireBrendan, gTrainerPalette_RubySapphireBrendan),
     TRAINER_SPRITE(TRAINER_PIC_RS_MAY, gTrainerFrontPic_RubySapphireMay, gTrainerPalette_RubySapphireMay),
+    TRAINER_SPRITE(TRAINER_PIC_BROCK, gTrainerFrontPic_Brock, gTrainerPalette_Brock),
+    TRAINER_SPRITE(TRAINER_PIC_MISTY, gTrainerFrontPic_Misty, gTrainerPalette_Misty),
+    TRAINER_SPRITE(TRAINER_PIC_SURGE, gTrainerFrontPic_Surge, gTrainerPalette_Surge),
+    TRAINER_SPRITE(TRAINER_PIC_ERIKA, gTrainerFrontPic_Erika, gTrainerPalette_Erika),
+    TRAINER_SPRITE(TRAINER_PIC_KOGA, gTrainerFrontPic_Koga, gTrainerPalette_Koga),
+    TRAINER_SPRITE(TRAINER_PIC_SABRINA, gTrainerFrontPic_Sabrina, gTrainerPalette_Sabrina),
+    TRAINER_SPRITE(TRAINER_PIC_BLAINE, gTrainerFrontPic_Blaine, gTrainerPalette_Blaine),
+    TRAINER_SPRITE(TRAINER_PIC_GIOVANNI, gTrainerFrontPic_Giovanni, gTrainerPalette_Giovanni),
+    TRAINER_SPRITE(TRAINER_PIC_LORELEI, gTrainerFrontPic_Lorelei, gTrainerPalette_Lorelei),
+    TRAINER_SPRITE(TRAINER_PIC_BRUNO, gTrainerFrontPic_Bruno, gTrainerPalette_Bruno),
+    TRAINER_SPRITE(TRAINER_PIC_AGATHA, gTrainerFrontPic_Agatha, gTrainerPalette_Agatha),
+    TRAINER_SPRITE(TRAINER_PIC_LANCE, gTrainerFrontPic_Lance, gTrainerPalette_Lance),
+    TRAINER_SPRITE(TRAINER_PIC_BLUE, gTrainerFrontPic_Blue, gTrainerPalette_Blue),
+    TRAINER_SPRITE(TRAINER_PIC_TATE, gTrainerFrontPic_Tate, gTrainerPalette_Tate),
+    TRAINER_SPRITE(TRAINER_PIC_LIZA, gTrainerFrontPic_Liza, gTrainerPalette_Liza),
 };
 
 static const union AnimCmd sAnimCmd_Hoenn[] =
