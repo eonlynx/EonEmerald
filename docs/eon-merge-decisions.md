@@ -58,8 +58,20 @@ so they are explicit and reviewable.
   - `ABILITY_GALVANIZED` -> `ABILITY_FUR_COAT`
   The original names/effects are recorded here so they can be restored properly later.
 
+## Completed ports
+
+- 864 trainers and 863 parties converted from the old split C format to `trainers.party` / competitive syntax.
+- EonEmerald custom items, Link Stone evolutions and Kanto trainer portraits.
+- EonEmerald species base data (stats, types, abilities, wild held items) via diff against its pret base.
+- Gen 3 level-up learnsets converted to `struct LevelUpMove` in `gen_3.h`.
+- Common UI strings from EonEmerald overlaid onto expansion's `strings.c`.
+
 ## Pending / review
 
-- Port remaining EonEmerald code tweaks (QoL, battle, menus) onto expansion code.
-- Port EonEmerald learnsets/evolutions and Battle Frontier data where they differ from expansion.
+- TM/HM and tutor compatibility: expansion generates `teachable_learnsets.h` with `tools/learnset_helpers/teachable.py`,
+  while EonEmerald used separate TM/HM and tutor tables plus `TUTOR_MOVE_*` scripts. This needs a dedicated port.
+- Remaining EonEmerald code tweaks (QoL, battle, menus) onto expansion code.
+- EonEmerald evolutions other than Link Stone, Battle Frontier data, and remaining data tables where they differ.
+- Full effects for the custom abilities currently aliased to Flash Fire / Sturdy / Fur Coat.
 - Review default configs (`B_*`, `I_*`, `P_*`, `OW_*`) so EonEmerald remains the default experience while expansion features stay available.
+- EonEmerald-only strings that expansion moved to other files (not added blindly to avoid duplicate labels).
