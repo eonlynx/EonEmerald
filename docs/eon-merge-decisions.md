@@ -123,6 +123,9 @@ A full per-file inventory of the original 205 merge conflicts is in
   - Battle Frontier tutors set `VAR_0x8005` to the correct move and Endure has its proper text.
   - Wattson gives the Basement Key again and Rustboro gives the Exp. Share.
   - `SwitchMonAbility` is implemented and registered for the Fallarbor ability switcher.
+- Eon berry tree yields (higher min/max yields) are applied through the existing
+  generation-selectable `YIELD_RATE` macro.
+- HMs can be forgotten through the summary screen move deleter, matching Eon.
 
 ## Pending / review
 
@@ -149,6 +152,12 @@ A full per-file inventory of the original 205 merge conflicts is in
   engine.
 - **Eon battle messages** not ported because expansion reorganized the string table: whiteout
   money/panic text, Exp. All message, and Eon's snow/hail wording. No broken references currently.
+- **Eon party-menu QoL** (nickname and move-relearner entries directly in the party menu, SELECT
+  quick-swap and moving held items) was not ported; expansion's menu layout differs.
+- **Kanto/Sevii surf music** (`MUS_RG_SURF`) and Eon's cloud/snow weather-effect fixes are not
+  wired in yet.
+- **Eon pickup table** (Choice items/Leftovers as rare Pickup finds) and Eon's whiteout money
+  message/script flow remain to be reviewed separately.
 - **Battle Frontier exchange corner / reward prices** and other Frontier data beyond the 882
   monster sets.
 - **Eon-only strings.** 286 Eon `gText_*` symbols are absent from current `src/strings.c`, but
