@@ -66,6 +66,19 @@ extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Man4;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Man5;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_ReporterM;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_ReporterF;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Brock;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Misty;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Surge;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Erika;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Koga;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Sabrina;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Blaine;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Giovanni;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Lorelei;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Bruno;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Agatha;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Lance;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Blue;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Bard;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Anabel;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Tucker;
@@ -490,6 +503,19 @@ const struct ObjectEventGraphicsInfo *const gObjectEventGraphicsInfoPointers[NUM
     [OBJ_EVENT_GFX_HOOH] =                     &gObjectEventGraphicsInfo_HoOh,
     [OBJ_EVENT_GFX_POKE_BALL] =                &gObjectEventGraphicsInfo_PokeBall,
     [OBJ_EVENT_GFX_OW_MON] =                   &gObjectEventGraphicsInfo_Follower,
+    [OBJ_EVENT_GFX_BROCK] = &gObjectEventGraphicsInfo_Brock,
+    [OBJ_EVENT_GFX_MISTY] = &gObjectEventGraphicsInfo_Misty,
+    [OBJ_EVENT_GFX_SURGE] = &gObjectEventGraphicsInfo_Surge,
+    [OBJ_EVENT_GFX_ERIKA] = &gObjectEventGraphicsInfo_Erika,
+    [OBJ_EVENT_GFX_KOGA] = &gObjectEventGraphicsInfo_Koga,
+    [OBJ_EVENT_GFX_SABRINA] = &gObjectEventGraphicsInfo_Sabrina,
+    [OBJ_EVENT_GFX_BLAINE] = &gObjectEventGraphicsInfo_Blaine,
+    [OBJ_EVENT_GFX_GIOVANNI] = &gObjectEventGraphicsInfo_Giovanni,
+    [OBJ_EVENT_GFX_LORELEI] = &gObjectEventGraphicsInfo_Lorelei,
+    [OBJ_EVENT_GFX_BRUNO] = &gObjectEventGraphicsInfo_Bruno,
+    [OBJ_EVENT_GFX_AGATHA] = &gObjectEventGraphicsInfo_Agatha,
+    [OBJ_EVENT_GFX_LANCE] = &gObjectEventGraphicsInfo_Lance,
+    [OBJ_EVENT_GFX_BLUE] = &gObjectEventGraphicsInfo_Blue,
 };
 
 const struct ObjectEventGraphicsInfo *const gMauvilleOldManGraphicsInfoPointers[] = {
