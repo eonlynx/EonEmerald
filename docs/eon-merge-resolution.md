@@ -1,5 +1,9 @@
 # EonEmerald merge conflict resolution inventory
 
+> Status note: this file records the original per-file resolution direction.
+> Current completion status and the live pending-work list are tracked in
+> [`docs/eon-merge-decisions.md`](eon-merge-decisions.md).
+
 Merge commit: `af2c7595cd` (`expansion/1.10.2`).
 
 Git semantics in that merge:
