@@ -5,6 +5,7 @@
 #include "field_effect.h"
 #include "field_player_avatar.h"
 #include "pokemon.h"
+#include "item.h"
 #include "script.h"
 #include "script_movement.h"
 #include "sprite.h"
@@ -32,6 +33,17 @@ static u8 GetTrainerApproachDistanceSouth(struct ObjectEvent *trainerObj, s16 ra
 static u8 GetTrainerApproachDistanceNorth(struct ObjectEvent *trainerObj, s16 range, s16 x, s16 y);
 static u8 GetTrainerApproachDistanceWest(struct ObjectEvent *trainerObj, s16 range, s16 x, s16 y);
 static u8 GetTrainerApproachDistanceEast(struct ObjectEvent *trainerObj, s16 range, s16 x, s16 y);
+
+static bool8 ignoreIfPokeDoll(void)
+{
+    int i;
+    for (i = 0; i < PARTY_SIZE; i++)
+    {
+        if (GetMonData(&gPlayerParty[i], MON_DATA_HELD_ITEM) == ITEM_POKE_DOLL)
+            return TRUE;
+    }
+    return FALSE;
+}
 
 static bool8 TrainerSeeIdle(u8 taskId, struct Task *task, struct ObjectEvent *trainerObj);
 static bool8 TrainerExclamationMark(u8 taskId, struct Task *task, struct ObjectEvent *trainerObj);
@@ -358,6 +370,9 @@ static const struct SpriteTemplate sSpriteTemplate_Emote =
 bool8 CheckForTrainersWantingBattle(void)
 {
     u8 i;
+
+    if (ignoreIfPokeDoll())
+        return FALSE;
 
     if (FlagGet(OW_FLAG_NO_TRAINER_SEE))
         return FALSE;
