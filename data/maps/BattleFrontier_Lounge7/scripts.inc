@@ -67,6 +67,7 @@ BattleFrontier_Lounge7_EventScript_ChooseNewLeftTutorMove::
 
 BattleFrontier_Lounge7_EventScript_Softboiled::
 	setvar VAR_0x8008, 16
+	setvar VAR_0x8005, MOVE_SOFT_BOILED
 	goto BattleFrontier_Lounge7_EventScript_ConfirmMoveSelection
 	end
 
@@ -246,11 +247,8 @@ BattleFrontier_Lounge7_EventScript_CancelChooseMon::
 @ VAR_TEMP_FRONTIER_TUTOR_SELECTION is the move selection
 @ VAR_TEMP_FRONTIER_TUTOR_ID is which move tutor was spoken to
 BattleFrontier_Lounge7_EventScript_ConfirmMoveSelection::
-	copyvar VAR_0x8004, VAR_TEMP_FRONTIER_TUTOR_SELECTION
-	copyvar VAR_0x8005, VAR_TEMP_FRONTIER_TUTOR_ID
 	special BufferBattleFrontierTutorMoveName
 	buffernumberstring STR_VAR_2, VAR_0x8008
-	copyvar VAR_0x8004, VAR_TEMP_C
 	msgbox BattleFrontier_Lounge7_Text_MoveWillBeXBattlePoints, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, BattleFrontier_Lounge7_EventScript_ChooseNewMove
 	specialvar VAR_TEMP_1, GetFrontierBattlePoints
@@ -261,7 +259,6 @@ BattleFrontier_Lounge7_EventScript_ConfirmMoveSelection::
 
 BattleFrontier_Lounge7_EventScript_TeachTutorMove::
 	msgbox BattleFrontier_Lounge7_Text_TeachMoveToWhichMon, MSGBOX_DEFAULT
-	special GetBattleFrontierTutorMoveIndex
 	fadescreen FADE_TO_BLACK
 	special CloseBattlePointsWindow
 	special CloseBattleFrontierTutorWindow

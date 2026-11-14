@@ -13,8 +13,6 @@
 #include "task.h"
 #include "trig.h"
 #include "gpu_regs.h"
-#include "metatile_behavior.h"
-#include "constants/metatile_behaviors.h"
 
 EWRAM_DATA static u8 sCurrentAbnormalWeather = 0;
 EWRAM_DATA static u16 sUnusedWeatherRelated = 0;
@@ -156,6 +154,7 @@ void Sunny_InitVars(void)
 {
     gWeatherPtr->targetColorMapIndex = 0;
     gWeatherPtr->colorMapStepDelay = 20;
+    Weather_SetBlendCoeffs(8, 12);
 }
 
 void Sunny_InitAll(void)
@@ -221,37 +220,10 @@ static void DestroyCloudSprites(void)
 
 static void UpdateCloudSprite(struct Sprite *sprite)
 {
-    s16 x, y;
-    s16 cameraX, cameraY;
-    u8 mb;
-
-    // 1. Handle Movement
+    // Move 1 pixel left every 2 frames.
     sprite->data[0] = (sprite->data[0] + 1) & 1;
     if (sprite->data[0])
         sprite->x--;
-
-    // 2. Get Camera Focus and Calculate World Coordinates
-    // This retrieves the map X/Y that the camera is centered on.
-    GetCameraFocusCoords(&cameraX, &cameraY);
-
-    // sprites are 64x64. We find the tile under the center.
-    // We adjust the camera focus (center of screen) by the sprite's 
-    // relative screen position (offset from screen center).
-    x = cameraX + (sprite->x / 16) - 7; 
-    y = cameraY + (sprite->y / 16) - 5;
-
-    // 3. Get the Metatile Behavior at this spot
-    mb = MapGridGetMetatileBehaviorAt(x, y);
-
-    // 4. Only show the sprite if it's over Pond Water or Puddles
-    if (mb == MB_POND_WATER || mb == MB_PUDDLE)
-    {
-        sprite->invisible = FALSE;
-    }
-    else
-    {
-        sprite->invisible = TRUE;
-    }
 }
 
 //------------------------------------------------------------------------------
@@ -701,23 +673,19 @@ static bool8 CreateRainSprite(void)
 
     spriteIndex = gWeatherPtr->rainSpriteCount;
     spriteId = CreateSpriteAtEnd(&sRainSpriteTemplate,
-                                 sRainSpriteCoords[spriteIndex].x, 
-                                 sRainSpriteCoords[spriteIndex].y, 78);
+      sRainSpriteCoords[spriteIndex].x, sRainSpriteCoords[spriteIndex].y, 78);
 
     if (spriteId != MAX_SPRITES)
     {
-        struct Sprite *sprite = &gSprites[spriteId]; // Use pointer to avoid repeated array indexing
+        gSprites[spriteId].tActive = FALSE;
+        gSprites[spriteId].tRandom = spriteIndex * 145;
+        while (gSprites[spriteId].tRandom >= 600)
+            gSprites[spriteId].tRandom -= 600;
 
-        sprite->tActive = FALSE;
-        
-        // OPTIMIZATION: Replaced the while loop with a modulo operator
-        // This is significantly faster on the GBA CPU
-        sprite->tRandom = (spriteIndex * 145) % 600;
-
-        StartRainSpriteFall(sprite);
-        InitRainSpriteMovement(sprite, spriteIndex * 9);
-        sprite->invisible = TRUE;
-        gWeatherPtr->sprites.s1.rainSprites[spriteIndex] = sprite;
+        StartRainSpriteFall(&gSprites[spriteId]);
+        InitRainSpriteMovement(&gSprites[spriteId], spriteIndex * 9);
+        gSprites[spriteId].invisible = TRUE;
+        gWeatherPtr->sprites.s1.rainSprites[spriteIndex] = &gSprites[spriteId];
     }
     else
     {
@@ -729,14 +697,12 @@ static bool8 CreateRainSprite(void)
         u16 i;
         for (i = 0; i < MAX_RAIN_SPRITES; i++)
         {
-            struct Sprite *rainSprite = gWeatherPtr->sprites.s1.rainSprites[i];
-            if (rainSprite)
+            if (gWeatherPtr->sprites.s1.rainSprites[i])
             {
-                // Optimization: Assign callback directly
-                if (!rainSprite->tWaiting)
-                    rainSprite->callback = UpdateRainSprite;
+                if (!gWeatherPtr->sprites.s1.rainSprites[i]->tWaiting)
+                    gWeatherPtr->sprites.s1.rainSprites[i]->callback = UpdateRainSprite;
                 else
-                    rainSprite->callback = WaitRainSprite;
+                    gWeatherPtr->sprites.s1.rainSprites[i]->callback = WaitRainSprite;
             }
         }
 
@@ -803,7 +769,7 @@ void Snow_InitVars(void)
 {
     gWeatherPtr->initStep = 0;
     gWeatherPtr->weatherGfxLoaded = FALSE;
-    gWeatherPtr->targetColorMapIndex = 3;
+    gWeatherPtr->targetColorMapIndex = 0;
     gWeatherPtr->colorMapStepDelay = 20;
     gWeatherPtr->targetSnowflakeSpriteCount = NUM_SNOWFLAKE_SPRITES;
     gWeatherPtr->snowflakeVisibleCounter = 0;
@@ -973,9 +939,8 @@ static void InitSnowflakeSpriteMovement(struct Sprite *sprite)
     sprite->tFallCounter = 0;
 }
 
-static void WaitSnowflakeSprite(struct Sprite *sprite)
+static void UNUSED WaitSnowflakeSprite(struct Sprite *sprite)
 {
-    // Timer is never incremented
     if (++gWeatherPtr->snowflakeTimer > 18)
     {
         sprite->invisible = FALSE;
@@ -989,7 +954,6 @@ static void WaitSnowflakeSprite(struct Sprite *sprite)
 static void UpdateSnowflakeSprite(struct Sprite *sprite)
 {
     s16 x;
-    s16 y;
 
     sprite->tPosY += sprite->tDeltaY;
     sprite->y = sprite->tPosY >> 7;
@@ -2641,5 +2605,3 @@ static void UpdateRainCounter(u8 newWeather, u8 oldWeather)
      && (newWeather == WEATHER_RAIN || newWeather == WEATHER_RAIN_THUNDERSTORM))
         IncrementGameStat(GAME_STAT_GOT_RAINED_ON);
 }
-
-

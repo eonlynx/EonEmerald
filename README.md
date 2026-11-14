@@ -21,3 +21,7 @@ Screenshots:
 > 
 > To set up the repository, see [INSTALL.md](INSTALL.md).
 > For contacts and other pret projects, see [pret.github.io](https://pret.github.io/).
+
+## Credits
+
+Based on RHH's pokeemerald-expansion 1.10.2: https://github.com/rh-hideout/pokeemerald-expansion/

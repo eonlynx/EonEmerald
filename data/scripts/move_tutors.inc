@@ -13,7 +13,7 @@ SlateportCity_PokemonFanClub_EventScript_SwaggerTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_SwaggerDeclinedMoney
 	msgbox MoveTutor_Text_SwaggerWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_SWAGGER
+	setvar VAR_0x8005, MOVE_SWAGGER
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_SwaggerDeclinedMoney
 	removemoney 10000
@@ -45,7 +45,7 @@ MauvilleCity_EventScript_RolloutTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_RolloutDeclinedMoney
 	msgbox MoveTutor_Text_RolloutWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_ROLLOUT
+	setvar VAR_0x8005, MOVE_ROLLOUT
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_RolloutDeclinedMoney
 	removemoney 10000
@@ -77,7 +77,7 @@ VerdanturfTown_PokemonCenter_1F_EventScript_FuryCutterTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_FuryCutterDeclinedMoney
 	msgbox MoveTutor_Text_FuryCutterWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_FURY_CUTTER
+	setvar VAR_0x8005, MOVE_FURY_CUTTER
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_FuryCutterDeclinedMoney
 	removemoney 10000
@@ -109,7 +109,7 @@ LavaridgeTown_House_EventScript_MimicTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_MimicDeclinedMoney
 	msgbox MoveTutor_Text_MimicWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_MIMIC
+	setvar VAR_0x8005, MOVE_MIMIC
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_MimicDeclinedMoney
 	removemoney 10000
@@ -141,7 +141,7 @@ FallarborTown_Mart_EventScript_MetronomeTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_MetronomeDeclinedMoney
 	msgbox MoveTutor_Text_MetronomeWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_METRONOME
+	setvar VAR_0x8005, MOVE_METRONOME
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_MetronomeDeclinedMoney
 	removemoney 10000
@@ -173,7 +173,7 @@ FortreeCity_House2_EventScript_SleepTalkTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_SleepTalkDeclinedMoney
 	msgbox MoveTutor_Text_SleepTalkWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_SLEEP_TALK
+	setvar VAR_0x8005, MOVE_SLEEP_TALK
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_SleepTalkDeclinedMoney
 	removemoney 10000
@@ -205,7 +205,7 @@ LilycoveCity_DepartmentStoreRooftop_EventScript_SubstituteTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_SubstituteDeclinedMoney
 	msgbox MoveTutor_Text_SubstituteWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_SUBSTITUTE
+	setvar VAR_0x8005, MOVE_SUBSTITUTE
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_SubstituteDeclinedMoney
 	removemoney 10000
@@ -237,7 +237,7 @@ MossdeepCity_EventScript_DynamicPunchTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_DynamicPunchDeclinedMoney
 	msgbox MoveTutor_Text_DynamicPunchWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_DYNAMIC_PUNCH
+	setvar VAR_0x8005, MOVE_DYNAMIC_PUNCH
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_DynamicPunchDeclinedMoney
 	removemoney 10000
@@ -269,7 +269,7 @@ SootopolisCity_PokemonCenter_1F_EventScript_DoubleEdgeTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_DoubleEdgeDeclinedMoney
 	msgbox MoveTutor_Text_DoubleEdgeWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_DOUBLE_EDGE
+	setvar VAR_0x8005, MOVE_DOUBLE_EDGE
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_DoubleEdgeDeclinedMoney
 	removemoney 10000
@@ -301,7 +301,7 @@ PacifidlogTown_PokemonCenter_1F_EventScript_ExplosionTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_ExplosionDeclinedMoney
 	msgbox MoveTutor_Text_ExplosionWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_EXPLOSION
+	setvar VAR_0x8005, MOVE_EXPLOSION
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_ExplosionDeclinedMoney
 	removemoney 10000

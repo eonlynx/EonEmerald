@@ -52,8 +52,8 @@
       "movement_range_x": 0,
       "movement_range_y": 0,
       "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "Route109_EventScript_ItemPPUp",
+      "trainer_sight_or_berry_tree_id": "ITEM_PP_MAX",
+      "script": "Common_EventScript_FindItem",
       "flag": "FLAG_UNUSED_0x472"
     },
     {
@@ -65,8 +65,8 @@
       "movement_range_x": 0,
       "movement_range_y": 0,
       "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "AquaHideout_B1F_EventScript_ItemMaxElixir",
+      "trainer_sight_or_berry_tree_id": "ITEM_MAX_ELIXIR",
+      "script": "Common_EventScript_FindItem",
       "flag": "FLAG_UNUSED_0x470"
     },
     {
@@ -138,7 +138,5 @@
       "script": "AquaHideout_EventScript_Reset_Trainers"
     }
   ],
-  "bg_events": [
-
-  ]
+  "bg_events": []
 }

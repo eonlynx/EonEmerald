@@ -1,9 +1,6 @@
 #include <string.h>
 #include "gba/m4a_internal.h"
-#include "dns.h"
-#include "rtc.h"
-#include "constants/flags.h"
-#include "overworld.h"
+#include "global.h"
 
 extern const u8 gCgb3Vol[];
 
@@ -23,12 +20,6 @@ COMMON_DATA struct MusicPlayerTrack gPokemonCryTracks[MAX_POKEMON_CRIES * 2] = {
 COMMON_DATA struct PokemonCrySong gPokemonCrySong = {0};
 COMMON_DATA u8 gMPlayMemAccArea[0x10] = {0};
 COMMON_DATA struct MusicPlayerInfo gMPlayInfo_SE3 = {0};
-
-#define DAY_HOUR_BEGIN       12
-#define DAY_HOUR_END         HOURS_PER_DAY
-
-#define NIGHT_HOUR_BEGIN     0
-#define NIGHT_HOUR_END       12
 
 u32 MidiKeyToFreq(struct WaveData *wav, u8 key, u8 fineAdjust)
 {
@@ -598,7 +589,7 @@ void MPlayOpen(struct MusicPlayerInfo *mplayInfo, struct MusicPlayerTrack *track
     mplayInfo->ident = ID_NUMBER;
 }
 
-void MPlayStart(struct MusicPlayerInfo *mplayInfo, struct SongHeader *songHeader) //DNS
+void MPlayStart(struct MusicPlayerInfo *mplayInfo, struct SongHeader *songHeader)
 {
     s32 i;
     u8 unk_B;
@@ -615,41 +606,20 @@ void MPlayStart(struct MusicPlayerInfo *mplayInfo, struct SongHeader *songHeader
                 || (mplayInfo->status & MUSICPLAYER_STATUS_PAUSE)))
         || (mplayInfo->priority <= songHeader->priority))
     {
-			RtcCalcLocalTime();
-			if ((FLAG_SYS_SHOAL_TIDE && IsMapTypeOutdoors(GetCurrentMapType()))) //find a way to make it only for outdoor maps
-			{
-				mplayInfo->ident++;
-				mplayInfo->status = 0;
-				mplayInfo->songHeader = songHeader;
-				mplayInfo->tone = songHeader->tone;
-				mplayInfo->priority = songHeader->priority;
-				mplayInfo->clock = 0;
-				mplayInfo->tempoD = 150;
-				mplayInfo->tempoI = 150;
-				mplayInfo->tempoU = (0x100);
-				mplayInfo->tempoC = 0;
-				mplayInfo->fadeOI = 0;
-				
-				i = 0;
-				track = mplayInfo->tracks;
-			}
-			else
-			{
-				mplayInfo->ident++;
-				mplayInfo->status = 0;
-				mplayInfo->songHeader = songHeader;
-				mplayInfo->tone = songHeader->tone;
-				mplayInfo->priority = songHeader->priority;
-				mplayInfo->clock = 0;
-				mplayInfo->tempoD = 150;
-				mplayInfo->tempoI = 150;
-				mplayInfo->tempoU = 0x100;
-				mplayInfo->tempoC = 0;
-				mplayInfo->fadeOI = 0;
-				
-				i = 0;
-				track = mplayInfo->tracks;
-			}
+        mplayInfo->ident++;
+        mplayInfo->status = 0;
+        mplayInfo->songHeader = songHeader;
+        mplayInfo->tone = songHeader->tone;
+        mplayInfo->priority = songHeader->priority;
+        mplayInfo->clock = 0;
+        mplayInfo->tempoD = 150;
+        mplayInfo->tempoI = 150;
+        mplayInfo->tempoU = 0x100;
+        mplayInfo->tempoC = 0;
+        mplayInfo->fadeOI = 0;
+
+        i = 0;
+        track = mplayInfo->tracks;
 
         while (i < songHeader->trackCount && i < mplayInfo->trackCount)
         {

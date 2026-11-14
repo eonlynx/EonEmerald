@@ -14,7 +14,6 @@
 #define TRAINER_SECRET_BASE                 1024
 #define TRAINER_LINK_OPPONENT               2048
 #define TRAINER_UNION_ROOM                  3072
-#define TRAINER_STEVEN_PARTNER              3075
 
 #define TRAINER_PIC_HIKER                  0
 #define TRAINER_PIC_AQUA_GRUNT_M           1
@@ -109,21 +108,7 @@
 #define TRAINER_PIC_LEAF                  90
 #define TRAINER_PIC_RS_BRENDAN            91
 #define TRAINER_PIC_RS_MAY                92
-#define TRAINER_PIC_BROCK           	  93
-#define TRAINER_PIC_MISTY                 94
-#define TRAINER_PIC_SURGE   			  95
-#define TRAINER_PIC_ERIKA     			  96
-#define TRAINER_PIC_KOGA  				  97
-#define TRAINER_PIC_SABRINA  			  98
-#define TRAINER_PIC_BLAINE  			  99
-#define TRAINER_PIC_GIOVANNI    		  100
-#define TRAINER_PIC_LORELEI 			  101
-#define TRAINER_PIC_BRUNO                 102
-#define TRAINER_PIC_AGATHA                103
-#define TRAINER_PIC_LANCE           	  104
-#define TRAINER_PIC_BLUE                  105
-#define TRAINER_PIC_TATE            	  106
-#define TRAINER_PIC_LIZA                  107
+#define TRAINER_PIC_COUNT                 93
 
 // The player back pics are assumed to alternate according to the gender values (MALE/FEMALE)
 #define TRAINER_BACK_PIC_BRENDAN                0
@@ -217,30 +202,8 @@
 #define FACILITY_CLASS_LEAF                  0x4f
 #define FACILITY_CLASS_RS_BRENDAN            0x50
 #define FACILITY_CLASS_RS_MAY                0x51
-#define FACILITY_CLASS_BROCK				 0x52
-#define FACILITY_CLASS_MISTY				 0x53
-#define FACILITY_CLASS_SURGE				 0x54
-#define FACILITY_CLASS_ERIKA				 0x55
-#define FACILITY_CLASS_KOGA					 0x56
-#define FACILITY_CLASS_SABRINA				 0x57
-#define FACILITY_CLASS_BLAINE				 0x58
-#define FACILITY_CLASS_GIOVANNI				 0x59
-#define FACILITY_CLASS_LORELEI				 0x5A
-#define FACILITY_CLASS_BRUNO				 0x5B
-#define FACILITY_CLASS_AGATHA				 0x5C
-#define FACILITY_CLASS_LANCE				 0x5D
-#define FACILITY_CLASS_BLUE				 	 0x5E
-#define FACILITY_CLASS_FLANNERY				 0x5F
-#define FACILITY_CLASS_WINONA				 0x60
-#define FACILITY_CLASS_LIZA					 0x61
-#define FACILITY_CLASS_WATTSON				 0x62
-#define FACILITY_CLASS_NORMAN				 0x63
-#define FACILITY_CLASS_TATE					 0x64
-#define FACILITY_CLASS_JUAN					 0x65
-#define FACILITY_CLASS_GLACIA				 0x66
-#define FACILITY_CLASS_DRAKE				 0x67
 
-#define FACILITY_CLASSES_COUNT               0x68
+#define FACILITY_CLASSES_COUNT               0x52
 
 #define RS_FACILITY_CLASS_AQUA_LEADER_ARCHIE    0x0
 #define RS_FACILITY_CLASS_AQUA_GRUNT_M          0x1
@@ -319,33 +282,11 @@
 #define RS_FACILITY_CLASS_YOUNG_COUPLE          0x4A
 #define RS_FACILITY_CLASS_OLD_COUPLE            0x4B
 #define RS_FACILITY_CLASS_SIS_AND_BRO           0x4C
-#define RS_FACILITY_CLASS_BROCK					0x4D
-#define RS_FACILITY_CLASS_MISTY					0x4E
-#define RS_FACILITY_CLASS_SURGE					0x4F
-#define RS_FACILITY_CLASS_ERIKA					0x50
-#define RS_FACILITY_CLASS_KOGA					0x51
-#define RS_FACILITY_CLASS_SABRINA				0x52
-#define RS_FACILITY_CLASS_BLAINE				0x53
-#define RS_FACILITY_CLASS_GIOVANNI				0x54
-#define RS_FACILITY_CLASS_LORELEI				0x55
-#define RS_FACILITY_CLASS_BRUNO					0x56
-#define RS_FACILITY_CLASS_AGATHA				0x57
-#define RS_FACILITY_CLASS_LANCE					0x58
-#define RS_FACILITY_CLASS_BLUE					0x59
-#define RS_FACILITY_CLASS_FLANNERY				0x5A
-#define RS_FACILITY_CLASS_WINONA				0x5B
-#define RS_FACILITY_CLASS_LIZA					0x5C
-#define RS_FACILITY_CLASS_WATTSON				0x5D
-#define RS_FACILITY_CLASS_NORMAN				0x5E
-#define RS_FACILITY_CLASS_TATE					0x5F
-#define RS_FACILITY_CLASS_JUAN					0x60
-#define RS_FACILITY_CLASS_RED					0x61
-#define RS_FACILITY_CLASS_LEAF					0x62
 
-#define RS_FACILITY_CLASSES_COUNT               0x63
+#define RS_FACILITY_CLASSES_COUNT               0x4D
 
 #define TRAINER_CLASS_PKMN_TRAINER_1 0x0  // Unused
-#define TRAINER_CLASS_PKMN_TRAINER_2 0x1  // Used for Red and Blue.
+#define TRAINER_CLASS_PKMN_TRAINER_2 0x1  // Unused
 #define TRAINER_CLASS_HIKER          0x2
 #define TRAINER_CLASS_TEAM_AQUA      0x3
 #define TRAINER_CLASS_PKMN_BREEDER   0x4
@@ -392,7 +333,7 @@
 #define TRAINER_CLASS_SWIMMER_F      0x2d
 #define TRAINER_CLASS_TWINS          0x2e
 #define TRAINER_CLASS_SAILOR         0x2f
-#define TRAINER_CLASS_LEADER_2       0x30 // Used for FRLG Gym Leaders.
+#define TRAINER_CLASS_COOLTRAINER_2  0x30 // Used for only one trainer.
 #define TRAINER_CLASS_MAGMA_ADMIN    0x31
 #define TRAINER_CLASS_RIVAL          0x32
 #define TRAINER_CLASS_BUG_CATCHER    0x33
@@ -410,8 +351,7 @@
 #define TRAINER_CLASS_PIKE_QUEEN     0x3f
 #define TRAINER_CLASS_PYRAMID_KING   0x40
 #define TRAINER_CLASS_RS_PROTAG      0x41
-#define TRAINER_CLASS_PKMN_TRAINER_3 0x42
-#define TRAINER_CLASS_PKMN_TRAINER_4 0x43
+#define TRAINER_CLASS_COUNT          0x42
 
 #define TRAINER_ENCOUNTER_MUSIC_MALE         0 // standard male encounter music
 #define TRAINER_ENCOUNTER_MUSIC_FEMALE       1 // standard female encounter music
@@ -430,10 +370,9 @@
 
 #define F_TRAINER_FEMALE (1 << 7)
 
-// All trainer parties specify the IV, level, and species for each Pokémon in the
-// party. Some trainer parties also specify held items and custom moves for each
-// Pokémon.
-#define F_TRAINER_PARTY_CUSTOM_MOVESET (1 << 0)
-#define F_TRAINER_PARTY_HELD_ITEM      (1 << 1)
+// Trainer party defines
+#define TRAINER_MON_MALE          1
+#define TRAINER_MON_FEMALE        2
+#define TRAINER_MON_RANDOM_GENDER 3
 
 #endif  // GUARD_TRAINERS_H

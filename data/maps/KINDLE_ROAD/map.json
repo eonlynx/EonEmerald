@@ -151,8 +151,8 @@
       "movement_range_x": 0,
       "movement_range_y": 0,
       "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "Route133_EventScript_ItemStarPiece",
+      "trainer_sight_or_berry_tree_id": "ITEM_STAR_PIECE",
+      "script": "Common_EventScript_FindItem",
       "flag": "FLAG_ITEM_ROUTE_133_STAR_PIECE"
     },
     {
@@ -190,8 +190,8 @@
       "movement_range_x": 0,
       "movement_range_y": 0,
       "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "Route127_EventScript_ItemZinc",
+      "trainer_sight_or_berry_tree_id": "ITEM_LAX_INCENSE",
+      "script": "Common_EventScript_FindItem",
       "flag": "FLAG_ITEM_ROUTE_127_ZINC"
     }
   ],
@@ -225,10 +225,6 @@
       "dest_warp_id": "3"
     }
   ],
-  "coord_events": [
-
-  ],
-  "bg_events": [
-
-  ]
+  "coord_events": [],
+  "bg_events": []
 }
