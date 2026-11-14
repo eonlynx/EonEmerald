@@ -131,7 +131,7 @@ A full per-file inventory of the original 205 merge conflicts is in
 - HMs can be forgotten through the summary screen move deleter, matching Eon.
 - Kanto/Sevii maps use `MUS_RG_SURF` for surfing, including map transitions and entering Surf.
 - Party menu QoL: nickname and move-relearner actions are available directly from the field
-  party menu (using the existing naming screen and move relearner).
+  party menu, and SELECT starts a quick swap from the field party menu.
 
 ## Pending / review
 
@@ -157,8 +157,8 @@ A full per-file inventory of the original 205 merge conflicts is in
   Overgrow/Blaze/Torrent/Liquid Ooze/Thick Fat/Snow Warning buffs are now ported.
 - **Eon battle messages** not ported because expansion reorganized the string table: whiteout
   money/panic text, Exp. All message, and Eon's snow/hail wording. No broken references currently.
-- **Eon party-menu QoL leftovers:** SELECT quick-swap and the move-held-item action are still
-  pending; nickname and move-relearner entries are now ported.
+- **Eon party-menu QoL leftover:** the move-held-item action is still pending; nickname,
+  move-relearner and SELECT quick-swap are ported.
 - **Eon cloud-over-water weather effect** is still not wired in; the snowflake timer fix was
   already present in expansion.
 - **Eon pickup table** (Choice items/Leftovers as rare Pickup finds) and Eon's whiteout money
