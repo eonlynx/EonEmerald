@@ -654,6 +654,9 @@ const u32 gItemIconPalette_BlackAugurite[] = INCBIN_U32("graphics/items/icon_pal
 const u32 gItemIcon_LinkingCord[] = INCBIN_U32("graphics/items/icons/linking_cord.4bpp.lz");
 const u32 gItemIconPalette_LinkingCord[] = INCBIN_U32("graphics/items/icon_palettes/linking_cord.gbapal.lz");
 
+const u32 gItemIcon_LinkStone[] = INCBIN_U32("graphics/items/icons/link_stone.4bpp.lz");
+const u32 gItemIconPalette_LinkStone[] = INCBIN_U32("graphics/items/icon_palettes/link_stone.gbapal.lz");
+
 const u32 gItemIcon_PeatBlock[] = INCBIN_U32("graphics/items/icons/peat_block.4bpp.lz");
 const u32 gItemIconPalette_PeatBlock[] = INCBIN_U32("graphics/items/icon_palettes/peat_block.gbapal.lz");
 

@@ -782,6 +782,8 @@ extern const u32 gItemIcon_BlackAugurite[];
 extern const u32 gItemIconPalette_BlackAugurite[];
 extern const u32 gItemIcon_LinkingCord[];
 extern const u32 gItemIconPalette_LinkingCord[];
+extern const u32 gItemIcon_LinkStone[];
+extern const u32 gItemIconPalette_LinkStone[];
 extern const u32 gItemIcon_PeatBlock[];
 extern const u32 gItemIconPalette_PeatBlock[];
 extern const u32 gItemIcon_SyrupyApple[];

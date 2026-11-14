@@ -14093,4 +14093,95 @@ const struct Item gItemsInfo[] =
         .iconPic = gItemIcon_PokeshiDoll,
         .iconPalette = gItemIconPalette_PokeshiDoll,
     },
+    [ITEM_COMBAT_VEST] =
+    {
+        .name = _("Bulwark Vest"),
+        .price = 9800,
+        .holdEffect = HOLD_EFFECT_ASSAULT_VEST,
+        .holdEffectParam = 50,
+        .description = COMPOUND_STRING(
+            "Prevents the use\n"
+            "of status moves\n"
+            "to boost Defense."),
+        .pocket = POCKET_ITEMS,
+        .type = ITEM_USE_BAG_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+        .flingPower = 80,
+        .iconPic = gItemIcon_AssaultVest,
+        .iconPalette = gItemIconPalette_AssaultVest,
+    },
+
+    [ITEM_LINK_STONE] =
+    {
+        .name = _("Link Stone"),
+        .price = 2100,
+        .description = COMPOUND_STRING(
+            "A peculiar stone\n"
+            "that makes certain\n"
+            "Pokémon evolve."),
+        .pocket = POCKET_ITEMS,
+        .type = ITEM_USE_PARTY_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_EvolutionStone,
+        .effect = gItemEffect_EvoItem,
+        .flingPower = 80,
+        .iconPic = gItemIcon_LinkStone,
+        .iconPalette = gItemIconPalette_LinkStone,
+    },
+
+    [ITEM_ROOM_1_KEY] =
+    {
+        .name = _("Rm. 1 Key"),
+        .price = 0,
+        .description = COMPOUND_STRING(
+            "A key that opens a\n"
+            "door inside the\n"
+            "Abandoned Ship."),
+        .importance = 1,
+        .pocket = POCKET_KEY_ITEMS,
+        .type = ITEM_USE_BAG_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+    },
+
+    [ITEM_ROOM_2_KEY] =
+    {
+        .name = _("Rm. 2 Key"),
+        .price = 0,
+        .description = COMPOUND_STRING(
+            "A key that opens a\n"
+            "door inside the\n"
+            "Abandoned Ship."),
+        .importance = 1,
+        .pocket = POCKET_KEY_ITEMS,
+        .type = ITEM_USE_BAG_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+    },
+
+    [ITEM_ROOM_4_KEY] =
+    {
+        .name = _("Rm. 4 Key"),
+        .price = 0,
+        .description = COMPOUND_STRING(
+            "A key that opens a\n"
+            "door inside the\n"
+            "Abandoned Ship."),
+        .importance = 1,
+        .pocket = POCKET_KEY_ITEMS,
+        .type = ITEM_USE_BAG_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+    },
+
+    [ITEM_ROOM_6_KEY] =
+    {
+        .name = _("Rm. 6 Key"),
+        .price = 0,
+        .description = COMPOUND_STRING(
+            "A key that opens a\n"
+            "door inside the\n"
+            "Abandoned Ship."),
+        .importance = 1,
+        .pocket = POCKET_KEY_ITEMS,
+        .type = ITEM_USE_BAG_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+    },
+
 };
