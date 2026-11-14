@@ -129,6 +129,7 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Eon berry tree yields (higher min/max yields) are applied through the existing
   generation-selectable `YIELD_RATE` macro.
 - HMs can be forgotten through the summary screen move deleter, matching Eon.
+- Kanto/Sevii maps use `MUS_RG_SURF` for surfing, including map transitions and entering Surf.
 
 ## Pending / review
 
@@ -156,8 +157,8 @@ A full per-file inventory of the original 205 merge conflicts is in
   money/panic text, Exp. All message, and Eon's snow/hail wording. No broken references currently.
 - **Eon party-menu QoL** (nickname and move-relearner entries directly in the party menu, SELECT
   quick-swap and moving held items) was not ported; expansion's menu layout differs.
-- **Kanto/Sevii surf music** (`MUS_RG_SURF`) and Eon's cloud/snow weather-effect fixes are not
-  wired in yet.
+- **Eon cloud-over-water weather effect** is still not wired in; the snowflake timer fix was
+  already present in expansion.
 - **Eon pickup table** (Choice items/Leftovers as rare Pickup finds) and Eon's whiteout money
   message/script flow remain to be reviewed separately.
 - **Battle Frontier exchange corner / reward prices** and other Frontier data beyond the 882
