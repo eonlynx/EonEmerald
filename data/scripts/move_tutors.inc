@@ -333,7 +333,7 @@ GSCMoveTutor_EventScript_CurseTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_GSCMoveTutorDeclined
 	msgbox MoveTutor_Text_GSCMoveTutorWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_CURSE
+	setvar VAR_0x8005, MOVE_CURSE
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, FALSE, MoveTutor_EventScript_GSCMoveTutorDeclined
 	removemoney 10000
@@ -351,7 +351,7 @@ GSCMoveTutor_EventScript_ZapCannonTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_RolloutDeclinedMoney
 	msgbox MoveTutor_Text_RolloutWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_ZAP_CANNON
+	setvar VAR_0x8005, MOVE_ZAP_CANNON
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, 0, MoveTutor_EventScript_RolloutDeclinedMoney
 	removemoney 10000
@@ -369,7 +369,7 @@ GSCMoveTutor_EventScript_FirePunchTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_GSCMoveTutorDeclined
 	msgbox MoveTutor_Text_GSCMoveTutorWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_FIRE_PUNCH
+	setvar VAR_0x8005, MOVE_FIRE_PUNCH
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, FALSE, MoveTutor_EventScript_GSCMoveTutorDeclined
 	removemoney 10000
@@ -387,7 +387,7 @@ GSCMoveTutor_EventScript_IcePunchTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_GSCMoveTutorDeclined
 	msgbox MoveTutor_Text_GSCMoveTutorWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_ICE_PUNCH
+	setvar VAR_0x8005, MOVE_ICE_PUNCH
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, FALSE, MoveTutor_EventScript_GSCMoveTutorDeclined
 	removemoney 10000
@@ -405,7 +405,7 @@ GSCMoveTutor_EventScript_ThunderPunchTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, MoveTutor_EventScript_GSCMoveTutorDeclined
 	msgbox MoveTutor_Text_GSCMoveTutorWhichMon, MSGBOX_DEFAULT
-	setvar VAR_0x8005, TUTOR_MOVE_THUNDER_PUNCH
+	setvar VAR_0x8005, MOVE_THUNDER_PUNCH
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, FALSE, MoveTutor_EventScript_GSCMoveTutorDeclined
 	removemoney 10000
@@ -433,7 +433,7 @@ TwoIsland_EventScript_BodySlamTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, EventScript_BodySlamDeclined
 	msgbox Text_BodySlamWhichMon
-	setvar VAR_0x8005, TUTOR_MOVE_BODY_SLAM
+	setvar VAR_0x8005, MOVE_BODY_SLAM
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, FALSE, EventScript_BodySlamDeclined
 	removemoney 10000
@@ -461,7 +461,7 @@ SevenIsland_EventScript_SwordsDanceTutor::
 	call MoveTutor_EventScript_CanOnlyBeLearnedOnce
 	goto_if_eq VAR_RESULT, NO, EventScript_SwordsDanceDeclined
 	msgbox Text_SwordsDanceWhichMon
-	setvar VAR_0x8005, TUTOR_MOVE_SWORDS_DANCE
+	setvar VAR_0x8005, MOVE_SWORDS_DANCE
 	call MoveTutor_EventScript_OpenPartyMenu
 	goto_if_eq VAR_RESULT, FALSE, EventScript_SwordsDanceDeclined
 	removemoney 10000
