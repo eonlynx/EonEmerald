@@ -4262,6 +4262,10 @@ u32 CanAbilityAbsorbMove(u32 battlerAtk, u32 battlerDef, u32 abilityDef, u32 mov
         if (moveType == TYPE_ROCK)
             effect = MOVE_ABSORBED_BY_DRAIN_HP_ABILITY;
         break;
+    case ABILITY_LIQUID_OOZE:
+        if (moveType == TYPE_POISON)
+            effect = MOVE_ABSORBED_BY_DRAIN_HP_ABILITY;
+        break;
     case ABILITY_MOTOR_DRIVE:
         if (moveType == TYPE_ELECTRIC && gMovesInfo[move].target != MOVE_TARGET_ALL_BATTLERS) // Potential bug in singles (might be solved with simu hp reudction)
             effect = MOVE_ABSORBED_BY_STAT_INCREASE_ABILITY;
@@ -5253,6 +5257,72 @@ u32 AbilityBattleEffects(u32 caseID, u32 battler, u32 ability, u32 special, u32 
                     effect++;
                 }
                 break;
+            // EonEmerald: Overgrow restores HP while above half health.
+            case ABILITY_OVERGROW:
+                if (gBattleMons[battler].hp > gBattleMons[battler].maxHP / 2
+                 && !BATTLER_MAX_HP(battler)
+                 && !(gStatuses3[battler] & STATUS3_HEAL_BLOCK))
+                {
+                    BattleScriptPushCursorAndCallback(BattleScript_RainDishActivates);
+                    gBattleMoveDamage = GetNonDynamaxMaxHP(battler) / 16;
+                    if (gBattleMoveDamage == 0)
+                        gBattleMoveDamage = 1;
+                    gBattleMoveDamage *= -1;
+                    effect++;
+                }
+                break;
+            // EonEmerald: Torrent and Liquid Ooze restore HP in rain.
+            case ABILITY_TORRENT:
+            case ABILITY_LIQUID_OOZE:
+                if (IsBattlerWeatherAffected(battler, B_WEATHER_RAIN)
+                 && !BATTLER_MAX_HP(battler)
+                 && !(gStatuses3[battler] & STATUS3_HEAL_BLOCK))
+                {
+                    BattleScriptPushCursorAndCallback(BattleScript_RainDishActivates);
+                    gBattleMoveDamage = GetNonDynamaxMaxHP(battler) / 16;
+                    if (gBattleMoveDamage == 0)
+                        gBattleMoveDamage = 1;
+                    gBattleMoveDamage *= -1;
+                    effect++;
+                }
+                break;
+            // EonEmerald: Thick Fat / Snow Warning grant hail recovery to specific ice species.
+            case ABILITY_THICK_FAT:
+            case ABILITY_SNOW_WARNING:
+                if (IsBattlerWeatherAffected(battler, B_WEATHER_HAIL)
+                 && !BATTLER_MAX_HP(battler)
+                 && !(gStatuses3[battler] & STATUS3_HEAL_BLOCK))
+                {
+                    u32 species = gBattleMons[battler].species;
+                    u32 divisor = 0;
+
+                    if (species == SPECIES_SPHEAL
+                     || species == SPECIES_SEALEO
+                     || species == SPECIES_WALREIN
+                     || species == SPECIES_GLALIE
+                     || species == SPECIES_SNORUNT)
+                        divisor = 16;
+                    else if (species == SPECIES_DEWGONG)
+                        divisor = 8;
+
+                    if (divisor != 0)
+                    {
+                        BattleScriptPushCursorAndCallback(BattleScript_RainDishActivates);
+                        gBattleMoveDamage = GetNonDynamaxMaxHP(battler) / divisor;
+                        if (gBattleMoveDamage == 0)
+                            gBattleMoveDamage = 1;
+                        gBattleMoveDamage *= -1;
+                        effect++;
+                    }
+                }
+                if (IsBattlerWeatherAffected(battler, B_WEATHER_HAIL)
+                 && gBattleMons[battler].status1 & STATUS1_ANY
+                 && (gBattleMons[battler].species == SPECIES_DEWGONG
+                  || gBattleMons[battler].species == SPECIES_SEEL))
+                {
+                    goto ABILITY_HEAL_MON_STATUS;
+                }
+                break;
             case ABILITY_NATURAL_CURE:
                 if (!BATTLER_MAX_HP(battler)
                  && !(gStatuses3[battler] & STATUS3_HEAL_BLOCK))
@@ -5958,6 +6028,7 @@ u32 AbilityBattleEffects(u32 caseID, u32 battler, u32 ability, u32 special, u32 
             }
             break;
         case ABILITY_FLAME_BODY:
+        case ABILITY_BLAZE:
             if (!(gMoveResultFlags & MOVE_RESULT_NO_EFFECT)
              && IsBattlerAlive(gBattlerAttacker)
              && !gProtectStructs[gBattlerAttacker].confusionSelfDmg
@@ -6370,6 +6441,7 @@ u32 AbilityBattleEffects(u32 caseID, u32 battler, u32 ability, u32 special, u32 
                 }
                 break;
             case ABILITY_MAGMA_ARMOR:
+            case ABILITY_BLAZE:
                 if (gBattleMons[battler].status1 & (STATUS1_FREEZE | STATUS1_FROSTBITE))
                 {
                     StringCopy(gBattleTextBuff1, gStatusConditionString_IceJpn);
@@ -6836,6 +6908,7 @@ bool32 CanBeFrozen(u32 battler)
      || IsBattlerWeatherAffected(battler, B_WEATHER_SUN)
      || gSideStatuses[GetBattlerSide(battler)] & SIDE_STATUS_SAFEGUARD
      || ability == ABILITY_MAGMA_ARMOR
+     || ability == ABILITY_BLAZE
      || ability == ABILITY_COMATOSE
      || ability == ABILITY_PURIFYING_SALT
      || gBattleMons[battler].status1 & STATUS1_ANY
@@ -10774,6 +10847,7 @@ uq4_12_t GetOverworldTypeEffectiveness(struct Pokemon *mon, u8 moveType)
                                        ||  abilityDef == ABILITY_PERMAFROST))
          || (moveType == TYPE_GRASS    &&  abilityDef == ABILITY_SAP_SIPPER)
          || (moveType == TYPE_ROCK     &&  abilityDef == ABILITY_ROCK_BODY)
+         || (moveType == TYPE_POISON   &&  abilityDef == ABILITY_LIQUID_OOZE)
          || (moveType == TYPE_GROUND   && (abilityDef == ABILITY_LEVITATE
                                        ||  abilityDef == ABILITY_EARTH_EATER))
          || (moveType == TYPE_WATER    && (abilityDef == ABILITY_WATER_ABSORB
