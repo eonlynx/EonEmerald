@@ -3,6 +3,13 @@
 This file records decisions made while porting EonEmerald onto pokeemerald-expansion 1.10.2,
 so they are explicit and reviewable.
 
+A full per-file inventory of the original 205 merge conflicts is in
+[`docs/eon-merge-resolution.md`](eon-merge-resolution.md):
+
+- 123 files resolved as `theirs` (expansion) - Eon changes may still need porting.
+- 35 files resolved as `ours` (EonEmerald) - expansion changes may still need review.
+- 24 deleted, 18 manually merged, 5 already identical.
+
 ## Trainers
 
 - `src/data/trainers.party` is the source of truth (competitive party syntax).
@@ -74,6 +81,7 @@ so they are explicit and reviewable.
 - Battle Frontier monster sets: all 882 Eon slots converted to expansion `TrainerMon`, with Eon held items and EV spreads.
 - TM sales limited in shops like Eon: owned TMs/HMs show as sold out and use the single-purchase prompt.
 - Eon/Gen 3 defaults for breeding, EV cap, TM literacy, legendary IVs and single-use TMs.
+- Eon egg-hatch QoL (faster Flame Body/Magma Armor) and Poke Doll trainer-approach suppression.
 
 ## Pending / review
 
