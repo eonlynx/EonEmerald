@@ -124,8 +124,8 @@ A full per-file inventory of the original 205 merge conflicts is in
   and Leftovers finds at high levels.
 - Gen 3 battle config sweep, verified Eon type chart (`B_UPDATED_TYPE_MATCHUPS GEN_5`), while
   keeping the per-move physical/special split.
-- Curated Eon move-data batch: 58 damaging moves use Eon's power, accuracy, PP and type values
-  where the move's effect was not repurposed. This includes Absorb, Mega Drain, Aurora Beam,
+- Curated Eon move-data batch: 67 moves use Eon's power, accuracy, PP and type values where the
+  move's effect was not repurposed. This includes Absorb, Mega Drain, Aurora Beam,
   Dragon Breath, Rock Slide, Poison Tail and the Normal-to-coverage type changes such as
   Comet Punch, Fury Attack, Dizzy Punch, Twineedle and Spike Cannon. Category, target,
   priority and effect reworks remain expansion-side. Bind/Clamp/Wrap/Submission now pin Eon's
@@ -164,11 +164,11 @@ A full per-file inventory of the original 205 merge conflicts is in
 
 ### High priority
 
-- **Remaining Eon move data.** 101 shared moves still differ in power, accuracy, PP, type,
+- **Remaining Eon move data.** 95 shared moves still differ in power, accuracy, PP, type,
   target or priority. These are mostly effect-repurposed moves (Cut, Charge, Flash, Water
-  Sport, Spider Web, etc.), target/priority quirks (Arm Thrust priority 1, Memento, Teleport,
-  weather moves) and status-move accuracy buffs. Keep reviewing in batches; do not import
-  Eon's category values because expansion keeps the per-move physical/special split.
+  Sport, Spider Web, etc.) and target/priority quirks (Arm Thrust priority 1, Memento,
+  Teleport, weather moves). Keep reviewing in batches; do not import Eon's category values
+  because expansion keeps the per-move physical/special split.
 - **Eon conditional PSS outside battle.** The summary screen, move relearner and Pokédex still
   show the move's base category icon because they have no battle battler context. The battle
   move menu and damage calculation use the per-species category.
