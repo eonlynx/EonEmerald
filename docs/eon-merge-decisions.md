@@ -127,12 +127,13 @@ A full per-file inventory of the original 205 merge conflicts is in
   and Leftovers finds at high levels.
 - Gen 3 battle config sweep, verified Eon type chart (`B_UPDATED_TYPE_MATCHUPS GEN_5`), while
   keeping the per-move physical/special split.
-- Curated Eon move-data batch: 67 moves use Eon's power, accuracy, PP and type values where the
-  move's effect was not repurposed. This includes Absorb, Mega Drain, Aurora Beam,
-  Dragon Breath, Rock Slide, Poison Tail and the Normal-to-coverage type changes such as
-  Comet Punch, Fury Attack, Dizzy Punch, Twineedle and Spike Cannon. Category, target,
-  priority and effect reworks remain expansion-side. Bind/Clamp/Wrap/Submission now pin Eon's
-  accuracy and PP instead of following the generation config.
+- Curated Eon move-data batches: 93 moves use Eon's power, accuracy, PP and type values. This
+  includes Absorb, Mega Drain, Aurora Beam, Dragon Breath, Rock Slide, Poison Tail, the
+  Normal-to-coverage type changes such as Comet Punch/Fury Attack/Dizzy Punch/Twineedle/Spike
+  Cannon, and the stat changes for effect-repurposed moves such as Cut, Crabhammer, Heat Wave,
+  Horn Attack, Mega Punch, Strength, Take Down and Waterfall. Category, target, priority and
+  effect reworks remain expansion-side. Bind/Clamp/Wrap/Submission now pin Eon's accuracy and
+  PP instead of following the generation config.
 - Eon conditional physical/special split applied in the damage path: elemental punches for
   Medicham/Hitmonchan/Electabuzz/Sneasel, Breloom Bullet Seed, Togetic/Clefable Tri Attack,
   Delcatty Uproar, Wigglytuff Hyper Voice, Sludge Bomb, Leaf Blade, Solar Beam, Powder Snow,
@@ -184,11 +185,11 @@ or intentionally excluded:
   Eviolite, Focus Band becomes Focus Sash, Lucky Egg becomes Loaded Dice and Lucky Punch becomes
   Boxing Glove. Modern items stay separate, so disable this only if you want the old slots to
   keep their original expansion effects.
-- **Move data:** 95 shared moves still differ, but they are Eon's experimental effect, target
-  and priority reworks (Cut flinch, Charge/Volt Switch, damaging Flash/Water Sport/Spider Web,
-  Arm Thrust priority 1, Memento/Teleport priority, weather-move targets, etc.). They are
-  intentionally excluded; expansion keeps per-move PSS and modern effect implementations. The
-  67 safe power/accuracy/PP/type changes are ported, including the status-move accuracy buffs.
+- **Move data:** 69 shared moves still differ, but they are Eon's experimental effect, target
+  and priority reworks (Charge/Volt Switch, damaging Flash/Water Sport/Spider Web, Arm Thrust
+  priority 1, Memento/Teleport priority, weather-move targets, etc.). They are intentionally
+  excluded; expansion keeps per-move PSS and modern effect implementations. The 93 safe
+  power/accuracy/PP/type changes are ported, including the status-move accuracy buffs.
 - **Ability data:** Eon's custom ability effects are implemented in code; modern
   `B_UPDATED_ABILITY_DATA` values remain intentionally.
 - **Battle script/util effects:** reviewed at function/table level. The remaining Eon diff is

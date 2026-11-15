@@ -1038,6 +1038,10 @@ BattleFrontier_ExchangeServiceCorner_Text_COMBAT_VESTDesc::
 BattleFrontier_ExchangeServiceCorner_Text_EVERSTONEDesc::
 	.string "Prevents the holder from\n"
 	.string "evolving.$"
+BattleFrontier_ExchangeServiceCorner_Text_EVIOLITEDesc::
+	.string "Raises the Def and\n"
+	.string "Sp. Def of PokéMON\n"
+	.string "that can evolve.$"
 BattleFrontier_ExchangeServiceCorner_Text_ELECTIRIZERDesc::
 	.string "A hold item that evolves\n"
 	.string "Electabuzz.$"
@@ -1053,12 +1057,20 @@ BattleFrontier_ExchangeServiceCorner_Text_THICK_CLUBDesc::
 BattleFrontier_ExchangeServiceCorner_Text_LUCKY_PUNCHDesc::
 	.string "A hold item that boosts\n"
 	.string "Chansey's critical-hit rate.$"
+BattleFrontier_ExchangeServiceCorner_Text_BOXING_GLOVEDesc::
+	.string "Powers up punching\n"
+	.string "moves and removes\n"
+	.string "their contact.$"
 BattleFrontier_ExchangeServiceCorner_Text_METAL_COATDesc::
 	.string "A hold item that boosts\n"
 	.string "Steel-type moves.$"
 BattleFrontier_ExchangeServiceCorner_Text_LUCKY_EGGDesc::
 	.string "A hold item that boosts\n"
 	.string "Exp. Points gained.$"
+BattleFrontier_ExchangeServiceCorner_Text_LOADED_DICEDesc::
+	.string "Rolls high numbers.\n"
+	.string "Multihit strikes\n"
+	.string "hit more times.$"
 BattleFrontier_ExchangeServiceCorner_Text_SMOKE_BALLDesc::
 	.string "A hold item that lets the\n"
 	.string "holder flee from wild battles.$"
