@@ -42,12 +42,13 @@ A full per-file inventory of the original 205 merge conflicts is in
   Owned items show as sold out; bag-owned items use `gText_YouAlreadyHaveThis`.
 - Eon item and TM prices were ported for every item shared with Eon (325 price lines).
 - Item configs were set to Eon/Gen 3 behavior: Gen 3 healing values, 100 EV vitamin cap,
-  20% type-boost items, half sell value, held Exp. Share, non-key Escape Rope/fossils,
+  20% type-boost items, half sell value, key-item Exp. All, non-key Escape Rope/fossils,
   Gen 3 repel/fishing rules and the old Premier Ball bonus.
 - Eon Oran Berry heals 20 HP when held and Quick Claw has a 30% activation rate.
 - Eon repurposed several old items into effects that expansion now has as separate modern
   items (Power Herb, Covert Cloak, Eviolite, Focus Sash, Loaded Dice, Leech/Boxing Glove).
-  Those modern expansion items are kept instead of duplicating the effect on the old item.
+  `I_EON_LEGACY_ITEM_EFFECTS` restores those old slots on top of the modern items; the modern
+  items remain available separately.
 
 ## Battle configs
 
@@ -61,8 +62,9 @@ A full per-file inventory of the original 205 merge conflicts is in
 - `B_PHYSICAL_SPECIAL_SPLIT` deliberately remains modern (`GEN_LATEST`) because Eon's
   own move table has per-move physical/special categories rather than Gen 3 type-based ones.
 - `B_UPDATED_MOVE_DATA`, `B_UPDATED_MOVE_TYPES`, `B_UPDATED_MOVE_FLAGS`,
-  `B_UPDATED_ABILITY_DATA`, `B_METRONOME_MOVES` and `B_NATURE_POWER_MOVES` remain modern
-  until Eon's move/ability data is audited and ported move by move.
+  `B_UPDATED_ABILITY_DATA`, `B_METRONOME_MOVES` and `B_NATURE_POWER_MOVES` remain modern.
+  Eon's curated power/accuracy/PP/type changes are applied directly to the affected moves;
+  effect, target and priority reworks remain excluded.
 
 ## Graphics
 
@@ -156,7 +158,7 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Manual-merge regressions fixed:
   - Cut/Rock Smash/Strength/Waterfall/Dive check the party move and execute the field effect.
   - Battle Frontier tutors set `VAR_0x8005` to the correct move and Endure has its proper text.
-  - Wattson gives the Basement Key again and Rustboro gives the Exp. Share.
+  - Wattson gives the Basement Key again and Rustboro gives the Exp. All key item.
   - `SwitchMonAbility` is implemented and registered for the Fallarbor ability switcher.
 - Eon berry tree yields (higher min/max yields) are applied through the existing
   generation-selectable `YIELD_RATE` macro.

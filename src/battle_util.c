@@ -46,12 +46,12 @@
 u32 GetMoveCategoryForSpecies(u32 move, u16 species)
 {
     u32 category = GetBattleMoveCategory(move);
-    u8 moveType = gMovesInfo[move].type;
+    u8 moveType = GetMoveType(move);
 
     if (category == DAMAGE_CATEGORY_STATUS)
         return category;
 
-    switch (species)
+    switch (GET_BASE_SPECIES_ID(species))
     {
     case SPECIES_MEDICHAM:
     case SPECIES_HITMONCHAN:
