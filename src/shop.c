@@ -42,7 +42,7 @@
 #include "constants/songs.h"
 
 #define TAG_SCROLL_ARROW   2100
-#define TAG_ITEM_ICON_BASE 2110
+#define TAG_ITEM_ICON_BASE 9110 // immune to time blending
 
 #define MAX_ITEMS_SHOWN 8
 
@@ -115,9 +115,9 @@ static EWRAM_DATA u8 sPurchaseHistoryId = 0;
 // EonEmerald: TMs, key items and berries are single-purchase items.
 static bool32 IsSinglePurchaseItem(u16 itemId)
 {
-    u8 pocket = ItemId_GetPocket(itemId);
+    u8 pocket = GetItemPocket(itemId);
 
-    return ItemId_GetImportance(itemId)
+    return GetItemImportance(itemId)
         || pocket == POCKET_TM_HM
         || pocket == POCKET_KEY_ITEMS
         || pocket == POCKET_BERRIES;
@@ -383,7 +383,7 @@ static u8 CreateShopMenu(u8 martType)
     return CreateTask(Task_ShopMenu, 8);
 }
 
-static void SetShopMenuCallback(void (* callback)(void))
+static void SetShopMenuCallback(void (*callback)(void))
 {
     sMartInfo.callback = callback;
 }
@@ -617,7 +617,7 @@ static void BuyMenuPrintItemDescriptionAndShowItemIcon(s32 item, bool8 onInit, s
     if (item != LIST_CANCEL)
     {
         if (sMartInfo.martType == MART_TYPE_NORMAL)
-            description = ItemId_GetDescription(item);
+            description = GetItemDescription(item);
         else
             description = gDecorations[item].description;
     }
@@ -640,7 +640,7 @@ static void BuyMenuPrintPriceInList(u8 windowId, u32 itemId, u8 y)
         {
             ConvertIntToDecimalStringN(
                 gStringVar1,
-                ItemId_GetPrice(itemId) >> IsPokeNewsActive(POKENEWS_SLATEPORT),
+                GetItemPrice(itemId) >> IsPokeNewsActive(POKENEWS_SLATEPORT),
                 STR_CONV_MODE_LEFT_ALIGN,
                 6);
         }
@@ -757,7 +757,7 @@ static void BuyMenuDecompressBgGraphics(void)
 {
     DecompressAndCopyTileDataToVram(1, gShopMenu_Gfx, 0x3A0, 0x3E3, 0);
     LZDecompressWram(gShopMenu_Tilemap, sShopData->tilemapBuffers[0]);
-    LoadCompressedPalette(gShopMenu_Pal, BG_PLTT_ID(12), PLTT_SIZE_4BPP);
+    LoadPalette(gShopMenu_Pal, BG_PLTT_ID(12), PLTT_SIZE_4BPP);
 }
 
 static void BuyMenuInitWindows(void)
@@ -1011,13 +1011,11 @@ static void Task_BuyMenu(u8 taskId)
             BuyMenuPrintCursor(tListTaskId, COLORID_GRAY_CURSOR);
 
             if (sMartInfo.martType == MART_TYPE_NORMAL)
-                sShopData->totalCost = (ItemId_GetPrice(itemId) >> IsPokeNewsActive(POKENEWS_SLATEPORT));
+                sShopData->totalCost = (GetItemPrice(itemId) >> IsPokeNewsActive(POKENEWS_SLATEPORT));
             else
                 sShopData->totalCost = gDecorations[itemId].price;
 
-            if (IsSinglePurchaseItem(itemId) && CheckBagHasItem(itemId, 1))
-                BuyMenuDisplayMessage(taskId, gText_YouAlreadyHaveThis, BuyMenuReturnToItemList);
-            else if (IsSinglePurchaseItem(itemId) && CheckPCHasItem(itemId, 1))
+            if (IsSinglePurchaseItem(itemId) && (CheckBagHasItem(itemId, 1) || CheckPCHasItem(itemId, 1)))
                 BuyMenuDisplayMessage(taskId, gText_ThatItemIsSoldOut, BuyMenuReturnToItemList);
             else if (!IsEnoughMoney(&gSaveBlock1Ptr->money, sShopData->totalCost))
             {
@@ -1033,10 +1031,10 @@ static void Task_BuyMenu(u8 taskId)
                         ConvertIntToDecimalStringN(gStringVar2, sShopData->totalCost, STR_CONV_MODE_LEFT_ALIGN, 6);
                         StringExpandPlaceholders(gStringVar4, gText_YouWantedVar1ThatllBeVar2);
                         tItemCount = 1;
-                        sShopData->totalCost = (ItemId_GetPrice(tItemId) >> IsPokeNewsActive(POKENEWS_SLATEPORT)) * tItemCount;
+                        sShopData->totalCost = (GetItemPrice(tItemId) >> IsPokeNewsActive(POKENEWS_SLATEPORT)) * tItemCount;
                         BuyMenuDisplayMessage(taskId, gStringVar4, BuyMenuConfirmPurchase);
                     }
-                    else if (ItemId_GetPocket(itemId) == POCKET_TM_HM)
+                    else if (GetItemPocket(itemId) == POCKET_TM_HM)
                     {
                         StringCopy(gStringVar2, GetMoveName(ItemIdToBattleMoveId(itemId)));
                         BuyMenuDisplayMessage(taskId, gText_Var1CertainlyHowMany2, Task_BuyHowManyDialogueInit);
@@ -1100,7 +1098,7 @@ static void Task_BuyHowManyDialogueHandleInput(u8 taskId)
 
     if (AdjustQuantityAccordingToDPadInput(&tItemCount, sShopData->maxQuantity) == TRUE)
     {
-        sShopData->totalCost = (ItemId_GetPrice(tItemId) >> IsPokeNewsActive(POKENEWS_SLATEPORT)) * tItemCount;
+        sShopData->totalCost = (GetItemPrice(tItemId) >> IsPokeNewsActive(POKENEWS_SLATEPORT)) * tItemCount;
         BuyMenuPrintItemQuantityAndPrice(taskId);
     }
     else
@@ -1192,7 +1190,7 @@ static void Task_ReturnToItemListAfterItemPurchase(u8 taskId)
         u16 premierBallsToAdd = tItemCount / 10;
         if (premierBallsToAdd >= 1
          && ((I_PREMIER_BALL_BONUS <= GEN_7 && tItemId == ITEM_POKE_BALL)
-          || (I_PREMIER_BALL_BONUS >= GEN_8 && (ItemId_GetPocket(tItemId) == POCKET_POKE_BALLS))))
+          || (I_PREMIER_BALL_BONUS >= GEN_8 && (GetItemPocket(tItemId) == POCKET_POKE_BALLS))))
         {
             u32 spaceAvailable = GetFreeSpaceForItemInBag(ITEM_PREMIER_BALL);
             if (spaceAvailable < premierBallsToAdd)

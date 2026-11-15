@@ -357,7 +357,7 @@ const u8 gText_SendWhichMonToPC[] = _("Send which POKéMON to the PC?");
 const u8 gText_EnjoyCycling[] = _("Let's enjoy cycling!");
 const u8 gText_InUseAlready_PM[] = _("This is in use already.");
 const u8 gText_AlreadyHoldingOne[] = _("{STR_VAR_1} is already holding\none {STR_VAR_2}.");
-const u8 gText_MoveItemWhere[] = _("Move {STR_VAR_2} to where?");
+const u8 gText_MoveItemWhere[] = _("Move item to where?");
 const u8 gText_XsYAnd[] = _("{STR_VAR_1}'s {STR_VAR_2} and\n");
 const u8 gText_XsYWereSwapped[] = _("{STR_VAR_1}'s {STR_VAR_2} were swapped!{PAUSE_UNTIL_PRESS}");
 const u8 gText_WhichAppliance[] = _("Order which\nappliance?");
@@ -970,7 +970,7 @@ const u8 gText_IcePunch48BP[] = _("Ice Punch{CLEAR_TO 0x4E}24BP");
 const u8 gText_ThunderPunch48BP[] = _("Thunderpunch{CLEAR_TO 0x4E}24BP");
 const u8 gText_FirePunch48BP[] = _("Fire Punch{CLEAR_TO 0x4E}24BP");
 #if OW_POISON_DAMAGE < GEN_4
-const u8 gText_PkmnFainted_FldPsn[] = _("{STR_VAR_1} fainted…\p\n");
+const u8 gText_PkmnFainted_FldPsn[] = _("{STR_VAR_1} fainted.\p\n");
 #else
 const u8 gText_PkmnFainted_FldPsn[] = _("{STR_VAR_1} survived the poisoning.\nThe poison faded away!\p");
 #endif
@@ -1067,6 +1067,8 @@ const u8 gText_ThankYou[] = _("Thank You");
 const u8 gText_ByeBye[] = _("Bye-Bye!");
 const u8 gText_PlayerScurriedToCenter[] = _("{PLAYER} scurried to a POKéMON CENTER,\nprotecting the exhausted and fainted\nPOKéMON from further harm…\p");
 const u8 gText_PlayerScurriedBackHome[] = _("{PLAYER} scurried back home, protecting\nthe exhausted and fainted POKéMON from\nfurther harm…\p");
+const u8 gText_PlayerRegroupCenter[] = _("{PLAYER} went running back to a POKéMON CENTER\nto regroup and reconsider their battle\lstrategy…\p");
+const u8 gText_PlayerRegroupHome[] = _("{PLAYER} went running back home to regroup\nand reconsider their battle strategy…\p");
 const u8 gText_HatchedFromEgg[] = _("{STR_VAR_1} hatched from the Egg!");
 const u8 gText_NicknameHatchPrompt[] = _("Would you like to nickname the newly\nhatched {STR_VAR_1}?");
 ALIGNED(4) const u8 gText_ReadyPickBerry[] = _("Are you ready to BERRY-CRUSH?\nPlease pick a BERRY for use.\p");

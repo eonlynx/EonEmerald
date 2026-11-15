@@ -1,4 +1,4 @@
-.set LOCALID_DAYCARE_MAN, 1
+.set LOCALID_FOUR_ISLAND_DAYCARE_MAN, 1
 
 FOUR_ISLAND_MapScripts::
 	map_script MAP_SCRIPT_ON_TRANSITION, FOUR_ISLAND_OnTransition
@@ -15,7 +15,7 @@ FOUR_ISLAND_OnTransition:
 
 FOUR_ISLAND_EventScript_TryMoveDayCareMan::
 	goto_if_unset FLAG_PENDING_DAYCARE_EGG, Route117_EventScript_StopMoveDayCareMan
-	setobjectxyperm LOCALID_DAYCARE_MAN, 16, 14
+	setobjectxyperm LOCALID_FOUR_ISLAND_DAYCARE_MAN, 16, 14
 FOUR_ISLAND_EventScript_StopMoveDayCareMan::
 	return
 	

@@ -350,3 +350,31 @@ object gfx: 254 / NUM 254
 - El merge de 1.12.0 no se completó en esta pasada: además de las paletas, 1.12.0 mueve
   heal locations y region map a JSON y cambia el generador de teachable learnsets, con
   57 archivos en conflicto. Se abortó el merge para no dejar el árbol a medias.
+
+### 1.12.0: merge completado
+
+- Merge de `expansion/1.12.0` resuelto y compilado con `make -j12`.
+- Paletas de batalla: se conservaron las 53 paletas de Eon en
+  `graphics/battle_environment/`. `src/data/graphics/battle_environment.h` declara las
+  variantes horarias con `INCBIN_U16` y `src/battle_bg.c` las carga con
+  `GetTimeBasedBattlePalette` + `LoadPalette`, usando el enum
+  `BATTLE_ENVIRONMENT_*` de expansion.
+- Heal locations: se migraron las 13 ubicaciones de Sevii/Kanto de Eon a
+  `src/data/heal_locations.json`; `include/constants/heal_locations.h` y
+  `src/data/heal_locations.h` se regeneran desde el JSON (35 entradas).
+- Region map: se adopto el formato JSON de expansion (`id` en vez de `map_section`)
+  conservando coordenadas y nombres personalizados de Eon para Sevii, Islas Naranja,
+  Kanto reutilizado y Trainer Hill. El mapa grafico de Eon se mantiene.
+- `src/map_name_popup.c`: la tabla de temas paso a tamano completo (`MAPSEC_COUNT`) y
+  ya no descarta las secciones Kanto, porque Eon las usa para localizaciones de Sevii.
+- `trainers.h` y `test/battle/trainer_control.h` se regeneraron desde sus `.party`;
+  se conservan los 9 lideres de Kanto de Eon (864 trainers en total).
+- `teachable_learnsets.h` se regenero desde la base limpia de 1.12.0 y los learnables
+  de Eon. Los helpers de learnsets ahora abren archivos como UTF-8 para funcionar en
+  Windows.
+- Se resolvieron colisiones de `LOCALID_*` entre scripts propios de Eon y
+  `include/constants/map_event_ids.h` renombrando los alias de Four Island, Indigo
+  Plateau y Pokemon League.
+- Items: los Poke Doll y efectos antiguos siguen bajo `I_EON_ITEM_EFFECTS` (TRUE por
+  defecto). Las bayas Pamtre/Watmel/Durin/Belue de Eon usan `HOLD_EFFECT_WHITE_HERB`.
+- Verificado con `I_EON_ITEM_EFFECTS TRUE` y `FALSE`: ambos builds enlazan.

@@ -1,6 +1,9 @@
 #ifndef GUARD_CONSTANTS_EVENT_OBJECTS_H
 #define GUARD_CONSTANTS_EVENT_OBJECTS_H
 
+#include "constants/global.h"
+#include "constants/map_event_ids.h"
+
 #define OBJ_EVENT_GFX_BRENDAN_NORMAL               0
 #define OBJ_EVENT_GFX_BRENDAN_MACH_BIKE            1
 #define OBJ_EVENT_GFX_BRENDAN_SURFING              2
@@ -242,24 +245,25 @@
 #define OBJ_EVENT_GFX_HOOH                       238
 #define OBJ_EVENT_GFX_POKE_BALL                  239
 #define OBJ_EVENT_GFX_OW_MON                     240
-#define OBJ_EVENT_GFX_BROCK                      241
-#define OBJ_EVENT_GFX_MISTY                      242
-#define OBJ_EVENT_GFX_SURGE                      243
-#define OBJ_EVENT_GFX_ERIKA                      244
-#define OBJ_EVENT_GFX_KOGA                       245
-#define OBJ_EVENT_GFX_SABRINA                    246
-#define OBJ_EVENT_GFX_BLAINE                     247
-#define OBJ_EVENT_GFX_GIOVANNI                   248
-#define OBJ_EVENT_GFX_LORELEI                    249
-#define OBJ_EVENT_GFX_BRUNO                      250
-#define OBJ_EVENT_GFX_AGATHA                     251
-#define OBJ_EVENT_GFX_LANCE                      252
-#define OBJ_EVENT_GFX_BLUE                       253
+#define OBJ_EVENT_GFX_LIGHT_SPRITE               241
+#define OBJ_EVENT_GFX_BROCK                      242
+#define OBJ_EVENT_GFX_MISTY                      243
+#define OBJ_EVENT_GFX_SURGE                      244
+#define OBJ_EVENT_GFX_ERIKA                      245
+#define OBJ_EVENT_GFX_KOGA                       246
+#define OBJ_EVENT_GFX_SABRINA                    247
+#define OBJ_EVENT_GFX_BLAINE                     248
+#define OBJ_EVENT_GFX_GIOVANNI                   249
+#define OBJ_EVENT_GFX_LORELEI                    250
+#define OBJ_EVENT_GFX_BRUNO                      251
+#define OBJ_EVENT_GFX_AGATHA                     252
+#define OBJ_EVENT_GFX_LANCE                      253
+#define OBJ_EVENT_GFX_BLUE                       254
 
 // NOTE: The maximum amount of object events has been expanded from 255 to 65535.
 // Since dynamic graphics ids still require at least 16 free values, the actual limit
 // is 65519, but even considering follower Pokémon, this should be more than enough :)
-#define NUM_OBJ_EVENT_GFX                        254
+#define NUM_OBJ_EVENT_GFX                        255
 
 
 // These are dynamic object gfx ids.
@@ -283,6 +287,7 @@
 #define OBJ_EVENT_GFX_VAR_E  (OBJ_EVENT_GFX_VARS + 0xE)
 #define OBJ_EVENT_GFX_VAR_F  (OBJ_EVENT_GFX_VARS + 0xF)
 
+// Don't use (1u << 15) to avoid conflict with BLEND_IMMUNE_FLAG.
 #define OBJ_EVENT_MON               (1u << 14)
 #define OBJ_EVENT_MON_SHINY         (1u << 13)
 #define OBJ_EVENT_MON_FEMALE        (1u << 12)
@@ -318,45 +323,34 @@
 #define TRACKS_SPOT       4
 #define TRACKS_BUG        5
 
+#define LIGHT_TYPE_BALL             0
+#define LIGHT_TYPE_PKMN_CENTER_SIGN 1
+#define LIGHT_TYPE_POKE_MART_SIGN   2
+
 #define FIRST_DECORATION_SPRITE_GFX OBJ_EVENT_GFX_PICHU_DOLL
 
 #define OBJ_KIND_NORMAL 0
 #define OBJ_KIND_CLONE  255 // Exclusive to FRLG
 
 // Special object event local ids
-#define OBJ_EVENT_ID_PLAYER 0xFF
-#define OBJ_EVENT_ID_CAMERA 0x7F
-#define OBJ_EVENT_ID_FOLLOWER 0xFE
+// Used for link player OWs in CreateLinkPlayerSprite
+#define OBJ_EVENT_ID_DYNAMIC_BASE 0xF0
 
-// Object event local ids referenced in C files
-#define LOCALID_ROUTE111_PLAYER_FALLING 45
-#define LOCALID_BIRTH_ISLAND_EXTERIOR_ROCK 1
-#define LOCALID_FARAWAY_ISLAND_MEW 1
-#define LOCALID_UNION_ROOM_PLAYER_4 2
-#define LOCALID_UNION_ROOM_PLAYER_8 3
-#define LOCALID_UNION_ROOM_PLAYER_7 4
-#define LOCALID_UNION_ROOM_PLAYER_6 5
-#define LOCALID_UNION_ROOM_PLAYER_5 6
-#define LOCALID_UNION_ROOM_PLAYER_3 7
-#define LOCALID_UNION_ROOM_PLAYER_2 8
-#define LOCALID_UNION_ROOM_PLAYER_1 9
-#define LOCALID_BATTLE_TOWER_LOBBY_REPORTER 5
-#define LOCALID_TRUCK_BOX_TOP 1
-#define LOCALID_TRUCK_BOX_BOTTOM_L 2
-#define LOCALID_TRUCK_BOX_BOTTOM_R 3
-#define LOCALID_OLDALE_MART_CLERK 1
-#define LOCALID_LAVARIDGE_MART_CLERK 1
-#define LOCALID_FALLARBOR_MART_CLERK 1
-#define LOCALID_VERDANTURF_MART_CLERK 1
-#define LOCALID_PETALBURG_MART_CLERK 1
-#define LOCALID_SLATEPORT_MART_CLERK 1
-#define LOCALID_MAUVILLE_MART_CLERK 1
-#define LOCALID_RUSTBORO_MART_CLERK 1
-#define LOCALID_FORTREE_MART_CLERK 1
-#define LOCALID_MOSSDEEP_MART_CLERK 1
-#define LOCALID_SOOTOPOLIS_MART_CLERK 1
-#define LOCALID_BATTLE_FRONTIER_MART_CLERK 1
-#define LOCALID_SLATEPORT_ENERGY_GURU 25
+// Each object event template gets an ID that can be used to refer to it in scripts and elsewhere.
+// This is referred to as the "local id" (and it's really just 1 + its index in the templates array).
+// There are a few special IDs reserved for objects that don't have templates in the map data -- one for the player
+// in regular offline play, five for linked players while playing Berry Blender, and one for an invisible object that
+// can be spawned for the camera to track instead of the player. Additionally, the value 0 is reserved as an "empty" indicator.
+#define LOCALID_NONE                         0
+#define LOCALID_CAMERA                     127
+#define LOCALID_BERRY_BLENDER_PLAYER_END   240 // This will use 5 (MAX_RFU_PLAYERS) IDs ending at 240, i.e. 236-240
+#define LOCALID_PLAYER                     255
+#define OBJ_EVENT_ID_FOLLOWER 0xFE
+#define OBJ_EVENT_ID_NPC_FOLLOWER 0xFD
+
+// Aliases for old names. "object event id" normally refers to an index into gObjectEvents, which these are not.
+#define OBJ_EVENT_ID_CAMERA LOCALID_CAMERA
+#define OBJ_EVENT_ID_PLAYER LOCALID_PLAYER
 
 // Moved from src/event_object_movement.c so that they're accesible from other files.
 #define OBJ_EVENT_PAL_TAG_BRENDAN                 0x1100
@@ -434,7 +428,10 @@
 #endif //OW_FOLLOWERS_POKEBALLS
 // Used as a placeholder follower graphic
 #define OBJ_EVENT_PAL_TAG_SUBSTITUTE              0x7611
-#define OBJ_EVENT_PAL_TAG_EMOTES                  0x8002
+#define OBJ_EVENT_PAL_TAG_LIGHT                   0x8001
+#define OBJ_EVENT_PAL_TAG_LIGHT_2                 0x8002
+#define OBJ_EVENT_PAL_TAG_EMOTES                  0x8003
+#define OBJ_EVENT_PAL_TAG_NEON_LIGHT              0x8004
 #define OBJ_EVENT_PAL_TAG_NPC_GREEN               0x1170
 #define OBJ_EVENT_PAL_TAG_NPC_BLUE                0x1171
 #define OBJ_EVENT_PAL_TAG_NPC_WHITE               0x1172

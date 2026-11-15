@@ -20,12 +20,12 @@
     },
     {
       "map": "MAP_MAUVILLE_CITY",
-      "offset": 4,
+      "offset": 0,
       "direction": "left"
     },
     {
       "map": "MAP_ROUTE123",
-      "offset": 4,
+      "offset": 0,
       "direction": "right"
     }
   ],
@@ -33,7 +33,7 @@
     {
       "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE",
       "x": 35,
-      "y": 9,
+      "y": 5,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_BERRY_TREE_GROWTH",
       "movement_range_x": 0,
@@ -46,7 +46,7 @@
     {
       "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE",
       "x": 36,
-      "y": 9,
+      "y": 5,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_BERRY_TREE_GROWTH",
       "movement_range_x": 0,
@@ -59,7 +59,7 @@
     {
       "graphics_id": "OBJ_EVENT_GFX_BERRY_TREE",
       "x": 37,
-      "y": 9,
+      "y": 5,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_BERRY_TREE_GROWTH",
       "movement_range_x": 0,
@@ -70,9 +70,23 @@
       "flag": "0"
     },
     {
+      "graphics_id": "OBJ_EVENT_GFX_MAN_5",
+      "x": 64,
+      "y": 10,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NORMAL",
+      "trainer_sight_or_berry_tree_id": "3",
+      "script": "Route118_EventScript_Perry",
+      "flag": "0"
+    },
+    {
+      "local_id": "LOCALID_ROUTE118_GABBY_1",
       "graphics_id": "OBJ_EVENT_GFX_REPORTER_F",
       "x": 33,
-      "y": 12,
+      "y": 8,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
       "movement_range_x": 0,
@@ -83,9 +97,10 @@
       "flag": "FLAG_HIDE_ROUTE_118_GABBY_AND_TY_1"
     },
     {
+      "local_id": "LOCALID_ROUTE118_TY_1",
       "graphics_id": "OBJ_EVENT_GFX_CAMERAMAN",
       "x": 34,
-      "y": 12,
+      "y": 8,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
       "movement_range_x": 0,
@@ -109,9 +124,10 @@
       "flag": "0"
     },
     {
+      "local_id": "LOCALID_ROUTE118_GABBY_2",
       "graphics_id": "OBJ_EVENT_GFX_REPORTER_F",
       "x": 33,
-      "y": 12,
+      "y": 8,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
       "movement_range_x": 0,
@@ -122,9 +138,10 @@
       "flag": "FLAG_HIDE_ROUTE_118_GABBY_AND_TY_2"
     },
     {
+      "local_id": "LOCALID_ROUTE118_TY_2",
       "graphics_id": "OBJ_EVENT_GFX_CAMERAMAN",
       "x": 34,
-      "y": 12,
+      "y": 8,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
       "movement_range_x": 0,
@@ -135,9 +152,10 @@
       "flag": "FLAG_HIDE_ROUTE_118_GABBY_AND_TY_2"
     },
     {
+      "local_id": "LOCALID_ROUTE118_GABBY_3",
       "graphics_id": "OBJ_EVENT_GFX_REPORTER_F",
       "x": 33,
-      "y": 12,
+      "y": 8,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
       "movement_range_x": 0,
@@ -148,9 +166,10 @@
       "flag": "FLAG_HIDE_ROUTE_118_GABBY_AND_TY_3"
     },
     {
+      "local_id": "LOCALID_ROUTE118_TY_3",
       "graphics_id": "OBJ_EVENT_GFX_CAMERAMAN",
       "x": 34,
-      "y": 12,
+      "y": 8,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
       "movement_range_x": 0,
@@ -163,7 +182,7 @@
     {
       "graphics_id": "OBJ_EVENT_GFX_CUTTABLE_TREE",
       "x": 38,
-      "y": 12,
+      "y": 8,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
       "movement_range_x": 0,
@@ -175,10 +194,10 @@
     },
     {
       "graphics_id": "OBJ_EVENT_GFX_FISHERMAN",
-      "x": 15,
-      "y": 18,
+      "x": 28,
+      "y": 8,
       "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_FACE_RIGHT",
+      "movement_type": "MOVEMENT_TYPE_FACE_LEFT",
       "movement_range_x": 0,
       "movement_range_y": 0,
       "trainer_type": "TRAINER_TYPE_NONE",
@@ -201,8 +220,8 @@
     },
     {
       "graphics_id": "OBJ_EVENT_GFX_FISHERMAN",
-      "x": 29,
-      "y": 13,
+      "x": 14,
+      "y": 14,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
       "movement_range_x": 0,
@@ -215,7 +234,7 @@
     {
       "graphics_id": "OBJ_EVENT_GFX_MAN_5",
       "x": 56,
-      "y": 11,
+      "y": 7,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_UP_AND_RIGHT",
       "movement_range_x": 0,
@@ -228,7 +247,7 @@
     {
       "graphics_id": "OBJ_EVENT_GFX_FISHERMAN",
       "x": 39,
-      "y": 19,
+      "y": 15,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
       "movement_range_x": 0,
@@ -241,7 +260,7 @@
     {
       "graphics_id": "OBJ_EVENT_GFX_MAN_5",
       "x": 17,
-      "y": 15,
+      "y": 11,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_UP_AND_LEFT",
       "movement_range_x": 1,
@@ -252,9 +271,10 @@
       "flag": "0"
     },
     {
+      "local_id": "LOCALID_ROUTE118_STEVEN",
       "graphics_id": "OBJ_EVENT_GFX_STEVEN",
       "x": 44,
-      "y": 11,
+      "y": 7,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
       "movement_range_x": 1,
@@ -267,7 +287,7 @@
     {
       "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
       "x": 69,
-      "y": 11,
+      "y": 7,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
       "movement_range_x": 1,
@@ -311,7 +331,7 @@
     {
       "type": "trigger",
       "x": 43,
-      "y": 16,
+      "y": 11,
       "elevation": 3,
       "var": "VAR_ROUTE118_STATE",
       "var_value": "0",
@@ -320,7 +340,7 @@
     {
       "type": "trigger",
       "x": 44,
-      "y": 16,
+      "y": 11,
       "elevation": 3,
       "var": "VAR_ROUTE118_STATE",
       "var_value": "0",
@@ -329,7 +349,7 @@
     {
       "type": "trigger",
       "x": 45,
-      "y": 16,
+      "y": 11,
       "elevation": 3,
       "var": "VAR_ROUTE118_STATE",
       "var_value": "0",
@@ -340,14 +360,14 @@
     {
       "type": "secret_base",
       "x": 47,
-      "y": 18,
+      "y": 14,
       "elevation": 0,
       "secret_base_id": "SECRET_BASE_RED_CAVE1_1"
     },
     {
       "type": "sign",
-      "x": 11,
-      "y": 8,
+      "x": 13,
+      "y": 6,
       "elevation": 0,
       "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
       "script": "Route118_EventScript_RouteSignMauville"
@@ -355,7 +375,7 @@
     {
       "type": "sign",
       "x": 56,
-      "y": 12,
+      "y": 8,
       "elevation": 0,
       "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
       "script": "Route118_EventScript_RouteSign119"
@@ -363,35 +383,35 @@
     {
       "type": "secret_base",
       "x": 67,
-      "y": 10,
+      "y": 6,
       "elevation": 0,
       "secret_base_id": "SECRET_BASE_RED_CAVE2_1"
     },
     {
       "type": "secret_base",
       "x": 29,
-      "y": 9,
+      "y": 5,
       "elevation": 0,
       "secret_base_id": "SECRET_BASE_YELLOW_CAVE1_2"
     },
     {
       "type": "secret_base",
       "x": 47,
-      "y": 9,
+      "y": 5,
       "elevation": 0,
       "secret_base_id": "SECRET_BASE_TREE1_3"
     },
     {
       "type": "secret_base",
       "x": 46,
-      "y": 9,
+      "y": 5,
       "elevation": 0,
       "secret_base_id": "SECRET_BASE_TREE2_1"
     },
     {
       "type": "hidden_item",
       "x": 31,
-      "y": 17,
+      "y": 13,
       "elevation": 3,
       "item": "ITEM_IRON",
       "flag": "FLAG_HIDDEN_ITEM_ROUTE_118_IRON"
@@ -399,7 +419,7 @@
     {
       "type": "hidden_item",
       "x": 12,
-      "y": 18,
+      "y": 14,
       "elevation": 3,
       "item": "ITEM_HEART_SCALE",
       "flag": "FLAG_HIDDEN_ITEM_ROUTE_118_HEART_SCALE"

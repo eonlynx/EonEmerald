@@ -1,0 +1,214 @@
+{
+  "heal_locations": [
+    {
+      "id": "HEAL_LOCATION_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F",
+      "map": "MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F",
+      "x": 4,
+      "y": 2
+    },
+    {
+      "id": "HEAL_LOCATION_LITTLEROOT_TOWN_MAYS_HOUSE_2F",
+      "map": "MAP_LITTLEROOT_TOWN_MAYS_HOUSE_2F",
+      "x": 4,
+      "y": 2
+    },
+    {
+      "id": "HEAL_LOCATION_PETALBURG_CITY",
+      "map": "MAP_PETALBURG_CITY",
+      "x": 20,
+      "y": 17
+    },
+    {
+      "id": "HEAL_LOCATION_SLATEPORT_CITY",
+      "map": "MAP_SLATEPORT_CITY",
+      "x": 19,
+      "y": 20
+    },
+    {
+      "id": "HEAL_LOCATION_MAUVILLE_CITY",
+      "map": "MAP_MAUVILLE_CITY",
+      "x": 22,
+      "y": 6
+    },
+    {
+      "id": "HEAL_LOCATION_RUSTBORO_CITY",
+      "map": "MAP_RUSTBORO_CITY",
+      "x": 16,
+      "y": 39
+    },
+    {
+      "id": "HEAL_LOCATION_FORTREE_CITY",
+      "map": "MAP_FORTREE_CITY",
+      "x": 5,
+      "y": 7
+    },
+    {
+      "id": "HEAL_LOCATION_LILYCOVE_CITY",
+      "map": "MAP_LILYCOVE_CITY",
+      "x": 24,
+      "y": 15
+    },
+    {
+      "id": "HEAL_LOCATION_MOSSDEEP_CITY",
+      "map": "MAP_MOSSDEEP_CITY",
+      "x": 28,
+      "y": 17
+    },
+    {
+      "id": "HEAL_LOCATION_SOOTOPOLIS_CITY",
+      "map": "MAP_SOOTOPOLIS_CITY",
+      "x": 43,
+      "y": 32
+    },
+    {
+      "id": "HEAL_LOCATION_EVER_GRANDE_CITY",
+      "map": "MAP_EVER_GRANDE_CITY",
+      "x": 27,
+      "y": 49
+    },
+    {
+      "id": "HEAL_LOCATION_LITTLEROOT_TOWN_BRENDANS_HOUSE",
+      "map": "MAP_LITTLEROOT_TOWN",
+      "x": 5,
+      "y": 9
+    },
+    {
+      "id": "HEAL_LOCATION_LITTLEROOT_TOWN_MAYS_HOUSE",
+      "map": "MAP_LITTLEROOT_TOWN",
+      "x": 14,
+      "y": 9
+    },
+    {
+      "id": "HEAL_LOCATION_OLDALE_TOWN",
+      "map": "MAP_OLDALE_TOWN",
+      "x": 6,
+      "y": 17
+    },
+    {
+      "id": "HEAL_LOCATION_DEWFORD_TOWN",
+      "map": "MAP_DEWFORD_TOWN",
+      "x": 2,
+      "y": 11
+    },
+    {
+      "id": "HEAL_LOCATION_LAVARIDGE_TOWN",
+      "map": "MAP_LAVARIDGE_TOWN",
+      "x": 9,
+      "y": 7
+    },
+    {
+      "id": "HEAL_LOCATION_FALLARBOR_TOWN",
+      "map": "MAP_FALLARBOR_TOWN",
+      "x": 14,
+      "y": 8
+    },
+    {
+      "id": "HEAL_LOCATION_VERDANTURF_TOWN",
+      "map": "MAP_VERDANTURF_TOWN",
+      "x": 16,
+      "y": 4
+    },
+    {
+      "id": "HEAL_LOCATION_PACIFIDLOG_TOWN",
+      "map": "MAP_PACIFIDLOG_TOWN",
+      "x": 8,
+      "y": 16
+    },
+    {
+      "id": "HEAL_LOCATION_EVER_GRANDE_CITY_POKEMON_LEAGUE",
+      "map": "MAP_EVER_GRANDE_CITY",
+      "x": 18,
+      "y": 6
+    },
+    {
+      "id": "HEAL_LOCATION_SOUTHERN_ISLAND_EXTERIOR",
+      "map": "MAP_SOUTHERN_ISLAND_EXTERIOR",
+      "x": 15,
+      "y": 20
+    },
+    {
+      "id": "HEAL_LOCATION_BATTLE_FRONTIER_OUTSIDE_EAST",
+      "map": "MAP_BATTLE_FRONTIER_OUTSIDE_EAST",
+      "x": 3,
+      "y": 52
+    },
+    {
+      "id": "HEAL_LOCATION_ONE_ISLAND",
+      "map": "MAP_ONE_ISLAND",
+      "x": 14,
+      "y": 7
+    },
+    {
+      "id": "HEAL_LOCATION_TWO_ISLAND",
+      "map": "MAP_TWO_ISLAND",
+      "x": 21,
+      "y": 7
+    },
+    {
+      "id": "HEAL_LOCATION_THREE_ISLAND",
+      "map": "MAP_THREE_ISLAND",
+      "x": 13,
+      "y": 28
+    },
+    {
+      "id": "HEAL_LOCATION_FOUR_ISLAND",
+      "map": "MAP_FOUR_ISLAND",
+      "x": 17,
+      "y": 21
+    },
+    {
+      "id": "HEAL_LOCATION_FIVE_ISLAND",
+      "map": "MAP_FIVE_ISLAND",
+      "x": 16,
+      "y": 7
+    },
+    {
+      "id": "HEAL_LOCATION_SIX_ISLAND",
+      "map": "MAP_SIX_ISLAND",
+      "x": 11,
+      "y": 12
+    },
+    {
+      "id": "HEAL_LOCATION_SEVEN_ISLAND",
+      "map": "MAP_SEVEN_ISLAND",
+      "x": 12,
+      "y": 9
+    },
+    {
+      "id": "HEAL_LOCATION_ROUTE121",
+      "map": "MAP_ROUTE121",
+      "x": 37,
+      "y": 6
+    },
+    {
+      "id": "HEAL_LOCATION_INDIGO_PLATEAU",
+      "map": "MAP_INDIGO_PLATEAU",
+      "x": 11,
+      "y": 6
+    },
+    {
+      "id": "HEAL_LOCATION_ROUTE123",
+      "map": "MAP_ROUTE123",
+      "x": 22,
+      "y": 7
+    },
+    {
+      "id": "HEAL_LOCATION_FARAWAY_ISLAND",
+      "map": "MAP_FARAWAY_ISLAND_ENTRANCE",
+      "x": 17,
+      "y": 27
+    },
+    {
+      "id": "HEAL_LOCATION_NAVAL_ROCK",
+      "map": "MAP_NAVEL_ROCK_EXTERIOR",
+      "x": 9,
+      "y": 12
+    },
+    {
+      "id": "HEAL_LOCATION_BIRTH_ISLAND",
+      "map": "MAP_BIRTH_ISLAND_EXTERIOR",
+      "x": 15,
+      "y": 16
+    }
+  ]
+}

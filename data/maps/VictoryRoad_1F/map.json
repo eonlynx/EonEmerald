@@ -12,7 +12,7 @@
   "allow_running": true,
   "show_map_name": true,
   "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
-  "connections": 0,
+  "connections": null,
   "object_events": [
     {
       "graphics_id": "OBJ_EVENT_GFX_MAN_3",
@@ -41,6 +41,20 @@
       "flag": "0"
     },
     {
+      "graphics_id": "OBJ_EVENT_GFX_MAN_3",
+      "x": 27,
+      "y": 34,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN_AND_RIGHT",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NORMAL",
+      "trainer_sight_or_berry_tree_id": "3",
+      "script": "VictoryRoad_1F_EventScript_Albert",
+      "flag": "0"
+    },
+    {
+      "local_id": "LOCALID_VICTORY_ROAD_ENTRANCE_WALLY",
       "graphics_id": "OBJ_EVENT_GFX_WALLY",
       "x": 12,
       "y": 25,
@@ -81,8 +95,8 @@
     },
     {
       "graphics_id": "OBJ_EVENT_GFX_WALLY",
-      "x": 32,
-      "y": 5,
+      "x": 31,
+      "y": 9,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
       "movement_range_x": 1,
@@ -94,8 +108,8 @@
     },
     {
       "graphics_id": "OBJ_EVENT_GFX_WOMAN_5",
-      "x": 30,
-      "y": 16,
+      "x": 29,
+      "y": 17,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_RIGHT",
       "movement_range_x": 1,
@@ -107,8 +121,8 @@
     },
     {
       "graphics_id": "OBJ_EVENT_GFX_MAN_3",
-      "x": 33,
-      "y": 16,
+      "x": 32,
+      "y": 17,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_LEFT",
       "movement_range_x": 1,
