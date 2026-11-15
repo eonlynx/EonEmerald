@@ -43,10 +43,9 @@
 // Eon's old engine intended these per-species category changes but its damage
 // code accidentally used comparison instead of assignment. Apply them here so
 // the damage calculation and the move-selection display agree.
-u32 GetMoveCategoryForBattler(u32 move, u32 battler)
+u32 GetMoveCategoryForSpecies(u32 move, u16 species)
 {
     u32 category = GetBattleMoveCategory(move);
-    u16 species = gBattleMons[battler].species;
     u8 moveType = gMovesInfo[move].type;
 
     if (category == DAMAGE_CATEGORY_STATUS)
@@ -156,6 +155,11 @@ u32 GetMoveCategoryForBattler(u32 move, u32 battler)
     }
 
     return category;
+}
+
+u32 GetMoveCategoryForBattler(u32 move, u32 battler)
+{
+    return GetMoveCategoryForSpecies(move, gBattleMons[battler].species);
 }
 
 bool32 IsMovePhysicalForBattler(u32 move, u32 battler)

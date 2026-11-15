@@ -2,6 +2,7 @@
 #include "main.h"
 #include "battle.h"
 #include "battle_anim.h"
+#include "battle_util.h"
 #include "frontier_util.h"
 #include "battle_message.h"
 #include "battle_tent.h"
@@ -3853,7 +3854,7 @@ static void PrintMoveDetails(u16 move)
         {
             moveEffect = gMovesInfo[move].effect;
             if (B_SHOW_CATEGORY_ICON == TRUE)
-                ShowCategoryIcon(GetBattleMoveCategory(move));
+                ShowCategoryIcon(GetMoveCategoryForSpecies(move, sMonSummaryScreen->summary.species));
             PrintMovePowerAndAccuracy(move);
 
             if (moveEffect != EFFECT_PLACEHOLDER)

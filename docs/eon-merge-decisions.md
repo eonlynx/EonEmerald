@@ -171,9 +171,9 @@ A full per-file inventory of the original 205 merge conflicts is in
   Sport, Spider Web, etc.) and target/priority quirks (Arm Thrust priority 1, Memento,
   Teleport, weather moves). Keep reviewing in batches; do not import Eon's category values
   because expansion keeps the per-move physical/special split.
-- **Eon conditional PSS outside battle.** The summary screen, move relearner and Pokédex still
-  show the move's base category icon because they have no battle battler context. The battle
-  move menu and damage calculation use the per-species category.
+- **Eon conditional PSS outside battle.** The summary screen and move relearner now use the
+  selected Pokémon's species for the category icon; the Pokédex still shows the base category
+  because it has no battler context.
 - **Remaining `battle_script_commands.c` / `battle_util.c` Eon effects** not covered by the
   custom abilities: move effects, item effects, weather damage exceptions, EXP distribution,
   trainer money and Pickup tables.

@@ -1012,6 +1012,7 @@ void MoveRelearnerShowHideCategoryIcon(s32 moveId)
             sMoveRelearnerStruct->categoryIconSpriteId = CreateSprite(&gSpriteTemplate_CategoryIcons, 66, 40, 0);
 
         gSprites[sMoveRelearnerStruct->categoryIconSpriteId].invisible = FALSE;
-        StartSpriteAnim(&gSprites[sMoveRelearnerStruct->categoryIconSpriteId], GetBattleMoveCategory(moveId));
+        StartSpriteAnim(&gSprites[sMoveRelearnerStruct->categoryIconSpriteId],
+                        (u8)GetMoveCategoryForSpecies(moveId, (u16)GetMonData(&gPlayerParty[sMoveRelearnerStruct->partyMon], MON_DATA_SPECIES)));
     }
 }
