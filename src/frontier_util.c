@@ -256,7 +256,7 @@ static const struct FrontierBrainMon sFrontierBrainsMons[][2][FRONTIER_PARTY_SIZ
         {
             {
                 .species = SPECIES_ALAKAZAM,
-                .heldItem = ITEM_FOCUS_BAND,
+                .heldItem = ITEM_FOCUS_SASH,
                 .fixedIV = 0,
                 .nature = NATURE_MODEST,
                 .evs = {106, 0, 152, 152, 100, 0},
@@ -313,7 +313,7 @@ static const struct FrontierBrainMon sFrontierBrainsMons[][2][FRONTIER_PARTY_SIZ
         {
             {
                 .species = SPECIES_SWAMPERT,
-                .heldItem = ITEM_FOCUS_BAND,
+                .heldItem = ITEM_FOCUS_SASH,
                 .fixedIV = 0,
                 .nature = NATURE_BRAVE,
                 .evs = {152, 152, 106, 0, 100, 0},
@@ -462,7 +462,7 @@ static const struct FrontierBrainMon sFrontierBrainsMons[][2][FRONTIER_PARTY_SIZ
             },
             {
                 .species = SPECIES_GENGAR,
-                .heldItem = ITEM_FOCUS_BAND,
+                .heldItem = ITEM_FOCUS_SASH,
                 .fixedIV = 0,
                 .nature = NATURE_MODEST,
                 .evs = {252, 0, 252, 0, 6, 0},
@@ -568,7 +568,7 @@ static const struct FrontierBrainMon sFrontierBrainsMons[][2][FRONTIER_PARTY_SIZ
         {
             {
                 .species = SPECIES_SEVIPER,
-                .heldItem = ITEM_FOCUS_BAND,
+                .heldItem = ITEM_FOCUS_SASH,
                 .fixedIV = 0,
                 .nature = NATURE_QUIET,
                 .evs = {252, 0, 0, 0, 252, 6},

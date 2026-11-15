@@ -1043,7 +1043,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Toxic
 - Baton Pass
 
-Espeon @ Focus Band
+Espeon @ Focus Sash
 Level: 100
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Psychic
@@ -1085,7 +1085,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Dive
 - Taunt
 
-Ampharos @ Focus Band
+Ampharos @ Focus Sash
 Level: 100
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Thunderbolt
@@ -1167,7 +1167,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Toxic
 - Rock Slide
 
-Glalie @ Focus Band
+Glalie @ Focus Sash
 Level: 100
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Spikes
@@ -1209,7 +1209,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Solar Beam
 - Dragon Breath
 
-Bellossom @ Focus Band
+Bellossom @ Focus Sash
 Level: 100
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Sunny Day
@@ -5211,7 +5211,7 @@ Items: Full Restore / Full Restore
 Double Battle: Yes
 AI: Check Bad Move / Try To Faint / Check Viability / Risky
 
-Banette @ Focus Band
+Banette @ Focus Sash
 Level: 51
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Shadow Ball
@@ -5235,7 +5235,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Night Shade
 - Knock Off
 
-Gengar @ Focus Band
+Gengar @ Focus Sash
 Level: 52
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Toxic
@@ -5251,7 +5251,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Swords Dance
 - Protect
 
-Dusclops @ Everstone
+Dusclops @ Eviolite
 Level: 53
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Shadow Ball
@@ -5278,7 +5278,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Blizzard
 - Explosion
 
-Sneasel @ Everstone
+Sneasel @ Eviolite
 Level: 52
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Swords Dance
@@ -5474,7 +5474,7 @@ Items: Super Potion / Super Potion
 Double Battle: Yes
 AI: Check Bad Move / Try To Faint / Check Viability / Risky
 
-Voltorb @ Focus Band
+Voltorb @ Focus Sash
 Level: 22
 IVs: 24 HP / 24 Atk / 24 Def / 24 SpA / 24 SpD / 24 Spe
 - Light Screen
@@ -5686,7 +5686,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Psychic
 - Yawn
 
-Alakazam @ Focus Band
+Alakazam @ Focus Sash
 Level: 42
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Protect
@@ -5721,7 +5721,7 @@ Items: Hyper Potion / Hyper Potion
 Double Battle: Yes
 AI: Check Bad Move / Try To Faint / Check Viability / Risky
 
-Starmie @ Focus Band
+Starmie @ Focus Sash
 Level: 41
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Hydro Pump
@@ -13334,7 +13334,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Dragon Claw
 - Dragon Dance
 
-Delcatty @ Focus Band
+Delcatty @ Focus Sash
 Level: 85
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Sing
@@ -13342,7 +13342,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Charm
 - Faint Attack
 
-Roselia @ Everstone
+Roselia @ Eviolite
 Level: 86
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Protect
@@ -15545,7 +15545,7 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Sludge Bomb
 - Crunch
 
-Crobat @ Focus Band
+Crobat @ Focus Sash
 Level: 87
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Super Fang
@@ -15577,7 +15577,7 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Will O Wisp
 - Pain Split
 
-Misdreavus @ Everstone
+Misdreavus @ Eviolite
 Level: 86
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Calm Mind
@@ -15628,7 +15628,7 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Dragon Claw
 - Thunderbolt
 
-Aerodactyl @ Focus Band
+Aerodactyl @ Focus Sash
 Level: 87
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Rock Slide
@@ -15746,7 +15746,7 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Knock Off
 - Mega Punch
 
-Alakazam @ Focus Band
+Alakazam @ Focus Sash
 Level: 87
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Psychic
@@ -16108,7 +16108,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Pursuit
 - Curse
 
-Houndoom @ Focus Band
+Houndoom @ Focus Sash
 Level: 90
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Solar Beam
@@ -17314,7 +17314,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Encore
 - Protect
 
-Delibird @ Focus Band
+Delibird @ Focus Sash
 Level: 100
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Fake Out
@@ -17372,7 +17372,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Cross Chop
 - Protect
 
-Flareon @ Focus Band
+Flareon @ Focus Sash
 Level: 100
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Blaze Kick
@@ -17406,7 +17406,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Pursuit
 - Protect
 
-Hitmonchan @ Lucky Punch
+Hitmonchan @ Punching Glove
 Level: 100
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Fire Punch
@@ -17430,7 +17430,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Ice Punch
 - Protect
 
-Gengar @ Focus Band
+Gengar @ Focus Sash
 Level: 100
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Thunderbolt
@@ -17448,7 +17448,7 @@ Music: Elite Four
 Double Battle: Yes
 AI: Check Bad Move / Try To Faint / Check Viability / Risky
 
-Sneasel @ Focus Band
+Sneasel @ Focus Sash
 Level: 100
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Pursuit
@@ -17456,7 +17456,7 @@ IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Frustration
 - Fake Out
 
-Ninjask @ Focus Band
+Ninjask @ Focus Sash
 Level: 100
 IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
 - Aerial Ace
@@ -18232,7 +18232,7 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Sludge Bomb
 - Earthquake
 
-Charizard @ Focus Band
+Charizard @ Focus Sash
 Level: 87
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Fire Blast
@@ -18266,7 +18266,7 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Moonlight
 - Tri Attack
 
-Gengar @ Focus Band
+Gengar @ Focus Sash
 Level: 87
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Shadow Ball
@@ -18465,7 +18465,7 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Rock Slide
 - Explosion
 
-Aerodactyl @ Focus Band
+Aerodactyl @ Focus Sash
 Level: 87
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Rock Slide
@@ -18567,7 +18567,7 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Tri Attack
 - Thunder Wave
 
-Electabuzz @ Electirizer
+Electabuzz @ Macho Brace
 Level: 87
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Thunder Punch
@@ -18610,7 +18610,7 @@ Items: Full Restore / Full Restore / Full Restore / Full Restore
 Double Battle: Yes
 AI: Check Bad Move / Try To Faint / Check Viability / Risky
 
-Victreebel @ Focus Band
+Victreebel @ Focus Sash
 Level: 86
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Leech Life
@@ -18642,7 +18642,7 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Weather Ball
 - Sunny Day
 
-Roselia @ Everstone
+Roselia @ Eviolite
 Level: 86
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Sludge Bomb
@@ -18929,7 +18929,7 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Icicle Spear
 - Dive
 
-Jynx @ Focus Band
+Jynx @ Focus Sash
 Level: 88
 IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 - Psychic

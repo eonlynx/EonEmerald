@@ -1926,6 +1926,12 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
     u32 personalityValue;
     s32 i;
     u8 monsCount;
+#if B_EON_DYNAMIC_TRAINER_LEVELS
+    u16 dynamicLevel = 0;
+    u16 partyLevelAdjust = 0;
+    u8 levelSpread[2] = {0, 0};
+    u8 countedMons = 0;
+#endif
     if (battleTypeFlags & BATTLE_TYPE_TRAINER && !(battleTypeFlags & (BATTLE_TYPE_FRONTIER
                                                                         | BATTLE_TYPE_EREADER_TRAINER
                                                                         | BATTLE_TYPE_TRAINER_HILL)))
@@ -1945,6 +1951,68 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
             monsCount = trainer->partySize;
         }
 
+#if B_EON_DYNAMIC_TRAINER_LEVELS
+        for (i = 0; i < PARTY_SIZE; i++)
+        {
+            u32 species = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES_OR_EGG);
+            u16 level;
+
+            if (species == SPECIES_NONE)
+                break;
+            if (species == SPECIES_EGG)
+                continue;
+
+            level = GetMonData(&gPlayerParty[i], MON_DATA_LEVEL);
+            dynamicLevel += level;
+            if (countedMons == 0 || level < levelSpread[0])
+                levelSpread[0] = level;
+            if (countedMons == 0 || level > levelSpread[1])
+                levelSpread[1] = level;
+            countedMons++;
+        }
+
+        if (countedMons != 0)
+            dynamicLevel /= countedMons;
+        if (dynamicLevel < 3)
+            dynamicLevel = 3;
+        else if (dynamicLevel > MAX_LEVEL)
+            dynamicLevel = MAX_LEVEL;
+
+        if (countedMons != 0)
+        {
+            partyLevelAdjust = levelSpread[1] - levelSpread[0];
+            if (levelSpread[1] - dynamicLevel < 40)
+            {
+                partyLevelAdjust *= 3;
+                partyLevelAdjust /= 10;
+            }
+            else if (levelSpread[1] - dynamicLevel < 50)
+            {
+                partyLevelAdjust *= 2;
+                partyLevelAdjust /= 5;
+            }
+            else if (levelSpread[1] - dynamicLevel < 60)
+            {
+                partyLevelAdjust /= 2;
+            }
+            else if (levelSpread[1] - dynamicLevel < 70)
+            {
+                partyLevelAdjust *= 3;
+                partyLevelAdjust /= 5;
+            }
+            else if (levelSpread[1] - dynamicLevel < 80)
+            {
+                partyLevelAdjust *= 7;
+                partyLevelAdjust /= 10;
+            }
+            else if (levelSpread[1] - dynamicLevel < 90)
+            {
+                partyLevelAdjust *= 4;
+                partyLevelAdjust /= 5;
+            }
+        }
+#endif
+
         for (i = 0; i < monsCount; i++)
         {
             s32 ball = -1;
@@ -1953,6 +2021,12 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
             u32 otIdType = OT_ID_RANDOM_NO_SHINY;
             u32 fixedOtId = 0;
             u32 ability = 0;
+            u8 level = partyData[i].lvl;
+
+#if B_EON_DYNAMIC_TRAINER_LEVELS
+            if (dynamicLevel > level)
+                level = dynamicLevel;
+#endif
 
             if (trainer->doubleBattle == TRUE)
                 personalityValue = 0x80;
@@ -1974,7 +2048,7 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
                 otIdType = OT_ID_PRESET;
                 fixedOtId = HIHALF(personalityValue) ^ LOHALF(personalityValue);
             }
-            CreateMon(&party[i], partyData[i].species, partyData[i].lvl, 0, TRUE, personalityValue, otIdType, fixedOtId);
+            CreateMon(&party[i], partyData[i].species, level, 0, TRUE, personalityValue, otIdType, fixedOtId);
             SetMonData(&party[i], MON_DATA_HELD_ITEM, &partyData[i].heldItem);
 
             CustomTrainerPartyAssignMoves(&party[i], &partyData[i]);
@@ -2047,6 +2121,17 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
                 ball = gTrainerClasses[trainer->trainerClass].ball ?: ITEM_POKE_BALL;
                 SetMonData(&party[i], MON_DATA_POKEBALL, &ball);
             }
+
+#if B_EON_DYNAMIC_TRAINER_LEVELS
+            {
+                u16 levelDrop = (Random() % 5) + partyLevelAdjust;
+
+                if (dynamicLevel > levelDrop)
+                    dynamicLevel -= levelDrop;
+                else
+                    dynamicLevel = 3;
+            }
+#endif
         }
     }
 

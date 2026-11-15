@@ -5294,7 +5294,7 @@ static void PrintStatsScreen_Moves_Bottom(u8 taskId)
         PrintStatsScreenTextSmall(WIN_STATS_MOVES_BOTTOM, gStringVar1, moves_x + 45, moves_y);
         //Physical/Special/Status Category
         DestroyCategoryIcon();
-        ShowCategoryIcon(GetBattleMoveCategory(move));
+        ShowCategoryIcon(GetMoveCategoryForSpecies(move, NationalPokedexNumToSpeciesHGSS(sPokedexListItem->dexNum)));
         //Accuracy
         if (gMovesInfo[move].accuracy == 0)
             StringCopy(gStringVar1, gText_ThreeDashes);

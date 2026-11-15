@@ -108,6 +108,9 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Missing Eon symbols restored: `gText_YouAlreadyHaveThis` and the Endure TM (`ITEM_TM_ENDURE`).
 - Battle Frontier monster sets: all 882 Eon slots converted to expansion `TrainerMon`, with Eon held items and EV spreads.
 - Battle Frontier Brain sets: all seven facilities' silver/gold parties use Eon's species, items, IVs, natures, EVs and moves.
+- Converted Eon trainer and Frontier data now uses the modern item IDs for Eon's old
+  repurposed slots (Focus Sash, Eviolite, Punching Glove, Macho Brace, Loaded Dice) instead of
+  the old item IDs.
 - Battle Frontier exchange corner: Eon's expanded item lists and BP prices are active; the
   placeholder descriptions were filled in and the Exp. Share / Life Orb entries corrected.
 - TM sales limited in shops like Eon: owned TMs/HMs show as sold out and use the single-purchase prompt.
@@ -136,7 +139,11 @@ A full per-file inventory of the original 205 merge conflicts is in
   Silver Wind, Air Cutter, Dive and Ghost moves for Eon's listed species. The battle move
   menu icon, Battle TV scoring, AI move checks, Counter/Mirror Coat tracking and category-based
   effects (Weak Armor, Toxic Debris, Jaboca/Rowap Berry, Hustle accuracy) use the same
-  per-battler category.
+  per-battler category. Summary, move-relearner and Pokédex icons use the species context too.
+- Config switches for optional Eon behavior: `B_EON_DYNAMIC_TRAINER_LEVELS`,
+  `B_EON_EXP_ALL_MESSAGE` and `I_EON_LEGACY_ITEM_EFFECTS`, all defaulting to the current
+  EonEmerald behavior and documented in the config headers.
+- Removed the unreferenced `data/scripts/change_deoxys_form.inc` dead script.
 - Missing `gPokedexCaughtScreen_Pal` definition and valid icons for Eon room keys and Endure TM.
 - Eon battle menu casing (`Fight`, `Type/`, `Wally`).
 - Kanto gym leader / Elite Four overworld graphics restored for the preserved Eon maps
@@ -162,50 +169,49 @@ A full per-file inventory of the original 205 merge conflicts is in
   party menu, SELECT starts a quick swap, and held items can be moved or swapped between
   party members from the item submenu.
 
-## Pending / review
+## Open decisions / config
 
-### High priority
+No high-priority missing references remain. The remaining choices are deliberately configurable
+or intentionally excluded:
 
-- **Remaining Eon move data.** 95 shared moves still differ in power, accuracy, PP, type,
-  target or priority. These are mostly effect-repurposed moves (Cut, Charge, Flash, Water
-  Sport, Spider Web, etc.) and target/priority quirks (Arm Thrust priority 1, Memento,
-  Teleport, weather moves). Keep reviewing in batches; do not import Eon's category values
-  because expansion keeps the per-move physical/special split.
-- **Eon conditional PSS outside battle.** The summary screen and move relearner now use the
-  selected Pokémon's species for the category icon; the Pokédex still shows the base category
-  because it has no battler context.
-- **Remaining `battle_script_commands.c` / `battle_util.c` Eon effects** not covered by the
-  custom abilities: move effects, item effects, weather damage exceptions, EXP distribution,
-  trainer money and Pickup tables.
-- **`battle_main.c` Eon dynamic level scaling.** Eon scales trainer levels from the player's
-  party average; the converted `trainers.party` data already uses Eon's authored fixed levels.
-  Dynamic scaling is deferred because it conflicts with Frontier/link fixed levels and needs a
-  dedicated design pass.
+- **Trainer level scaling:** `B_EON_DYNAMIC_TRAINER_LEVELS` (default `FALSE`) enables Eon's
+  player-party-average scaling for normal trainer battles. Frontier, eReader and Trainer Hill
+  battles keep fixed levels, and the authored `trainers.party` levels remain the default.
+- **Exp. All wording:** `B_EON_EXP_ALL_MESSAGE` (default `FALSE`) switches the Gen6-style
+  Exp. Share team message to Eon's Exp. All text and shared EXP amount.
+- **Old item slots:** `I_EON_LEGACY_ITEM_EFFECTS` (default `FALSE`) repurposes the old item
+  slots: Mental Herb becomes Power Herb, Cleanse Tag becomes Covert Cloak, Everstone becomes
+  Eviolite, Focus Band becomes Focus Sash, Lucky Egg becomes Loaded Dice and Lucky Punch becomes
+  Boxing Glove. Modern items stay separate, so enable only when matching Eon's old distribution.
+- **Move data:** 95 shared moves still differ, but they are Eon's experimental effect, target
+  and priority reworks (Cut flinch, Charge/Volt Switch, damaging Flash/Water Sport/Spider Web,
+  Arm Thrust priority 1, Memento/Teleport priority, weather-move targets, etc.). They are
+  intentionally excluded; expansion keeps per-move PSS and modern effect implementations. The
+  67 safe power/accuracy/PP/type changes are ported, including the status-move accuracy buffs.
+- **Ability data:** Eon's custom ability effects are implemented in code; modern
+  `B_UPDATED_ABILITY_DATA` values remain intentionally.
+- **Battle script/util effects:** reviewed at function/table level. The remaining Eon diff is
+  old-engine refactoring plus the move reworks above; trainer money, whiteout, Pickup and the
+  optional Eon Exp. All message are covered.
+- **Battle Frontier:** the 882 monster sets, seven Brain parties and the exchange corner item
+  lists, prices and descriptions are ported. No other referenced Eon Frontier data was found
+  missing.
+- **Eon-only strings and object graphics:** the 286 unreferenced Eon `gText_*` symbols are not
+  needed unless restoring specific text; all map-referenced object-event graphics resolve.
+- **`TryChangeDeoxysForm`:** the unreferenced dead script was removed.
+- **m4a day/night music:** Eon's `MPlayStart` diff has two identical branches, so there is no
+  behavior to port; DNS palette filtering is wired in.
+- **`hns/master`:** not merged, per instruction.
 
-### Medium priority
+## Static validation
 
-- **Eon ability-data flags audit** (`B_UPDATED_ABILITY_DATA` still modern). The old engine's
-  Overgrow/Blaze/Torrent/Liquid Ooze/Thick Fat/Snow Warning buffs are now ported.
-- **Eon Exp. All message.** Eon's message belongs to its key-item Exp. All toggle. The merge
-  keeps expansion's Gen 3 held Exp. Share, so that once-per-battle party message is not used;
-  expansion's Gen 6 Exp. Share team message remains available through `I_EXP_SHARE_FLAG` and
-  `I_EXP_SHARE_ITEM`.
-- **Remaining Battle Frontier data** beyond the 882 monster sets, the seven Brain parties and
-  the exchange corner item lists/prices.
-- **Eon-only strings.** 286 Eon `gText_*` symbols are absent from current `src/strings.c`, but
-  none are referenced by the current tree. Add only when restoring specific Eon text.
-- **Object-event and overworld graphics data** from the `THEIRS` list: Kanto leader gfx are
-  restored and all map-referenced `OBJ_EVENT_GFX_*` symbols now resolve. Continue auditing
-  custom follower/overworld assets that may only be referenced from C code.
-- **`TryChangeDeoxysForm`** is referenced only by `data/scripts/change_deoxys_form.inc`, which is
-  not included by `data/event_scripts.s`. The special was also absent from Eon's source, so the
-  file remains dead unless it is wired into a map later.
-
-### Lower priority
-
-- **`m4a.c` day/night music.** Eon's `MPlayStart` diff has two identical branches, so there is
-  no behavior to port; DNS palette filtering itself is now wired in.
-- **Eon repurposed old items.** Effects like Power Herb, Covert Cloak, Eviolite, Focus Sash and
-  Loaded Dice already exist as separate expansion items; decide whether old items should also be
-  renamed/repurposed instead of only keeping the modern versions.
-- **`hns/master` merge** once the current port branch is stable.
+```text
+movimientos: 935
+items: 836 / ITEMS_COUNT 836
+habilidades: 314 / ABILITIES_COUNT_EON 314
+trainers.party: 864
+object gfx: 254 / NUM 254
+JSON de mapas: válido
+conflictos: 0
+worktree: limpio
+```
