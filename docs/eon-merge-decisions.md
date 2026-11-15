@@ -143,6 +143,8 @@ A full per-file inventory of the original 205 merge conflicts is in
 - HMs can be forgotten through the summary screen move deleter, matching Eon.
 - Kanto/Sevii maps use `MUS_RG_SURF` for surfing, including map transitions and entering Surf.
 - Battle loss and prize-money messages use Eon's text and badge-based money values.
+- Eon's snow-themed hail battle text is used for weather start, continuation, end and
+  hail damage.
 - Party menu QoL: nickname and move-relearner actions are available directly from the field
   party menu, and SELECT starts a quick swap from the field party menu.
 
@@ -167,8 +169,10 @@ A full per-file inventory of the original 205 merge conflicts is in
 
 - **Eon ability-data flags audit** (`B_UPDATED_ABILITY_DATA` still modern). The old engine's
   Overgrow/Blaze/Torrent/Liquid Ooze/Thick Fat/Snow Warning buffs are now ported.
-- **Eon battle messages** still pending: the Exp. All message and Eon's snow/hail wording.
-  The whiteout defeat/prize-money battle text is ported.
+- **Eon Exp. All message.** Eon's message belongs to its key-item Exp. All toggle. The merge
+  keeps expansion's Gen 3 held Exp. Share, so that once-per-battle party message is not used;
+  expansion's Gen 6 Exp. Share team message remains available through `I_EXP_SHARE_FLAG` and
+  `I_EXP_SHARE_ITEM`.
 - **Eon party-menu QoL leftover:** the move-held-item action is still pending; nickname,
   move-relearner and SELECT quick-swap are ported.
 - **Eon cloud-over-water weather effect** is still not wired in; the snowflake timer fix was
