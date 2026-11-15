@@ -142,6 +142,8 @@ A full per-file inventory of the original 205 merge conflicts is in
   generation-selectable `YIELD_RATE` macro.
 - HMs can be forgotten through the summary screen move deleter, matching Eon.
 - Kanto/Sevii maps use `MUS_RG_SURF` for surfing, including map transitions and entering Surf.
+- Eon day/night palette filtering (DNS) is active in the overworld and battle loops, and
+  battle terrain backgrounds use the time-of-day palettes (day, morning, sunset, night).
 - Battle loss and prize-money messages use Eon's text and badge-based money values.
 - Eon's snow-themed hail battle text is used for weather start, continuation, end and
   hail damage.
@@ -191,8 +193,8 @@ A full per-file inventory of the original 205 merge conflicts is in
 
 - **Review the 35 `OURS` files** (mostly graphics, map scripts and assets) for expansion-side
   changes that should be merged while keeping Eon assets.
-- **`m4a.c` / DNS day-night music.** Eon's m4a diff has identical branches and `src/dns.c` is
-  currently unused dead code, so it was not wired in.
+- **`m4a.c` day/night music.** Eon's `MPlayStart` diff has two identical branches, so there is
+  no behavior to port; DNS palette filtering itself is now wired in.
 - **Eon repurposed old items.** Effects like Power Herb, Covert Cloak, Eviolite, Focus Sash and
   Loaded Dice already exist as separate expansion items; decide whether old items should also be
   renamed/repurposed instead of only keeping the modern versions.

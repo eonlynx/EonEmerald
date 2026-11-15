@@ -15,6 +15,8 @@
 #include "menu.h"
 #include "overworld.h"
 #include "palette.h"
+#include "dns.h"
+#include "rtc.h"
 #include "sound.h"
 #include "sprite.h"
 #include "task.h"
@@ -768,6 +770,87 @@ void LoadBattleMenuWindowGfx(void)
     }
 }
 
+static const u32 *GetTimeBasedBattlePalette(u8 terrain)
+{
+    u8 timelapse = GetDnsTimeLapse(gLocalTime.hours);
+    u8 time = 0; // Day
+
+    switch (timelapse)
+    {
+    case 1: // Dawn
+        time = 2;
+        break;
+    case 2: // Day
+        time = 0;
+        break;
+    case 3: // Sunset
+        time = 3;
+        break;
+    case 4: // Nightfall
+    case 5: // Night
+    case 0: // Midnight
+        time = 1;
+        break;
+    default:
+        time = 0;
+        break;
+    }
+
+    if (time == 0)
+        return sBattleTerrainTable[terrain].palette;
+
+    switch (terrain)
+    {
+    case BATTLE_TERRAIN_GRASS:
+        if (time == 1) return gBattleTerrainPalette_TallGrassNight;
+        if (time == 2) return gBattleTerrainPalette_TallGrassMorning;
+        if (time == 3) return gBattleTerrainPalette_TallGrassSunset;
+        break;
+    case BATTLE_TERRAIN_LONG_GRASS:
+        if (time == 1) return gBattleTerrainPalette_LongGrassNight;
+        if (time == 2) return gBattleTerrainPalette_LongGrassMorning;
+        if (time == 3) return gBattleTerrainPalette_LongGrassSunset;
+        break;
+    case BATTLE_TERRAIN_SAND:
+        if (time == 1) return gBattleTerrainPalette_SandNight;
+        if (time == 2) return gBattleTerrainPalette_SandMorning;
+        if (time == 3) return gBattleTerrainPalette_SandSunset;
+        break;
+    case BATTLE_TERRAIN_WATER:
+        if (time == 1) return gBattleTerrainPalette_WaterNight;
+        if (time == 2) return gBattleTerrainPalette_WaterMorning;
+        if (time == 3) return gBattleTerrainPalette_WaterSunset;
+        break;
+    case BATTLE_TERRAIN_POND:
+        if (time == 1) return gBattleTerrainPalette_PondNight;
+        if (time == 2) return gBattleTerrainPalette_PondMorning;
+        if (time == 3) return gBattleTerrainPalette_PondSunset;
+        break;
+    case BATTLE_TERRAIN_PLAIN:
+        if (time == 1) return gBattleTerrainPalette_PlainNight;
+        if (time == 2) return gBattleTerrainPalette_PlainMorning;
+        if (time == 3) return gBattleTerrainPalette_PlainSunset;
+        break;
+    case BATTLE_TERRAIN_CAVE:
+        if (time == 1) return gBattleTerrainPalette_CaveNight;
+        if (time == 2) return gBattleTerrainPalette_CaveMorning;
+        if (time == 3) return gBattleTerrainPalette_CaveSunset;
+        break;
+    case BATTLE_TERRAIN_MOUNTAIN:
+        if (time == 1) return gBattleTerrainPalette_RockNight;
+        if (time == 2) return gBattleTerrainPalette_RockMorning;
+        if (time == 3) return gBattleTerrainPalette_RockSunset;
+        break;
+    case BATTLE_TERRAIN_UNDERWATER:
+        if (time == 1) return gBattleTerrainPalette_UnderwaterNight;
+        if (time == 2) return gBattleTerrainPalette_UnderwaterMorning;
+        if (time == 3) return gBattleTerrainPalette_UnderwaterSunset;
+        break;
+    }
+
+    return sBattleTerrainTable[terrain].palette;
+}
+
 void DrawMainBattleBackground(void)
 {
     if (gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER | BATTLE_TYPE_EREADER_TRAINER | BATTLE_TYPE_RECORDED_LINK))
@@ -829,7 +912,7 @@ void DrawMainBattleBackground(void)
         case MAP_BATTLE_SCENE_NORMAL:
             LZDecompressVram(sBattleTerrainTable[gBattleTerrain].tileset, (void *)(BG_CHAR_ADDR(2)));
             LZDecompressVram(sBattleTerrainTable[gBattleTerrain].tilemap, (void *)(BG_SCREEN_ADDR(26)));
-            LoadCompressedPalette(sBattleTerrainTable[gBattleTerrain].palette, BG_PLTT_ID(2), 3 * PLTT_SIZE_4BPP);
+            LoadCompressedPalette(GetTimeBasedBattlePalette(gBattleTerrain), BG_PLTT_ID(2), 3 * PLTT_SIZE_4BPP);
             break;
         case MAP_BATTLE_SCENE_GYM:
             LZDecompressVram(gBattleTerrainTiles_Building, (void *)(BG_CHAR_ADDR(2)));

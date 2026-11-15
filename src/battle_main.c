@@ -18,6 +18,7 @@
 #include "berry.h"
 #include "bg.h"
 #include "data.h"
+#include "dns.h"
 #include "debug.h"
 #include "decompress.h"
 #include "dma3.h"
@@ -1739,6 +1740,7 @@ void BattleMainCB2(void)
     RunTextPrinters();
     UpdatePaletteFade();
     RunTasks();
+    DnsApplyFilters();
 
     if (JOY_HELD(B_BUTTON) && gBattleTypeFlags & BATTLE_TYPE_RECORDED && RecordedBattle_CanStopPlayback())
     {
