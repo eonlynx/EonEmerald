@@ -3,8 +3,8 @@
 Rama: `port/eon-features`
 Fecha: 2026-11-15
 
-Esta es la auditoría consolidada después de la pasada final de decisiones. No sustituye a una
-compilación ni a una prueba en emulador; toda la validación es estática.
+Esta es la auditoría consolidada después de la pasada final de decisiones y de la primera
+compilación completa. El ROM compila; las pruebas en emulador siguen pendientes.
 
 ## 1. Estado general
 
@@ -13,13 +13,14 @@ compilación ni a una prueba en emulador; toda la validación es estática.
 - Conflictos originales: 205. Inventario por archivo en `docs/eon-merge-resolution.md`.
 - `trainers.party` es la fuente de verdad; `trainers.h` está generado desde ella.
 - No se ha mergeado `hns/master`, por decisión expresa.
-- No se ha compilado el ROM ni ejecutado pruebas de batalla, guardado o mapas.
+- El ROM compila con `make -j12` (modern) usando devkitARM. No se han ejecutado pruebas de
+  batalla, guardado o mapas.
 
 Conteos estáticos actuales:
 
 ```text
 movimientos: 935
-items: 837 / ITEMS_COUNT 837
+items: 836 / ITEMS_COUNT 836
 habilidades: 314 / ABILITIES_COUNT_EON 314
 trainers.party: 864
 object gfx: 254 / NUM 254
@@ -27,6 +28,28 @@ JSON de mapas: válido
 marcadores de conflicto: 0
 worktree: limpio
 ```
+
+### 1.1 Correcciones de compilación
+
+La primera compilación completa requirió estos ajustes, todos incluidos en el árbol:
+
+- `ITEM_TM_ENDURE` vuelve a ser el TM45 generado por `FOREACH_TM`; se eliminó el ID manual
+  que colisionaba con el enum de `include/item.h`. `ITEM_EXP_ALL` queda en el ID 835 y
+  `ITEMS_COUNT` en 836.
+- Las reglas de `Makefile` y `map_data_rules.mk` convierten los `.party`/`.s` a LF antes de
+  `trainerproc`/`preproc`. En Windows, `cpp` emite CRLF y el parser de enums de `preproc` no
+  lo tolera.
+- Se restauraron las clases de facility de Kanto/Johto (`FACILITY_CLASS_BROCK`..`DRAKE`) y
+  `TRAINER_CLASS_LEADER_2` como alias de `TRAINER_CLASS_LEADER` para los lookups de Frontier.
+- Se restauraron los heal locations de Eon (Islas Sete, Ruta 121/123, Faraway, Navel Rock,
+  Birth Island e Indigo Plateau).
+- `src/dns.c` usa `DNS_TIME_*` para no chocar con los macros `TIME_DAY`/`TIME_NIGHT` de
+  `rtc.h`.
+- Se eliminó `.disableReflectionPaletteLoad` de los graphics info de Eon: expansion usa ese
+  bit para `compressed` y el campo no tenía código que lo leyera.
+- Se añadieron las declaraciones de texto del Exchange Corner y los scripts de item balls de
+  Eon que faltaban (`item_ball_scripts.inc`).
+- `teachable_learnsets.h` y `battle_partners.h` se regeneraron durante la compilación.
 
 ## 2. Decisiones consolidadas en esta pasada
 
@@ -50,7 +73,7 @@ Esto mantiene la intención de Eon sin romper el ecosistema de items de expansio
 
 Se eliminó `B_EON_EXP_ALL_MESSAGE` y se separaron las dos cosas:
 
-- `ITEM_EXP_ALL` es un key item nuevo (ID 836) que activa/desactiva el reparto de EXP.
+- `ITEM_EXP_ALL` es un key item nuevo (ID 835) que activa/desactiva el reparto de EXP.
 - El held Exp. Share sigue existiendo con `I_EXP_SHARE_ITEM GEN_3`.
 - `I_EXP_SHARE_FLAG 0x494` sigue siendo el flag que enciende el efecto de party.
 - El mensaje de Eon y la cantidad compartida se usan siempre que Exp. All está activo.
@@ -104,13 +127,13 @@ como exclusión deliberada.
 
 ### 3.2 Compilación y pruebas
 
-No hay compilación completa ni pruebas de:
+La compilación completa pasa con `make -j12` (modern). Faltan pruebas de:
 
 - Batalla normal y doble.
 - Mega Evolución, Teracristal y Dynamax.
 - Battle Frontier, Trainer Hill y Battle Tent.
 - Guardado/carga y compatibilidad de saves.
-- DNS, nubes, Exp. All y new item ID 836.
+- DNS, nubes, Exp. All y el nuevo item ID 835.
 
 ### 3.3 Consistencia de items
 
@@ -130,7 +153,7 @@ No hay compilación completa ni pruebas de:
 
 ### 3.5 `hns/master`
 
-No mergeado, por decisión expresa. No debe hacerse hasta cerrar compilación y pruebas.
+No mergeado, por decisión expresa. No debe hacerse hasta cerrar las pruebas de regresión.
 
 ## 4. Riesgos que quedan
 
@@ -165,7 +188,7 @@ actual prioriza que los entrenadores usen el efecto que Eon quería.
 
 ### 4.3 Exp. All nuevo item: riesgo bajo-medio
 
-- `ITEM_EXP_ALL` ocupa el ID 836 y `ITEMS_COUNT` pasa a 837.
+- `ITEM_EXP_ALL` ocupa el ID 835 y `ITEMS_COUNT` pasa a 836.
 - Es un key item con `ItemUseOutOfBattle_ExpAll`.
 - El held Exp. Share sigue en su ID original.
 - Falta probar que el menú de items, el registro, el guardado y el Exchange Corner manejen
@@ -187,6 +210,11 @@ actual prioriza que los entrenadores usen el efecto que Eon quería.
 - `B_EON_EXP_ALL_MESSAGE` ya no existe; el mensaje de Eon es siempre el usado cuando Exp. All
   está activo.
 - `I_EXP_SHARE_FLAG 0x494` está hardcodeado en config; es el antiguo “Unused Flag”.
+- Los scripts de item balls de Eon se portaron tal cual. Varias etiquetas no coinciden con el
+  item que entregan (por ejemplo, `NewMauville_Inside_EventScript_ItemUltraBall` da Water
+  Stone y `AbandonedShip_Rooms2_1F_EventScript_ItemRevive` da TM Flamethrower) y algunos
+  eventos de FieryPath/RusturfTunnel/ShoalCave reutilizan flags de New Mauville. Es un
+  problema de datos preexistente de Eon; no impide compilar.
 
 ## 5. Decisiones que considero correctas
 
@@ -203,13 +231,12 @@ actual prioriza que los entrenadores usen el efecto que Eon quería.
 
 ## 6. Siguiente orden recomendado
 
-1. Compilar y corregir errores de compilación.
-2. Probar batalla normal, doble, Mega, Frontier, guardado y Exp. All.
-3. Decidir si el escalado dinámico se queda en `TRUE` o se desactiva por defecto.
-4. Revisar Battle Tent/Trainer Hill y wild held items si se quiere consistencia total.
-5. Opcional: regenerar `trainers.h` con `trainerproc`.
-6. Opcional: probar DNS en transiciones de batalla.
-7. No mergear `hns/master` hasta cerrar 1–3.
+1. Probar batalla normal, doble, Mega, Frontier, guardado y Exp. All.
+2. Decidir si el escalado dinámico se queda en `TRUE` o se desactiva por defecto.
+3. Revisar Battle Tent/Trainer Hill y wild held items si se quiere consistencia total.
+4. Regenerar `trainers.h` con `trainerproc` y comparar.
+5. Probar DNS en transiciones de batalla.
+6. No mergear `hns/master` hasta cerrar 1–5.
 
 ## 7. Validación realizada
 
@@ -220,4 +247,9 @@ actual prioriza que los entrenadores usen el efecto que Eon quería.
   expanden correctamente.
 - Revisión de nombres de items usados por `trainers.party`.
 - Revisión de las diferencias de movimientos contra `main-grafted` (95 restantes).
-- No se compiló ni se ejecutó el ROM.
+- Compilación completa con `make -j12` (modern); se generó un ROM de 32 MB.
+- Segunda pasada de `make -j12` sin errores.
+- Correcciones de build: TM Endure/Exp. All, CRLF en `.party`/`.s`, clases de facility,
+  heal locations, conflicto DNS `TIME_*`, campo de graphics info, textos del Exchange Corner
+  y item balls de Eon.
+- No se ejecutó el ROM ni se hicieron pruebas runtime.

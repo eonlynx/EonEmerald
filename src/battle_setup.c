@@ -787,7 +787,7 @@ u8 BattleSetup_GetTerrainId(void)
     case MAP_TYPE_SECRET_BASE:
         return BATTLE_TERRAIN_BUILDING;
     case MAP_TYPE_UNKNOWN:
-        return BATTLE_TERRAIN_SKY;
+        return BATTLE_TERRAIN_SOARING;
     case MAP_TYPE_UNDERWATER:
         return BATTLE_TERRAIN_UNDERWATER;
     case MAP_TYPE_OCEAN_ROUTE:

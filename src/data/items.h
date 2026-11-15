@@ -11093,19 +11093,19 @@ const struct Item gItemsInfo[] =
         .secondaryId = MOVE_REST,
     },
 
-    [ITEM_TM_ATTRACT] =
+    [ITEM_TM_ENDURE] =
     {
         .name = _("TM45"),
-        .price = 3000,
+        .price = 15000,
         .description = COMPOUND_STRING(
-            "Makes it tough to\n"
-            "attack a foe of the\n"
-            "opposite gender."),
+            "Endures any attack\n"
+            "with 1 HP, but may\n"
+            "fail in succession."),
         .importance = I_REUSABLE_TMS,
         .pocket = POCKET_TM_HM,
         .type = ITEM_USE_PARTY_MENU,
         .fieldUseFunc = ItemUseOutOfBattle_TMHM,
-        .secondaryId = MOVE_ATTRACT,
+        .secondaryId = MOVE_ENDURE,
     },
 
     [ITEM_TM_THIEF] =
@@ -14205,22 +14205,6 @@ const struct Item gItemsInfo[] =
         .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
         .iconPic = gItemIcon_KeyToRoom6,
         .iconPalette = gItemIconPalette_Key,
-    },
-
-    [ITEM_TM_ENDURE] =
-    {
-        .name = _("TM Endure"),
-        .price = 15000,
-        .description = COMPOUND_STRING(
-            "Teaches Endure to a\n"
-            "compatible Pok�mon."),
-        .importance = 1,
-        .pocket = POCKET_TM_HM,
-        .type = ITEM_USE_PARTY_MENU,
-        .fieldUseFunc = ItemUseOutOfBattle_TMHM,
-        .secondaryId = MOVE_ENDURE,
-        .iconPic = gItemIcon_TM,
-        .iconPalette = gItemIconPalette_NormalTMHM,
     },
 
     [ITEM_EXP_ALL] =

@@ -184,7 +184,7 @@ or intentionally excluded:
 - **Trainer level scaling:** `B_EON_DYNAMIC_TRAINER_LEVELS` (default `TRUE`) enables Eon's
   player-party-average scaling for normal trainer battles. Frontier, eReader and Trainer Hill
   battles keep fixed levels.
-- **Exp. All:** `ITEM_EXP_ALL` is a separate key item (ID 836), toggled with
+- **Exp. All:** `ITEM_EXP_ALL` is a separate key item (ID 835), toggled with
   `I_EXP_SHARE_FLAG 0x494`. The held Exp. Share remains available
   (`I_EXP_SHARE_ITEM GEN_3`). Eon's party-wide message and shared EXP amount are always used
   when Exp. All is enabled.
@@ -213,11 +213,13 @@ or intentionally excluded:
   behavior to port; DNS palette filtering is wired in.
 - **`hns/master`:** not merged, per instruction.
 
-## Static validation
+## Build and validation
 
 ```text
+build: make -j12 (modern, devkitARM) OK
+ROM: pokeemerald.gba, 32 MB
 movimientos: 935
-items: 837 / ITEMS_COUNT 837
+items: 836 / ITEMS_COUNT 836
 habilidades: 314 / ABILITIES_COUNT_EON 314
 trainers.party: 864
 object gfx: 254 / NUM 254

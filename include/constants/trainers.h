@@ -217,8 +217,30 @@
 #define FACILITY_CLASS_LEAF                  0x4f
 #define FACILITY_CLASS_RS_BRENDAN            0x50
 #define FACILITY_CLASS_RS_MAY                0x51
+#define FACILITY_CLASS_BROCK                 0x52
+#define FACILITY_CLASS_MISTY                 0x53
+#define FACILITY_CLASS_SURGE                 0x54
+#define FACILITY_CLASS_ERIKA                 0x55
+#define FACILITY_CLASS_KOGA                  0x56
+#define FACILITY_CLASS_SABRINA               0x57
+#define FACILITY_CLASS_BLAINE                0x58
+#define FACILITY_CLASS_GIOVANNI              0x59
+#define FACILITY_CLASS_LORELEI               0x5A
+#define FACILITY_CLASS_BRUNO                 0x5B
+#define FACILITY_CLASS_AGATHA                0x5C
+#define FACILITY_CLASS_LANCE                 0x5D
+#define FACILITY_CLASS_BLUE                  0x5E
+#define FACILITY_CLASS_FLANNERY              0x5F
+#define FACILITY_CLASS_WINONA                0x60
+#define FACILITY_CLASS_LIZA                  0x61
+#define FACILITY_CLASS_WATTSON               0x62
+#define FACILITY_CLASS_NORMAN                0x63
+#define FACILITY_CLASS_TATE                  0x64
+#define FACILITY_CLASS_JUAN                  0x65
+#define FACILITY_CLASS_GLACIA                0x66
+#define FACILITY_CLASS_DRAKE                 0x67
 
-#define FACILITY_CLASSES_COUNT               0x52
+#define FACILITY_CLASSES_COUNT               0x68
 
 #define RS_FACILITY_CLASS_AQUA_LEADER_ARCHIE    0x0
 #define RS_FACILITY_CLASS_AQUA_GRUNT_M          0x1
@@ -349,6 +371,7 @@
 #define TRAINER_CLASS_TWINS          0x2e
 #define TRAINER_CLASS_SAILOR         0x2f
 #define TRAINER_CLASS_COOLTRAINER_2  0x30 // Used for only one trainer.
+#define TRAINER_CLASS_LEADER_2       TRAINER_CLASS_LEADER // Eon facility class for Kanto/Johto leaders.
 #define TRAINER_CLASS_MAGMA_ADMIN    0x31
 #define TRAINER_CLASS_RIVAL          0x32
 #define TRAINER_CLASS_BUG_CATCHER    0x33

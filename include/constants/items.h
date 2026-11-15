@@ -580,7 +580,7 @@
 #define ITEM_BRIGHTPOWDER ITEM_BRIGHT_POWDER // Pre-Gen VI name
 #define ITEM_WHITE_HERB 460
 #define ITEM_EXP_SHARE 461
-#define ITEM_EXP_ALL 836
+#define ITEM_EXP_ALL 835
 #define ITEM_QUICK_CLAW 462
 #define ITEM_SOOTHE_BELL 463
 #define ITEM_MENTAL_HERB 464
@@ -1004,9 +1004,7 @@
 #define ITEM_ROOM_4_KEY 833
 #define ITEM_ROOM_6_KEY 834
 
-#define ITEM_TM_ENDURE 835
-
-#define ITEMS_COUNT 837
+#define ITEMS_COUNT 836
 #define ITEM_FIELD_ARROW ITEMS_COUNT
 
 // A special item id associated with "Cancel"/"Exit" etc. in a list of items or decorations
