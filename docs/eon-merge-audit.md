@@ -338,3 +338,15 @@ object gfx: 254 / NUM 254
   hora (morning/night/sunset) y cambios de region map. Hay que integrarlas con DNS
   en lugar de mantener dos sistemas de paletas de batalla.
 - Después: 1.13.0, 1.14.0, 1.15.0, 1.16.0 y 1.17.2, en orden.
+
+### 1.12.0: preparación de paletas
+
+- Se copiaron las 53 paletas de Eon de `graphics/battle_terrain/` a la ruta nueva de
+  expansion 1.12.0, `graphics/battle_environment/`, incluyendo las variantes
+  `morning`, `night` y `sunset`.
+- Cuando se haga el merge de 1.12.0, la resolución debe conservar estas paletas de Eon
+  (no las de expansion) y adaptar `src/data/graphics/battle_environment.h` para declarar
+  las variantes horarias con `INCBIN_U16` y `LoadPalette`.
+- El merge de 1.12.0 no se completó en esta pasada: además de las paletas, 1.12.0 mueve
+  heal locations y region map a JSON y cambia el generador de teachable learnsets, con
+  57 archivos en conflicto. Se abortó el merge para no dejar el árbol a medias.
