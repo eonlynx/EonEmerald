@@ -123,6 +123,8 @@ A full per-file inventory of the original 205 merge conflicts is in
   grant Eon's hail healing and Dewgong/Seel status cure.
 - Eon shop single-purchase rules for TMs/HMs, berries and key items.
 - Eon item/TM prices and Gen 3 item config defaults.
+- Eon held-item effects restored: Razz/Bluk/Nanab/Pinap/Wepear Berries cure infatuation,
+  and Heart Scale restores 1/8 HP to a held Luvdisc at the end of the turn.
 - Eon Pickup distribution, including the rare Choice Band/Choice Specs/Choice Scarf
   and Leftovers finds at high levels.
 - Gen 3 battle config sweep, verified Eon type chart (`B_UPDATED_TYPE_MATCHUPS GEN_5`), while

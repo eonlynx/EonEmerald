@@ -2811,6 +2811,7 @@ const struct Item gItemsInfo[] =
     {
         .name = _("Heart Scale"),
         .price = 10000,
+        .holdEffect = HOLD_EFFECT_HEART_SCALE,
         .description = COMPOUND_STRING(
             "A lovely scale.\n"
             "It is coveted by\n"
@@ -9549,6 +9550,7 @@ const struct Item gItemsInfo[] =
         .name = _("Razz Berry"),
         .pluralName = _("Razz Berries"),
         .price = 500,
+        .holdEffect = HOLD_EFFECT_CURE_ATTRACT,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9566,6 +9568,7 @@ const struct Item gItemsInfo[] =
         .name = _("Bluk Berry"),
         .pluralName = _("Bluk Berries"),
         .price = 500,
+        .holdEffect = HOLD_EFFECT_CURE_ATTRACT,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9583,6 +9586,7 @@ const struct Item gItemsInfo[] =
         .name = _("Nanab Berry"),
         .pluralName = _("Nanab Berries"),
         .price = 500,
+        .holdEffect = HOLD_EFFECT_CURE_ATTRACT,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9600,6 +9604,7 @@ const struct Item gItemsInfo[] =
         .name = _("Wepear Berry"),
         .pluralName = _("Wepear Berries"),
         .price = 500,
+        .holdEffect = HOLD_EFFECT_CURE_ATTRACT,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9617,6 +9622,7 @@ const struct Item gItemsInfo[] =
         .name = _("Pinap Berry"),
         .pluralName = _("Pinap Berries"),
         .price = 500,
+        .holdEffect = HOLD_EFFECT_CURE_ATTRACT,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"

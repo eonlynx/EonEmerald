@@ -7561,6 +7561,21 @@ static u8 ItemEffectMoveEnd(u32 battler, u16 holdEffect)
         if (B_BERRIES_INSTANT >= GEN_4)
             effect = ItemHealHp(battler, gLastUsedItem, ITEMEFFECT_NONE, TRUE);
         break;
+    case HOLD_EFFECT_HEART_SCALE:
+        if (gBattleMons[battler].species == SPECIES_LUVDISC
+         && gBattleMons[battler].hp < gBattleMons[battler].maxHP)
+        {
+            gBattleMoveDamage = gBattleMons[battler].maxHP / 8;
+            if (gBattleMoveDamage == 0)
+                gBattleMoveDamage = 1;
+            if (gBattleMons[battler].hp + gBattleMoveDamage > gBattleMons[battler].maxHP)
+                gBattleMoveDamage = gBattleMons[battler].maxHP - gBattleMons[battler].hp;
+            gBattleMoveDamage *= -1;
+            BattleScriptExecute(BattleScript_ItemHealHP_End2);
+            effect = ITEM_HP_CHANGE;
+            RecordItemEffectBattle(battler, holdEffect);
+        }
+        break;
     case HOLD_EFFECT_RESTORE_PP:
         if (B_BERRIES_INSTANT >= GEN_4)
             effect = ItemRestorePp(battler, gLastUsedItem, ITEMEFFECT_NONE);
@@ -7680,6 +7695,16 @@ static u8 ItemEffectMoveEnd(u32 battler, u16 holdEffect)
             RemoveConfusionStatus(battler);
             BattleScriptPushCursor();
             gBattlescriptCurrInstr = BattleScript_BerryCureConfusionRet;
+            effect = ITEM_EFFECT_OTHER;
+        }
+        break;
+    case HOLD_EFFECT_CURE_ATTRACT:
+        if (gBattleMons[battler].status2 & STATUS2_INFATUATION && !UnnerveOn(battler, gLastUsedItem))
+        {
+            gBattleMons[battler].status2 &= ~STATUS2_INFATUATION;
+            StringCopy(gBattleTextBuff1, gStatusConditionString_LoveJpn);
+            gBattleCommunication[MULTISTRING_CHOOSER] = B_MSG_CURED_PROBLEM;
+            BattleScriptExecute(BattleScript_BerryCureChosenStatusEnd2);
             effect = ITEM_EFFECT_OTHER;
         }
         break;
@@ -8217,6 +8242,16 @@ u32 ItemBattleEffects(enum ItemCaseId caseID, u32 battler, bool32 moveTurn)
                 {
                     RemoveConfusionStatus(battler);
                     BattleScriptExecute(BattleScript_BerryCureConfusionEnd2);
+                    effect = ITEM_EFFECT_OTHER;
+                }
+                break;
+            case HOLD_EFFECT_CURE_ATTRACT:
+                if (gBattleMons[battler].status2 & STATUS2_INFATUATION && !UnnerveOn(battler, gLastUsedItem))
+                {
+                    gBattleMons[battler].status2 &= ~STATUS2_INFATUATION;
+                    StringCopy(gBattleTextBuff1, gStatusConditionString_LoveJpn);
+                    gBattleCommunication[MULTISTRING_CHOOSER] = B_MSG_CURED_PROBLEM;
+                    BattleScriptExecute(BattleScript_BerryCureChosenStatusEnd2);
                     effect = ITEM_EFFECT_OTHER;
                 }
                 break;
