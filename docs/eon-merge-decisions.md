@@ -54,6 +54,8 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Core battle mechanics were aligned with Eon's Gen 3 engine: critical hits, paralysis,
   confusion, multi-hit distribution, damage formulas, EXP gain, weather duration, balls,
   turn order, status timing and similar `B_*` settings.
+- Whiteout money uses Eon's FRLG-style badge-based formula (`B_WHITEOUT_MONEY GEN_4`) rather
+  than the Gen 3 half-money rule.
 - `B_UPDATED_TYPE_MATCHUPS == GEN_5` reproduces Eon's type chart (including Fairy and
   Ghost/Dark vs Steel) and was verified against Eon's `gTypeEffectiveness` table.
 - `B_PHYSICAL_SPECIAL_SPLIT` deliberately remains modern (`GEN_LATEST`) because Eon's
@@ -131,6 +133,7 @@ A full per-file inventory of the original 205 merge conflicts is in
   generation-selectable `YIELD_RATE` macro.
 - HMs can be forgotten through the summary screen move deleter, matching Eon.
 - Kanto/Sevii maps use `MUS_RG_SURF` for surfing, including map transitions and entering Surf.
+- Battle loss and prize-money messages use Eon's text and badge-based money values.
 - Party menu QoL: nickname and move-relearner actions are available directly from the field
   party menu, and SELECT starts a quick swap from the field party menu.
 
@@ -156,14 +159,14 @@ A full per-file inventory of the original 205 merge conflicts is in
 
 - **Eon ability-data flags audit** (`B_UPDATED_ABILITY_DATA` still modern). The old engine's
   Overgrow/Blaze/Torrent/Liquid Ooze/Thick Fat/Snow Warning buffs are now ported.
-- **Eon battle messages** not ported because expansion reorganized the string table: whiteout
-  money/panic text, Exp. All message, and Eon's snow/hail wording. No broken references currently.
+- **Eon battle messages** still pending: the Exp. All message and Eon's snow/hail wording.
+  The whiteout defeat/prize-money battle text is ported.
 - **Eon party-menu QoL leftover:** the move-held-item action is still pending; nickname,
   move-relearner and SELECT quick-swap are ported.
 - **Eon cloud-over-water weather effect** is still not wired in; the snowflake timer fix was
   already present in expansion.
-- **Eon pickup table** (Choice items/Leftovers as rare Pickup finds) and Eon's whiteout money
-  message/script flow remain to be reviewed separately.
+- **Eon pickup table** (Choice items/Leftovers as rare Pickup finds) remains to be reviewed
+  separately.
 - **Battle Frontier exchange corner / reward prices** and any remaining Frontier data beyond
   the 882 monster sets and the seven Brain parties.
 - **Eon-only strings.** 286 Eon `gText_*` symbols are absent from current `src/strings.c`, but
