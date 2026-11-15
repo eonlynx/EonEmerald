@@ -145,9 +145,8 @@ enum ItemHoldEffect
     // EonEmerald hold effects
     HOLD_EFFECT_CURE_ATTRACT,
     HOLD_EFFECT_HEART_SCALE,
+    HOLD_EFFECT_COUNT
 };
-
-#define HOLD_EFFECT_CHOICE(holdEffect) ((holdEffect == HOLD_EFFECT_CHOICE_BAND || holdEffect == HOLD_EFFECT_CHOICE_SCARF || holdEffect == HOLD_EFFECT_CHOICE_SPECS))
 
 // Terrain seed params
 #define HOLD_EFFECT_PARAM_ELECTRIC_TERRAIN  0

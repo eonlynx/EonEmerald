@@ -134,9 +134,6 @@ Std_FindItem::
 EventScript_CheckPCSpace::
 	checkitemtype VAR_0x8004 @ Don't add if it's a key item
 	goto_if_eq VAR_RESULT, POCKET_KEY_ITEMS, EventScript_CheckPCSpaceContinue
-	pyramid_inchallenge
-	copyvar VAR_0x8004, ITEMID  @ pyramid_inchallenge modifies VAR_0x8004
-	goto_if_eq VAR_RESULT, TRUE, EventScript_CheckPCSpaceContinue
 	checkpcspace VAR_0x8004, VAR_0x8005
 	goto_if_eq VAR_RESULT, FALSE, EventScript_CheckPCSpaceContinue
 	setvar VAR_0x8007, 2  @ (0= full, 1= in pocket, 2=in PC) 
@@ -160,9 +157,10 @@ EventScript_PickUpItemContinueAdd::
 	waitfanfare
 	waitmessage
 	bufferitemnameplural STR_VAR_2, VAR_0x8004, VAR_0x8005
-	pyramid_inchallenge
-	goto_if_eq VAR_RESULT, TRUE, EventScript_PutBattlePyramidItemInBag
-	call EventScript_PutItemMsg
+	pyramid_getlocation
+	goto_if_eq VAR_RESULT, PYRAMID_LOCATION_FLOOR, EventScript_PutBattlePyramidItemInBag
+	msgbox gText_PutItemInPocket, MSGBOX_DEFAULT
+	hideitemdescription
 	return
 
 EventScript_PutBattlePyramidItemInBag::

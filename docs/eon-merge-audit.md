@@ -378,3 +378,34 @@ object gfx: 254 / NUM 254
 - Items: los Poke Doll y efectos antiguos siguen bajo `I_EON_ITEM_EFFECTS` (TRUE por
   defecto). Las bayas Pamtre/Watmel/Durin/Belue de Eon usan `HOLD_EFFECT_WHITE_HERB`.
 - Verificado con `I_EON_ITEM_EFFECTS TRUE` y `FALSE`: ambos builds enlazan.
+
+### 1.13.0: merge completado
+
+- Merge de `expansion/1.13.0` resuelto y compilado con `make -j12`, con
+  `I_EON_ITEM_EFFECTS TRUE` y `FALSE`.
+- Se adopto la nueva tabla `gBattleEnvironmentInfo` de 1.13. Eon conserva sus
+  53 paletas base y `GetTimeBasedBattlePalette` se integro en
+  `LoadBattleEnvironmentGfx`/`LoadBattleEnvironmentPalette` para seguir usando
+  morning/night/sunset sin el sistema antiguo de `sBattleEnvironmentTable`.
+- Se conservaron los 864 trainers de Eon exactamente igual que antes del merge,
+  incluidos los lideres de Kanto/Johto. `trainers.h`, `battle_partners.h`,
+  `debug_trainers.h` y `trainer_control.h` se regeneran con `trainer_rules.mk`
+  adaptado a Windows (`-P` y `tr -d '\r'`).
+- Los 836 items conservan precios, efectos, descripciones y parametros de Eon;
+  solo se adopto el nuevo formato `ITEM_NAME`/`ITEM_PLURAL_NAME` de 1.13. Los
+  items exclusivos de Eon (Exp. All, Link Stone, llaves de Battle Pyramid, etc.)
+  siguen presentes.
+- Se adaptaron al nuevo motor de 1.13:
+  - `PERMAFROST` (Frost Body): inmunidad a Fuego y congelacion por contacto.
+  - `ROCK_BODY`: absorcion de Roca mediante `CanAbilityAbsorbMove`.
+  - `GALVANIZED`: reduccion de dano fisico.
+  - `HOLD_EFFECT_CURE_ATTRACT` usa `volatiles.infatuation`.
+  - PSS por battler en precision, pantallas, quemadura, stats y AI.
+- Heal locations: 35 entradas, incluidas las 13 de Sevii/Kanto; el JSON conserva
+  los campos nuevos `respawn_map`/`respawn_npc` de 1.13.
+- Region map: se mantienen los nombres/coordenadas de Sevii y los graficos del
+  mapa de Eon con el formato y secciones de 1.13.
+- Correcciones de integracion: BOM en `include/config/general.h`, macros
+  duplicadas, firmas nuevas de accuracy/contacto/estado, acciones de item menu,
+  `CheckPCHasSpace` sobre la nueva API de bolsas y eliminacion de textos de
+  whiteout obsoletos.
