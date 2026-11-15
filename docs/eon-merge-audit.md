@@ -309,3 +309,30 @@ actual prioriza que los entrenadores usen el efecto que Eon quería.
 - El log de mGBA con `Bad BIOS Load` y `Bad memory Load` viene del HLE/BIOS y del nivel de
   log INFO; no es un error del ROM. Si vuelve a ir lento, poner el log de mGBA en `Fatal` o
   desactivarlo y cargar un BIOS real evita el spam de mensajes.
+
+## 9. Merges incrementales
+
+- `expansion/1.10.3`: mergeado y compilado. Se conservaron las decisiones de Eon en
+  `include/config/battle.h` y se regeneró `trainers.h`.
+- `expansion/1.11.0`: mergeado y compilado. Se adaptaron:
+  - El escalado dinámico de Eon convive con `DoTrainerPartyPool`.
+  - El PSS por battler se mantiene frente a los nuevos helpers globales.
+  - `IsAlly` se sustituyó por `IsBattlerAlly`.
+  - Se conservaron los datos de Battle Frontier de Eon en vez de la consolidación
+    interna de 1.11.0, porque el struct y el conteo de 300 trainers no cambiaron.
+  - Se mantuvieron los menús de party/item de Eon y se añadieron los textos nuevos
+    de expansion como `COMPOUND_STRING`.
+- Estado tras 1.11.0:
+
+```text
+mapas: 573 con IDs únicos
+items: 836 / ITEMS_COUNT 836
+habilidades: 314 / ABILITIES_COUNT_EON 314
+trainers.party: 864
+object gfx: 254 / NUM 254
+```
+
+- Siguiente: `expansion/1.12.0`. Esa versión añade paletas de batalla nativas por
+  hora (morning/night/sunset) y cambios de region map. Hay que integrarlas con DNS
+  en lugar de mantener dos sistemas de paletas de batalla.
+- Después: 1.13.0, 1.14.0, 1.15.0, 1.16.0 y 1.17.2, en orden.
