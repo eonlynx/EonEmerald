@@ -52,7 +52,7 @@ static const u16 sFrontierExchangeCorner_Vitamins[] =
     ITEM_WHITE_HERB,
     ITEM_MENTAL_HERB,
 	ITEM_SOOTHE_BELL,
-	ITEM_POKE_DOLL,
+	ITEM_EXP_SHARE,
     ITEM_LEFTOVERS,
     ITEM_LIST_END
 };
@@ -147,7 +147,7 @@ static const u8 *const sFrontierExchangeCorner_HoldItemsDescriptions[] =
 	BattleFrontier_ExchangeServiceCorner_Text_CHOICE_SPECSDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_CHOICE_SCARFDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_FLAME_ORBDesc,
-	BattleFrontier_ExchangeServiceCorner_Text_TOXIC_ORBDesc,
+	BattleFrontier_ExchangeServiceCorner_Text_LIFE_ORBDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_AIR_BALLOONDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_ABSORB_BULBDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_CELL_BATTERYDesc,

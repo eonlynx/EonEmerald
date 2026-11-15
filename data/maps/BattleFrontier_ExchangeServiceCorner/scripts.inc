@@ -628,7 +628,7 @@ BattleFrontier_ExchangeServiceCorner_EventScript_EXP_SHARE::
 	msgbox BattleFrontier_ExchangeServiceCorner_Text_ConfirmProtein, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, BattleFrontier_ExchangeServiceCorner_EventScript_ChooseHoldItem
 	setvar VAR_0x8008, 8
-	setvar VAR_0x8009, ITEM_POKE_DOLL
+	setvar VAR_0x8009, ITEM_EXP_SHARE
 	goto BattleFrontier_ExchangeServiceCorner_EventScript_TryPurchasePrize
 	end
 	
@@ -988,60 +988,89 @@ BattleFrontier_ExchangeServiceCorner_Text_ScopeLensDesc::
 	.string "critical-hit rate.$"
 	
 BattleFrontier_ExchangeServiceCorner_Text_RARECANDYDesc::
-	.string "TBD.$"
+	.string "A candy that raises a\n"
+	.string "POKéMON's level by one.$"
 BattleFrontier_ExchangeServiceCorner_Text_HEARTSCALEDesc::
-	.string "TBD.$"
+	.string "A pretty scale that can be\n"
+	.string "traded for a move.$"
 BattleFrontier_ExchangeServiceCorner_Text_PPMAXDesc::
-	.string "TBD.$"
+	.string "Raises the PP of one move\n"
+	.string "to its maximum.$"
 BattleFrontier_ExchangeServiceCorner_Text_SOOTHEBELLDesc::
-	.string "TBD.$"
+	.string "A hold item that calms the\n"
+	.string "holder and raises friendship.$"
 BattleFrontier_ExchangeServiceCorner_Text_EXPSHAREDesc::
-	.string "TBD.$"
+	.string "A hold item that shares\n"
+	.string "Exp. Points with the holder.$"
 BattleFrontier_ExchangeServiceCorner_Text_CHOICE_SPECSDesc::
-	.string "TBD.$"
+	.string "Raises Sp. Atk, but permits\n"
+	.string "only one move.$"
 BattleFrontier_ExchangeServiceCorner_Text_CHOICE_SCARFDesc::
-	.string "TBD.$"
+	.string "Raises Speed, but permits\n"
+	.string "only one move.$"
 BattleFrontier_ExchangeServiceCorner_Text_FLAME_ORBDesc::
-	.string "TBD.$"
-BattleFrontier_ExchangeServiceCorner_Text_TOXIC_ORBDesc::
-	.string "TBD.$"
+	.string "A hold item that burns\n"
+	.string "the holder.$"
+BattleFrontier_ExchangeServiceCorner_Text_LIFE_ORBDesc::
+	.string "Boosts move power but\n"
+	.string "cuts the holder's HP.$"
 BattleFrontier_ExchangeServiceCorner_Text_AIR_BALLOONDesc::
-	.string "TBD.$"
+	.string "A hold item that makes the\n"
+	.string "holder immune to Ground moves.$"
 BattleFrontier_ExchangeServiceCorner_Text_ABSORB_BULBDesc::
-	.string "TBD.$"
+	.string "Raises Sp. Atk when hit\n"
+	.string "by a Water move.$"
 BattleFrontier_ExchangeServiceCorner_Text_CELL_BATTERYDesc::
-	.string "TBD.$"
+	.string "Raises Attack when hit\n"
+	.string "by an Electric move.$"
 BattleFrontier_ExchangeServiceCorner_Text_MUSCLE_BANDDesc::
-	.string "TBD.$"
+	.string "Boosts the power of\n"
+	.string "physical moves.$"
 BattleFrontier_ExchangeServiceCorner_Text_WISE_GLASSESDesc::
-	.string "TBD.$"	
+	.string "Boosts the power of\n"
+	.string "special moves.$"	
 BattleFrontier_ExchangeServiceCorner_Text_ASSAULT_VESTDesc::
-	.string "TBD.$"
+	.string "Raises Sp. Def but prevents\n"
+	.string "status moves.$"
 BattleFrontier_ExchangeServiceCorner_Text_COMBAT_VESTDesc::
-	.string "TBD.$"
+	.string "Prevents status moves\n"
+	.string "to boost Defense.$"
 BattleFrontier_ExchangeServiceCorner_Text_EVERSTONEDesc::
-	.string "TBD.$"
+	.string "Prevents the holder from\n"
+	.string "evolving.$"
 BattleFrontier_ExchangeServiceCorner_Text_ELECTIRIZERDesc::
-	.string "TBD.$"
+	.string "A hold item that evolves\n"
+	.string "Electabuzz.$"
 BattleFrontier_ExchangeServiceCorner_Text_MAGMARIZERDesc::
-	.string "TBD.$"
+	.string "A hold item that evolves\n"
+	.string "Magmar.$"
 BattleFrontier_ExchangeServiceCorner_Text_STICKDesc::
-	.string "TBD.$"
+	.string "A hold item that raises\n"
+	.string "Farfetch'd's critical-hit rate.$"
 BattleFrontier_ExchangeServiceCorner_Text_THICK_CLUBDesc::
-	.string "TBD.$"
+	.string "A hold item that boosts\n"
+	.string "Cubone and Marowak.$"
 BattleFrontier_ExchangeServiceCorner_Text_LUCKY_PUNCHDesc::
-	.string "TBD.$"
+	.string "A hold item that boosts\n"
+	.string "Chansey's critical-hit rate.$"
 BattleFrontier_ExchangeServiceCorner_Text_METAL_COATDesc::
-	.string "TBD.$"
+	.string "A hold item that boosts\n"
+	.string "Steel-type moves.$"
 BattleFrontier_ExchangeServiceCorner_Text_LUCKY_EGGDesc::
-	.string "TBD.$"
+	.string "A hold item that boosts\n"
+	.string "Exp. Points gained.$"
 BattleFrontier_ExchangeServiceCorner_Text_SMOKE_BALLDesc::
-	.string "TBD.$"
+	.string "A hold item that lets the\n"
+	.string "holder flee from wild battles.$"
 BattleFrontier_ExchangeServiceCorner_Text_LIGHT_BALLDesc::
-	.string "TBD.$"
+	.string "A hold item that boosts\n"
+	.string "Pikachu's stats.$"
 BattleFrontier_ExchangeServiceCorner_Text_DEEP_SEA_TOOTHDesc::
-	.string "TBD.$"
+	.string "A hold item that boosts\n"
+	.string "Clamperl's Sp. Atk.$"
 BattleFrontier_ExchangeServiceCorner_Text_DEEP_SEA_SCALEDesc::
-	.string "TBD.$"
+	.string "A hold item that boosts\n"
+	.string "Clamperl's Sp. Def.$"
 BattleFrontier_ExchangeServiceCorner_Text_SOUL_DEWDesc::
-	.string "TBD.$"
+	.string "A hold item that boosts\n"
+	.string "Latias and Latios.$"
