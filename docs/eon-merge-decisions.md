@@ -174,15 +174,16 @@ A full per-file inventory of the original 205 merge conflicts is in
 No high-priority missing references remain. The remaining choices are deliberately configurable
 or intentionally excluded:
 
-- **Trainer level scaling:** `B_EON_DYNAMIC_TRAINER_LEVELS` (default `FALSE`) enables Eon's
+- **Trainer level scaling:** `B_EON_DYNAMIC_TRAINER_LEVELS` (default `TRUE`) enables Eon's
   player-party-average scaling for normal trainer battles. Frontier, eReader and Trainer Hill
-  battles keep fixed levels, and the authored `trainers.party` levels remain the default.
-- **Exp. All wording:** `B_EON_EXP_ALL_MESSAGE` (default `FALSE`) switches the Gen6-style
+  battles keep fixed levels.
+- **Exp. All wording:** `B_EON_EXP_ALL_MESSAGE` (default `TRUE`) switches the Gen6-style
   Exp. Share team message to Eon's Exp. All text and shared EXP amount.
-- **Old item slots:** `I_EON_LEGACY_ITEM_EFFECTS` (default `FALSE`) repurposes the old item
+- **Old item slots:** `I_EON_LEGACY_ITEM_EFFECTS` (default `TRUE`) repurposes the old item
   slots: Mental Herb becomes Power Herb, Cleanse Tag becomes Covert Cloak, Everstone becomes
   Eviolite, Focus Band becomes Focus Sash, Lucky Egg becomes Loaded Dice and Lucky Punch becomes
-  Boxing Glove. Modern items stay separate, so enable only when matching Eon's old distribution.
+  Boxing Glove. Modern items stay separate, so disable this only if you want the old slots to
+  keep their original expansion effects.
 - **Move data:** 95 shared moves still differ, but they are Eon's experimental effect, target
   and priority reworks (Cut flinch, Charge/Volt Switch, damaging Flash/Water Sport/Spider Web,
   Arm Thrust priority 1, Memento/Teleport priority, weather-move targets, etc.). They are
