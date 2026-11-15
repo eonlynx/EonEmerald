@@ -8247,14 +8247,24 @@ const struct Item gItemsInfo[] =
 
     [ITEM_EXP_SHARE] =
     {
+#if B_EON_EXP_ALL_MESSAGE
+        .name = _("Exp. All"),
+#else
         .name = _("Exp. Share"),
+#endif
         .holdEffect = HOLD_EFFECT_EXP_SHARE,
         #if I_EXP_SHARE_ITEM >= GEN_6
             .price = 3000,
             .description = COMPOUND_STRING(
+#if B_EON_EXP_ALL_MESSAGE
+                "Allows all party\n"
+                "PokéMON to gain\n"
+                "Exp. Points."),
+#else
                 "This device gives\n"
                 "exp. to other\n"
                 "party members."),
+#endif
         #else
             .price = 3000,
             .description = COMPOUND_STRING(

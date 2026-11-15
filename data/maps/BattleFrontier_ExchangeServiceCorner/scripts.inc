@@ -1000,8 +1000,9 @@ BattleFrontier_ExchangeServiceCorner_Text_SOOTHEBELLDesc::
 	.string "A hold item that calms the\n"
 	.string "holder and raises friendship.$"
 BattleFrontier_ExchangeServiceCorner_Text_EXPSHAREDesc::
-	.string "A hold item that shares\n"
-	.string "Exp. Points with the holder.$"
+	.string "Allows all party\n"
+	.string "PokéMON to gain\n"
+	.string "Exp. Points.$"
 BattleFrontier_ExchangeServiceCorner_Text_CHOICE_SPECSDesc::
 	.string "Raises Sp. Atk, but permits\n"
 	.string "only one move.$"

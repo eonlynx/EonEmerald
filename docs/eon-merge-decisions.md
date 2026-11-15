@@ -123,6 +123,7 @@ A full per-file inventory of the original 205 merge conflicts is in
   grant Eon's hail healing and Dewgong/Seel status cure.
 - Eon shop single-purchase rules for TMs/HMs, berries and key items.
 - Eon item/TM prices and Gen 3 item config defaults.
+- Eon Exp. All key item is active, including its on/off field text and party EXP message.
 - Eon held-item effects restored: Razz/Bluk/Nanab/Pinap/Wepear Berries cure infatuation,
   Belue/Durin/Pamtre/Watmel restore lowered stats, Cornn/Magost/Nomel/Rabuta/Spelon restore HP,
   and Heart Scale restores 1/8 HP to a held Luvdisc at the end of the turn.
@@ -181,8 +182,9 @@ or intentionally excluded:
 - **Trainer level scaling:** `B_EON_DYNAMIC_TRAINER_LEVELS` (default `TRUE`) enables Eon's
   player-party-average scaling for normal trainer battles. Frontier, eReader and Trainer Hill
   battles keep fixed levels.
-- **Exp. All wording:** `B_EON_EXP_ALL_MESSAGE` (default `TRUE`) switches the Gen6-style
-  Exp. Share team message to Eon's Exp. All text and shared EXP amount.
+- **Exp. All:** the key-item Exp. All is active (`I_EXP_SHARE_ITEM GEN_6` and
+  `I_EXP_SHARE_FLAG 0x494`), and `B_EON_EXP_ALL_MESSAGE` (default `TRUE`) uses Eon's
+  party-wide message and shared EXP amount.
 - **Old item slots:** `I_EON_LEGACY_ITEM_EFFECTS` (default `TRUE`) repurposes the old item
   slots: Mental Herb becomes Power Herb, Cleanse Tag becomes Covert Cloak, Everstone becomes
   Eviolite, Focus Band becomes Focus Sash, Lucky Egg becomes Loaded Dice and Lucky Punch becomes
