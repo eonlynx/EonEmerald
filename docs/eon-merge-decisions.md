@@ -4,7 +4,8 @@ This file records decisions made while porting EonEmerald onto pokeemerald-expan
 so they are explicit and reviewable.
 
 A full per-file inventory of the original 205 merge conflicts is in
-[`docs/eon-merge-resolution.md`](eon-merge-resolution.md):
+[`docs/eon-merge-resolution.md`](eon-merge-resolution.md). A broader audit of pending work and
+risky decisions is in [`docs/eon-merge-audit.md`](eon-merge-audit.md).
 
 - 123 files resolved as `theirs` (expansion) - Eon changes may still need porting.
 - 35 files resolved as `ours` (EonEmerald) - expansion changes may still need review.
