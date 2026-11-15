@@ -153,6 +153,8 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Eon day/night palette filtering (DNS) is active in the overworld and battle loops, and
   battle terrain backgrounds use the time-of-day palettes (day, morning, sunset, night).
 - Eon's cloud weather effect only renders clouds over pond water and puddles.
+- Reviewed the 35 `OURS` files: 34 are byte-identical Eon assets. Mauville City's script only
+  differs by the already-added bag-full check when Wattson gives the Basement Key.
 - Battle loss and prize-money messages use Eon's text and badge-based money values.
 - Eon's snow-themed hail battle text is used for weather start, continuation, end and
   hail damage.
@@ -199,8 +201,6 @@ A full per-file inventory of the original 205 merge conflicts is in
 
 ### Lower priority
 
-- **Review the 35 `OURS` files** (mostly graphics, map scripts and assets) for expansion-side
-  changes that should be merged while keeping Eon assets.
 - **`m4a.c` day/night music.** Eon's `MPlayStart` diff has two identical branches, so there is
   no behavior to port; DNS palette filtering itself is now wired in.
 - **Eon repurposed old items.** Effects like Power Herb, Covert Cloak, Eviolite, Focus Sash and
