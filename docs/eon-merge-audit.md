@@ -55,17 +55,19 @@ La primera compilación completa requirió estos ajustes, todos incluidos en el 
 
 ### 2.1 Items viejos: se conservan ambos mundos
 
-Se eliminó `I_EON_LEGACY_ITEM_EFFECTS` porque era una decisión de alto impacto y creaba
-duplicados/nombres repetidos. Ahora:
+Se reintrodujo el control como `I_EON_ITEM_EFFECTS` (por defecto `TRUE`) para que Eon y
+expansion puedan convivir sin perder los cambios de Eon:
 
-- Los slots viejos conservan sus efectos originales de expansion: Everstone previene evolución,
-  Focus Band da el 10%, Lucky Egg sube EXP, Mental Herb cura, Cleanse Tag reduce encuentros y
-  Lucky Punch boostea a Chansey.
-- Los efectos que Eon quería se usan a través de los items modernos: Power Herb, Covert Cloak,
-  Eviolite, Focus Sash, Loaded Dice y Punching Glove.
+- Con `TRUE`, Poke Doll oculta el equipo al ojo de los entrenadores y los slots viejos usan
+  las identidades de Eon: Everstone→Eviolite, Focus Band→Focus Sash, Lucky Egg→Loaded Dice,
+  Lucky Punch→Punching Glove, Mental Herb→Power Herb y Cleanse Tag→Covert Cloak.
+- Con `FALSE`, los slots viejos conservan sus efectos originales de expansion: Everstone
+  previene evolución, Focus Band da el 10%, Lucky Egg sube EXP, Mental Herb cura, Cleanse Tag
+  reduce encuentros y Lucky Punch boostea a Chansey.
+- Los items modernos siguen existiendo en ambos casos: Power Herb, Covert Cloak, Eviolite,
+  Focus Sash, Loaded Dice y Punching Glove.
 - Los entrenadores, Frontier y Exchange Corner usan esos items modernos donde Eon usaba el
   efecto repurposado.
-- No hay nombres duplicados ni funciones clásicas perdidas.
 
 Esto mantiene la intención de Eon sin romper el ecosistema de items de expansion.
 

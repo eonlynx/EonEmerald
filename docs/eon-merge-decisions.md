@@ -188,10 +188,11 @@ or intentionally excluded:
   `I_EXP_SHARE_FLAG 0x494`. The held Exp. Share remains available
   (`I_EXP_SHARE_ITEM GEN_3`). Eon's party-wide message and shared EXP amount are always used
   when Exp. All is enabled.
-- **Old item slots:** the old slots keep their original expansion effects. The Eon-intended
-  effects use the modern items (Power Herb, Covert Cloak, Eviolite, Focus Sash, Loaded Dice,
-  Punching Glove) in trainers, Frontier and the Exchange Corner. No legacy item-swap flag is
-  kept.
+- **Eon item effects:** `I_EON_ITEM_EFFECTS` (default `TRUE`) enables Eon's item
+  identities and quirks: Poke Doll hides the party from trainer sight, and the old slots
+  become Eviolite, Focus Sash, Loaded Dice, Punching Glove, Power Herb and Covert Cloak.
+  Set it to `FALSE` to keep expansion's original Everstone, Focus Band, Lucky Egg, Lucky
+  Punch, Mental Herb and Cleanse Tag. The modern items remain available either way.
 - **Move data:** 95 shared moves still differ, but they are Eon's experimental effect, target
   and priority reworks (Charge/Volt Switch, damaging Flash/Water Sport/Spider Web, Arm Thrust
   priority 1, Memento/Teleport priority, weather-move targets, etc.). They are intentionally

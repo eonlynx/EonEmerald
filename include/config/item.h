@@ -29,6 +29,7 @@
 // Eg: Replace with FLAG_UNUSED_0x264 so you can use that flag to toggle the feature.
 #define I_EXP_SHARE_FLAG        0x494       // FLAG_EXP_SHARE. Eon Exp. All toggle: if set, every Pokémon in the party gains experience, regardless of participation.
 #define I_EXP_SHARE_ITEM        GEN_3       // Eon keeps the held Exp. Share; Exp. All is a separate key item.
+#define I_EON_ITEM_EFFECTS      TRUE        // If TRUE, enables Eon's item identities and held-item quirks (Poke Doll hides the party from trainer sight, old slots use Eviolite/Focus Sash/Loaded Dice/Punching Glove/Power Herb/Covert Cloak).
 
 // Repel/Lure config
 // These two settings are both independent and complementary.

@@ -35,6 +35,7 @@ static u8 GetTrainerApproachDistanceNorth(struct ObjectEvent *trainerObj, s16 ra
 static u8 GetTrainerApproachDistanceWest(struct ObjectEvent *trainerObj, s16 range, s16 x, s16 y);
 static u8 GetTrainerApproachDistanceEast(struct ObjectEvent *trainerObj, s16 range, s16 x, s16 y);
 
+#if I_EON_ITEM_EFFECTS
 static bool8 ignoreIfPokeDoll(void)
 {
     int i;
@@ -45,6 +46,7 @@ static bool8 ignoreIfPokeDoll(void)
     }
     return FALSE;
 }
+#endif
 
 static bool8 TrainerSeeIdle(u8 taskId, struct Task *task, struct ObjectEvent *trainerObj);
 static bool8 TrainerExclamationMark(u8 taskId, struct Task *task, struct ObjectEvent *trainerObj);
@@ -372,8 +374,10 @@ bool8 CheckForTrainersWantingBattle(void)
 {
     u8 i;
 
+#if I_EON_ITEM_EFFECTS
     if (ignoreIfPokeDoll())
         return FALSE;
+#endif
 
     if (FlagGet(OW_FLAG_NO_TRAINER_SEE))
         return FALSE;
