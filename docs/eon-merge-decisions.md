@@ -105,6 +105,7 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Hold-to-use second registered item QoL, including `registeredLongItem` in `SaveBlock1`, tap/hold detection and the Tap/Hold bag submenu.
 - Missing Eon symbols restored: `gText_YouAlreadyHaveThis` and the Endure TM (`ITEM_TM_ENDURE`).
 - Battle Frontier monster sets: all 882 Eon slots converted to expansion `TrainerMon`, with Eon held items and EV spreads.
+- Battle Frontier Brain sets: all seven facilities' silver/gold parties use Eon's species, items, IVs, natures, EVs and moves.
 - TM sales limited in shops like Eon: owned TMs/HMs show as sold out and use the single-purchase prompt.
 - Eon/Gen 3 defaults for breeding, EV cap, TM literacy, legendary IVs and single-use TMs.
 - Eon egg-hatch QoL (faster Flame Body/Magma Armor) and Poke Doll trainer-approach suppression.
@@ -163,8 +164,8 @@ A full per-file inventory of the original 205 merge conflicts is in
   already present in expansion.
 - **Eon pickup table** (Choice items/Leftovers as rare Pickup finds) and Eon's whiteout money
   message/script flow remain to be reviewed separately.
-- **Battle Frontier exchange corner / reward prices** and other Frontier data beyond the 882
-  monster sets.
+- **Battle Frontier exchange corner / reward prices** and any remaining Frontier data beyond
+  the 882 monster sets and the seven Brain parties.
 - **Eon-only strings.** 286 Eon `gText_*` symbols are absent from current `src/strings.c`, but
   none are referenced by the current tree. Add only when restoring specific Eon text.
 - **Object-event and overworld graphics data** from the `THEIRS` list: Kanto leader gfx are
