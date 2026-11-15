@@ -177,8 +177,10 @@ A full per-file inventory of the original 205 merge conflicts is in
 - **Remaining `battle_script_commands.c` / `battle_util.c` Eon effects** not covered by the
   custom abilities: move effects, item effects, weather damage exceptions, EXP distribution,
   trainer money and Pickup tables.
-- **`battle_main.c` Eon trainer party generation and turn-order changes.** Verify the converted
-  `trainers.party` data already covers Eon's party construction rules; port anything missing.
+- **`battle_main.c` Eon dynamic level scaling.** Eon scales trainer levels from the player's
+  party average; the converted `trainers.party` data already uses Eon's authored fixed levels.
+  Dynamic scaling is deferred because it conflicts with Frontier/link fixed levels and needs a
+  dedicated design pass.
 
 ### Medium priority
 
