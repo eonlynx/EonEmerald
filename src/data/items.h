@@ -9748,6 +9748,7 @@ const struct Item gItemsInfo[] =
         .name = _("Cornn Berry"),
         .pluralName = _("Cornn Berries"),
         .price = 1000,
+        .holdEffect = HOLD_EFFECT_RESTORE_PCT_HP,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9765,6 +9766,7 @@ const struct Item gItemsInfo[] =
         .name = _("Magost Berry"),
         .pluralName = _("Magost Berries"),
         .price = 1000,
+        .holdEffect = HOLD_EFFECT_RESTORE_PCT_HP,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9782,6 +9784,7 @@ const struct Item gItemsInfo[] =
         .name = _("Rabuta Berry"),
         .pluralName = _("Rabuta Berries"),
         .price = 1000,
+        .holdEffect = HOLD_EFFECT_RESTORE_PCT_HP,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9799,6 +9802,7 @@ const struct Item gItemsInfo[] =
         .name = _("Nomel Berry"),
         .pluralName = _("Nomel Berries"),
         .price = 1000,
+        .holdEffect = HOLD_EFFECT_RESTORE_PCT_HP,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9816,6 +9820,7 @@ const struct Item gItemsInfo[] =
         .name = _("Spelon Berry"),
         .pluralName = _("Spelon Berries"),
         .price = 1000,
+        .holdEffect = HOLD_EFFECT_RESTORE_PCT_HP,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9833,6 +9838,7 @@ const struct Item gItemsInfo[] =
         .name = _("Pamtre Berry"),
         .pluralName = _("Pamtre Berries"),
         .price = 1000,
+        .holdEffect = HOLD_EFFECT_RESTORE_STATS,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9850,6 +9856,7 @@ const struct Item gItemsInfo[] =
         .name = _("Watmel Berry"),
         .pluralName = _("Watmel Berries"),
         .price = 1000,
+        .holdEffect = HOLD_EFFECT_RESTORE_STATS,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9867,6 +9874,7 @@ const struct Item gItemsInfo[] =
         .name = _("Durin Berry"),
         .pluralName = _("Durin Berries"),
         .price = 1000,
+        .holdEffect = HOLD_EFFECT_RESTORE_STATS,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"
@@ -9884,6 +9892,7 @@ const struct Item gItemsInfo[] =
         .name = _("Belue Berry"),
         .pluralName = _("Belue Berries"),
         .price = 1000,
+        .holdEffect = HOLD_EFFECT_RESTORE_STATS,
         .description = COMPOUND_STRING(
             "{POKEBLOCK} ingredient.\n"
             "Plant in loamy soil\n"

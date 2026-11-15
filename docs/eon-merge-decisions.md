@@ -124,6 +124,7 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Eon shop single-purchase rules for TMs/HMs, berries and key items.
 - Eon item/TM prices and Gen 3 item config defaults.
 - Eon held-item effects restored: Razz/Bluk/Nanab/Pinap/Wepear Berries cure infatuation,
+  Belue/Durin/Pamtre/Watmel restore lowered stats, Cornn/Magost/Nomel/Rabuta/Spelon restore HP,
   and Heart Scale restores 1/8 HP to a held Luvdisc at the end of the turn.
 - Eon Pickup distribution, including the rare Choice Band/Choice Specs/Choice Scarf
   and Leftovers finds at high levels.
