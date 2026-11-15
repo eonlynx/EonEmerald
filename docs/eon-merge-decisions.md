@@ -118,6 +118,8 @@ A full per-file inventory of the original 205 merge conflicts is in
   grant Eon's hail healing and Dewgong/Seel status cure.
 - Eon shop single-purchase rules for TMs/HMs, berries and key items.
 - Eon item/TM prices and Gen 3 item config defaults.
+- Eon Pickup distribution, including the rare Choice Band/Choice Specs/Choice Scarf
+  and Leftovers finds at high levels.
 - Gen 3 battle config sweep, verified Eon type chart (`B_UPDATED_TYPE_MATCHUPS GEN_5`), while
   keeping the per-move physical/special split.
 - Eon conditional physical/special split applied in the damage path: elemental punches for
@@ -171,8 +173,6 @@ A full per-file inventory of the original 205 merge conflicts is in
   move-relearner and SELECT quick-swap are ported.
 - **Eon cloud-over-water weather effect** is still not wired in; the snowflake timer fix was
   already present in expansion.
-- **Eon pickup table** (Choice items/Leftovers as rare Pickup finds) remains to be reviewed
-  separately.
 - **Battle Frontier exchange corner / reward prices** and any remaining Frontier data beyond
   the 882 monster sets and the seven Brain parties.
 - **Eon-only strings.** 286 Eon `gText_*` symbols are absent from current `src/strings.c`, but
