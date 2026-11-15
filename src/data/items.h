@@ -4379,23 +4379,6 @@ const struct Item gItemsInfo[] =
 
     [ITEM_EVERSTONE] =
     {
-#if I_EON_LEGACY_ITEM_EFFECTS
-    .name = _("Eviolite"),
-    .price = 200,
-    .holdEffect = HOLD_EFFECT_EVIOLITE,
-    .holdEffectParam = 50,
-    .description = COMPOUND_STRING(
-        "Raises the Def and\n"
-        "Sp. Def of PokéMON\n"
-        "that can evolve."),
-    .pocket = POCKET_ITEMS,
-    .type = ITEM_USE_BAG_MENU,
-    .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
-    .flingPower = 40,
-    .iconPic = gItemIcon_Eviolite,
-    .iconPalette = gItemIconPalette_Eviolite,
-#else
-
         .name = _("Everstone"),
         .price = 200,
         .holdEffect = HOLD_EFFECT_PREVENT_EVOLVE,
@@ -4409,7 +4392,6 @@ const struct Item gItemsInfo[] =
         .flingPower = 30,
         .iconPic = gItemIcon_Everstone,
         .iconPalette = gItemIconPalette_Everstone,
-    #endif
 },
 
 // Nectars
@@ -7046,23 +7028,6 @@ const struct Item gItemsInfo[] =
 
     [ITEM_LUCKY_PUNCH] =
     {
-#if I_EON_LEGACY_ITEM_EFFECTS
-    .name = _("Boxing Glove"),
-    .pluralName = _("Boxing Gloves"),
-    .price = 10,
-    .holdEffect = HOLD_EFFECT_PUNCHING_GLOVE,
-    .description = COMPOUND_STRING(
-        "Powers up punching\n"
-        "moves and removes\n"
-        "their contact."),
-    .pocket = POCKET_ITEMS,
-    .type = ITEM_USE_BAG_MENU,
-    .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
-    .flingPower = 40,
-    .iconPic = gItemIcon_PunchingGlove,
-    .iconPalette = gItemIconPalette_PunchingGlove,
-#else
-
         .name = _("Lucky Punch"),
         .pluralName = _("Lucky Punches"),
         .price = 10,
@@ -7077,7 +7042,6 @@ const struct Item gItemsInfo[] =
         .flingPower = 40,
         .iconPic = gItemIcon_LuckyPunch,
         .iconPalette = gItemIconPalette_LuckyPunch,
-    #endif
 },
 
     [ITEM_METAL_POWDER] =
@@ -8247,24 +8211,14 @@ const struct Item gItemsInfo[] =
 
     [ITEM_EXP_SHARE] =
     {
-#if B_EON_EXP_ALL_MESSAGE
-        .name = _("Exp. All"),
-#else
         .name = _("Exp. Share"),
-#endif
         .holdEffect = HOLD_EFFECT_EXP_SHARE,
         #if I_EXP_SHARE_ITEM >= GEN_6
             .price = 3000,
             .description = COMPOUND_STRING(
-#if B_EON_EXP_ALL_MESSAGE
-                "Allows all party\n"
-                "PokéMON to gain\n"
-                "Exp. Points."),
-#else
                 "This device gives\n"
                 "exp. to other\n"
                 "party members."),
-#endif
         #else
             .price = 3000,
             .description = COMPOUND_STRING(
@@ -8317,22 +8271,6 @@ const struct Item gItemsInfo[] =
 
     [ITEM_MENTAL_HERB] =
     {
-#if I_EON_LEGACY_ITEM_EFFECTS
-    .name = _("Power Herb"),
-    .price = 3000,
-    .holdEffect = HOLD_EFFECT_POWER_HERB,
-    .description = COMPOUND_STRING(
-        "Allows immediate\n"
-        "use of a move that\n"
-        "charges first."),
-    .pocket = POCKET_ITEMS,
-    .type = ITEM_USE_BAG_MENU,
-    .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
-    .flingPower = 10,
-    .iconPic = gItemIcon_PowerHerb,
-    .iconPalette = gItemIconPalette_PowerHerb,
-#else
-
         .name = _("Mental Herb"),
         .price = 3000,
         .holdEffect = HOLD_EFFECT_MENTAL_HERB,
@@ -8352,7 +8290,6 @@ const struct Item gItemsInfo[] =
         .flingPower = 10,
         .iconPic = gItemIcon_InBattleHerb,
         .iconPalette = gItemIconPalette_MentalHerb,
-    #endif
 },
 
     [ITEM_KINGS_ROCK] =
@@ -8387,22 +8324,6 @@ const struct Item gItemsInfo[] =
 
     [ITEM_CLEANSE_TAG] =
     {
-#if I_EON_LEGACY_ITEM_EFFECTS
-    .name = _("Covert Cloak"),
-    .price = 9800,
-    .holdEffect = HOLD_EFFECT_COVERT_CLOAK,
-    .description = COMPOUND_STRING(
-        "Protects holder\n"
-        "from additional\n"
-        "effects of moves."),
-    .pocket = POCKET_ITEMS,
-    .type = ITEM_USE_BAG_MENU,
-    .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
-    .flingPower = 30,
-    .iconPic = gItemIcon_CovertCloak,
-    .iconPalette = gItemIconPalette_CovertCloak,
-#else
-
         .name = _("Cleanse Tag"),
         .price = 9800,
         .holdEffect = HOLD_EFFECT_REPEL,
@@ -8413,7 +8334,6 @@ const struct Item gItemsInfo[] =
         .flingPower = 30,
         .iconPic = gItemIcon_CleanseTag,
         .iconPalette = gItemIconPalette_CleanseTag,
-    #endif
 },
 
     [ITEM_SMOKE_BALL] =
@@ -8435,22 +8355,6 @@ const struct Item gItemsInfo[] =
 
     [ITEM_FOCUS_BAND] =
     {
-#if I_EON_LEGACY_ITEM_EFFECTS
-    .name = _("Focus Sash"),
-    .price = 200,
-    .holdEffect = HOLD_EFFECT_FOCUS_SASH,
-    .description = COMPOUND_STRING(
-        "If the holder has\n"
-        "full HP, it endures\n"
-        "KO hits with 1 HP."),
-    .pocket = POCKET_ITEMS,
-    .type = ITEM_USE_BAG_MENU,
-    .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
-    .flingPower = 10,
-    .iconPic = gItemIcon_FocusSash,
-    .iconPalette = gItemIconPalette_FocusSash,
-#else
-
         .name = _("Focus Band"),
         .price = 200,
         .holdEffect = HOLD_EFFECT_FOCUS_BAND,
@@ -8465,28 +8369,10 @@ const struct Item gItemsInfo[] =
         .flingPower = 10,
         .iconPic = gItemIcon_FocusBand,
         .iconPalette = gItemIconPalette_FocusBand,
-    #endif
 },
 
     [ITEM_LUCKY_EGG] =
     {
-#if I_EON_LEGACY_ITEM_EFFECTS
-    .name = _("Loaded Dice"),
-    .pluralName = _("Loaded Dice"),
-    .price = 200,
-    .holdEffect = HOLD_EFFECT_LOADED_DICE,
-    .description = COMPOUND_STRING(
-        "Rolls high numbers.\n"
-        "Multihit strikes\n"
-        "hit more times."),
-    .pocket = POCKET_ITEMS,
-    .type = ITEM_USE_BAG_MENU,
-    .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
-    .flingPower = 30,
-    .iconPic = gItemIcon_LoadedDice,
-    .iconPalette = gItemIconPalette_LoadedDice,
-#else
-
         .name = _("Lucky Egg"),
         .price = 200,
         .holdEffect = HOLD_EFFECT_LUCKY_EGG,
@@ -8500,7 +8386,6 @@ const struct Item gItemsInfo[] =
         .flingPower = 30,
         .iconPic = gItemIcon_LuckyEgg,
         .iconPalette = gItemIconPalette_LuckyEgg,
-    #endif
 },
 
     [ITEM_SCOPE_LENS] =
@@ -14336,6 +14221,22 @@ const struct Item gItemsInfo[] =
         .secondaryId = MOVE_ENDURE,
         .iconPic = gItemIcon_TM,
         .iconPalette = gItemIconPalette_NormalTMHM,
+    },
+
+    [ITEM_EXP_ALL] =
+    {
+        .name = _("Exp. All"),
+        .price = 0,
+        .description = COMPOUND_STRING(
+            "Allows all party\n"
+            "PokéMON to gain\n"
+            "Exp. Points."),
+        .importance = 1,
+        .pocket = POCKET_KEY_ITEMS,
+        .type = ITEM_USE_FIELD,
+        .fieldUseFunc = ItemUseOutOfBattle_ExpAll,
+        .iconPic = gItemIcon_ExpShare,
+        .iconPalette = gItemIconPalette_ExpShare,
     },
 
 };

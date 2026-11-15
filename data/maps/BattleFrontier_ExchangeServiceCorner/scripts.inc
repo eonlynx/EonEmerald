@@ -964,8 +964,13 @@ BattleFrontier_ExchangeServiceCorner_Text_QuickClawDesc::
 	.string "the first strike.$"
 
 BattleFrontier_ExchangeServiceCorner_Text_MentalHerbDesc::
-	.string "A hold item that helps POKéMON use\n"
-	.string "charging moves at high HP.$"
+	.string "A hold item that snaps\n"
+	.string "POKéMON out of\n"
+	.string "infatuation.$"
+BattleFrontier_ExchangeServiceCorner_Text_POWER_HERBDesc::
+	.string "Allows immediate\n"
+	.string "use of a move that\n"
+	.string "charges first.$"
 
 BattleFrontier_ExchangeServiceCorner_Text_BrightpowderDesc::
 	.string "A hold item that casts a glare to\n"
@@ -982,6 +987,9 @@ BattleFrontier_ExchangeServiceCorner_Text_KingsRockDesc::
 BattleFrontier_ExchangeServiceCorner_Text_FocusBandDesc::
 	.string "A hold item that occasionally\n"
 	.string "prevents fainting.$"
+BattleFrontier_ExchangeServiceCorner_Text_FOCUS_SASHDesc::
+	.string "If the holder has full HP,\n"
+	.string "it endures KO hits with 1 HP.$"
 
 BattleFrontier_ExchangeServiceCorner_Text_ScopeLensDesc::
 	.string "A hold item that raises the\n"
@@ -1000,9 +1008,8 @@ BattleFrontier_ExchangeServiceCorner_Text_SOOTHEBELLDesc::
 	.string "A hold item that calms the\n"
 	.string "holder and raises friendship.$"
 BattleFrontier_ExchangeServiceCorner_Text_EXPSHAREDesc::
-	.string "Allows all party\n"
-	.string "PokéMON to gain\n"
-	.string "Exp. Points.$"
+	.string "A hold item that shares\n"
+	.string "Exp. Points with the holder.$"
 BattleFrontier_ExchangeServiceCorner_Text_CHOICE_SPECSDesc::
 	.string "Raises Sp. Atk, but permits\n"
 	.string "only one move.$"

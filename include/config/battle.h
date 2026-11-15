@@ -256,7 +256,6 @@
 #define B_TRAINER_CLASS_POKE_BALLS      GEN_3 // In Gen7+, trainers will use certain types of Poké Balls depending on their trainer class.
 #define B_TRAINER_MON_RANDOM_ABILITY    FALSE      // If this is set to TRUE a random legal ability will be generated for a trainer mon
 #define B_EON_DYNAMIC_TRAINER_LEVELS    TRUE       // If TRUE, Eon's player-party-average level scaling is applied to normal trainer battles. Frontier, eReader and Trainer Hill battles keep their fixed levels.
-#define B_EON_EXP_ALL_MESSAGE           TRUE       // If TRUE, the Gen6-style Exp. Share team message uses Eon's Exp. All wording and shows the shared EXP amount.
 #define B_OBEDIENCE_MECHANICS           GEN_3 // In PLA+ (here Gen8+), obedience restrictions also apply to non-outsider Pokémon, albeit based on their level met rather than actual level
 #define B_USE_FROSTBITE                 FALSE      // In PLA, Frostbite replaces Freeze. Enabling this flag does the same here. Moves can still be cherry-picked to either Freeze or Frostbite. Freeze-Dry, Secret Power & Tri Attack depend on this config.
 #define B_OVERWORLD_SNOW                GEN_3 // In Gen9+, overworld Snow will summon snow instead of hail in battle.

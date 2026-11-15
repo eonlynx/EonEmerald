@@ -43,13 +43,14 @@ risky decisions is in [`docs/eon-merge-audit.md`](eon-merge-audit.md).
   Owned items show as sold out; bag-owned items use `gText_YouAlreadyHaveThis`.
 - Eon item and TM prices were ported for every item shared with Eon (325 price lines).
 - Item configs were set to Eon/Gen 3 behavior: Gen 3 healing values, 100 EV vitamin cap,
-  20% type-boost items, half sell value, key-item Exp. All, non-key Escape Rope/fossils,
+  20% type-boost items, half sell value, held Exp. Share and a separate key-item Exp. All,
+  non-key Escape Rope/fossils,
   Gen 3 repel/fishing rules and the old Premier Ball bonus.
 - Eon Oran Berry heals 20 HP when held and Quick Claw has a 30% activation rate.
 - Eon repurposed several old items into effects that expansion now has as separate modern
   items (Power Herb, Covert Cloak, Eviolite, Focus Sash, Loaded Dice, Leech/Boxing Glove).
-  `I_EON_LEGACY_ITEM_EFFECTS` restores those old slots on top of the modern items; the modern
-  items remain available separately.
+  The old slots keep their original expansion effects; the modern items are used for the
+  Eon-intended effects. No legacy item-swap flag is kept.
 
 ## Battle configs
 
@@ -134,13 +135,12 @@ risky decisions is in [`docs/eon-merge-audit.md`](eon-merge-audit.md).
   and Leftovers finds at high levels.
 - Gen 3 battle config sweep, verified Eon type chart (`B_UPDATED_TYPE_MATCHUPS GEN_5`), while
   keeping the per-move physical/special split.
-- Curated Eon move-data batches: 93 moves use Eon's power, accuracy, PP and type values. This
-  includes Absorb, Mega Drain, Aurora Beam, Dragon Breath, Rock Slide, Poison Tail, the
-  Normal-to-coverage type changes such as Comet Punch/Fury Attack/Dizzy Punch/Twineedle/Spike
-  Cannon, and the stat changes for effect-repurposed moves such as Cut, Crabhammer, Heat Wave,
-  Horn Attack, Mega Punch, Strength, Take Down and Waterfall. Category, target, priority and
-  effect reworks remain expansion-side. Bind/Clamp/Wrap/Submission now pin Eon's accuracy and
-  PP instead of following the generation config.
+- Curated Eon move-data batch: 67 moves whose effects were not repurposed use Eon's power,
+  accuracy, PP and type values. This includes Absorb, Mega Drain, Aurora Beam, Dragon Breath,
+  Rock Slide, Poison Tail, the Normal-to-coverage type changes such as Comet
+  Punch/Fury Attack/Dizzy Punch/Twineedle/Spike Cannon, and the status-move accuracy buffs.
+  Category, target, priority and effect reworks remain expansion-side. Bind/Clamp/Wrap/
+  Submission now pin Eon's accuracy and PP instead of following the generation config.
 - Eon conditional physical/special split applied in the damage path: elemental punches for
   Medicham/Hitmonchan/Electabuzz/Sneasel, Breloom Bullet Seed, Togetic/Clefable Tri Attack,
   Delcatty Uproar, Wigglytuff Hyper Voice, Sludge Bomb, Leaf Blade, Solar Beam, Powder Snow,
@@ -148,9 +148,8 @@ risky decisions is in [`docs/eon-merge-audit.md`](eon-merge-audit.md).
   menu icon, Battle TV scoring, AI move checks, Counter/Mirror Coat tracking and category-based
   effects (Weak Armor, Toxic Debris, Jaboca/Rowap Berry, Hustle accuracy) use the same
   per-battler category. Summary, move-relearner and Pokédex icons use the species context too.
-- Config switches for optional Eon behavior: `B_EON_DYNAMIC_TRAINER_LEVELS`,
-  `B_EON_EXP_ALL_MESSAGE` and `I_EON_LEGACY_ITEM_EFFECTS`, all defaulting to the current
-  EonEmerald behavior and documented in the config headers.
+- Config switch for optional Eon behavior: `B_EON_DYNAMIC_TRAINER_LEVELS`, defaulting to the
+  current EonEmerald behavior.
 - Removed the unreferenced `data/scripts/change_deoxys_form.inc` dead script.
 - Missing `gPokedexCaughtScreen_Pal` definition and valid icons for Eon room keys and Endure TM.
 - Eon battle menu casing (`Fight`, `Type/`, `Wally`).
@@ -185,24 +184,25 @@ or intentionally excluded:
 - **Trainer level scaling:** `B_EON_DYNAMIC_TRAINER_LEVELS` (default `TRUE`) enables Eon's
   player-party-average scaling for normal trainer battles. Frontier, eReader and Trainer Hill
   battles keep fixed levels.
-- **Exp. All:** the key-item Exp. All is active (`I_EXP_SHARE_ITEM GEN_6` and
-  `I_EXP_SHARE_FLAG 0x494`), and `B_EON_EXP_ALL_MESSAGE` (default `TRUE`) uses Eon's
-  party-wide message and shared EXP amount.
-- **Old item slots:** `I_EON_LEGACY_ITEM_EFFECTS` (default `TRUE`) repurposes the old item
-  slots: Mental Herb becomes Power Herb, Cleanse Tag becomes Covert Cloak, Everstone becomes
-  Eviolite, Focus Band becomes Focus Sash, Lucky Egg becomes Loaded Dice and Lucky Punch becomes
-  Boxing Glove. Modern items stay separate, so disable this only if you want the old slots to
-  keep their original expansion effects.
-- **Move data:** 69 shared moves still differ, but they are Eon's experimental effect, target
+- **Exp. All:** `ITEM_EXP_ALL` is a separate key item (ID 836), toggled with
+  `I_EXP_SHARE_FLAG 0x494`. The held Exp. Share remains available
+  (`I_EXP_SHARE_ITEM GEN_3`). Eon's party-wide message and shared EXP amount are always used
+  when Exp. All is enabled.
+- **Old item slots:** the old slots keep their original expansion effects. The Eon-intended
+  effects use the modern items (Power Herb, Covert Cloak, Eviolite, Focus Sash, Loaded Dice,
+  Punching Glove) in trainers, Frontier and the Exchange Corner. No legacy item-swap flag is
+  kept.
+- **Move data:** 95 shared moves still differ, but they are Eon's experimental effect, target
   and priority reworks (Charge/Volt Switch, damaging Flash/Water Sport/Spider Web, Arm Thrust
   priority 1, Memento/Teleport priority, weather-move targets, etc.). They are intentionally
-  excluded; expansion keeps per-move PSS and modern effect implementations. The 93 safe
-  power/accuracy/PP/type changes are ported, including the status-move accuracy buffs.
+  excluded; expansion keeps per-move PSS and modern effect implementations. The 67 moves whose
+  effects were not repurposed use Eon's power/accuracy/PP/type values, including the
+  status-move accuracy buffs.
 - **Ability data:** Eon's custom ability effects are implemented in code; modern
   `B_UPDATED_ABILITY_DATA` values remain intentionally.
 - **Battle script/util effects:** reviewed at function/table level. The remaining Eon diff is
-  old-engine refactoring plus the move reworks above; trainer money, whiteout, Pickup and the
-  optional Eon Exp. All message are covered.
+  old-engine refactoring plus the move reworks above; trainer money, whiteout, Pickup, the
+  Eon berries/Heart Scale and the Exp. All message are covered.
 - **Battle Frontier:** the 882 monster sets, seven Brain parties and the exchange corner item
   lists, prices and descriptions are ported. No other referenced Eon Frontier data was found
   missing.
@@ -217,7 +217,7 @@ or intentionally excluded:
 
 ```text
 movimientos: 935
-items: 836 / ITEMS_COUNT 836
+items: 837 / ITEMS_COUNT 837
 habilidades: 314 / ABILITIES_COUNT_EON 314
 trainers.party: 864
 object gfx: 254 / NUM 254

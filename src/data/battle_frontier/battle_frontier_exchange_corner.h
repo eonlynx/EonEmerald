@@ -22,14 +22,14 @@ static const u16 sFrontierExchangeCorner_Decor2[] =
 {
    	ITEM_ASSAULT_VEST,
 	ITEM_COMBAT_VEST,
-	ITEM_EVERSTONE,
+	ITEM_EVIOLITE,
 	ITEM_ELECTIRIZER,
 	ITEM_MAGMARIZER,
 	ITEM_STICK,
 	ITEM_THICK_CLUB,
-	ITEM_LUCKY_PUNCH,
+	ITEM_PUNCHING_GLOVE,
 	ITEM_METAL_COAT,
-	ITEM_LUCKY_EGG,
+	ITEM_LOADED_DICE,
 	ITEM_SMOKE_BALL,
 	ITEM_LIGHT_BALL,
 	ITEM_DEEP_SEA_TOOTH,
@@ -50,7 +50,7 @@ static const u16 sFrontierExchangeCorner_Vitamins[] =
 	ITEM_HEART_SCALE,
 	ITEM_PP_MAX,
     ITEM_WHITE_HERB,
-    ITEM_MENTAL_HERB,
+    ITEM_POWER_HERB,
 	ITEM_SOOTHE_BELL,
 	ITEM_EXP_SHARE,
     ITEM_LEFTOVERS,
@@ -62,7 +62,7 @@ static const u16 sFrontierExchangeCorner_HoldItems[] =
     ITEM_QUICK_CLAW,
     ITEM_BRIGHT_POWDER,
     ITEM_KINGS_ROCK,
-    ITEM_FOCUS_BAND,
+    ITEM_FOCUS_SASH,
     ITEM_SCOPE_LENS,
 	ITEM_CHOICE_BAND,	
 	ITEM_CHOICE_SPECS,
@@ -101,26 +101,14 @@ static const u8 *const sFrontierExchangeCorner_Decor2Descriptions[] =
 {
 	BattleFrontier_ExchangeServiceCorner_Text_ASSAULT_VESTDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_COMBAT_VESTDesc,
-#if I_EON_LEGACY_ITEM_EFFECTS
 	BattleFrontier_ExchangeServiceCorner_Text_EVIOLITEDesc,
-#else
-	BattleFrontier_ExchangeServiceCorner_Text_EVERSTONEDesc,
-#endif
 	BattleFrontier_ExchangeServiceCorner_Text_ELECTIRIZERDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_MAGMARIZERDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_STICKDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_THICK_CLUBDesc,
-#if I_EON_LEGACY_ITEM_EFFECTS
 	BattleFrontier_ExchangeServiceCorner_Text_BOXING_GLOVEDesc,
-#else
-	BattleFrontier_ExchangeServiceCorner_Text_LUCKY_PUNCHDesc,
-#endif
 	BattleFrontier_ExchangeServiceCorner_Text_METAL_COATDesc,
-#if I_EON_LEGACY_ITEM_EFFECTS
 	BattleFrontier_ExchangeServiceCorner_Text_LOADED_DICEDesc,
-#else
-	BattleFrontier_ExchangeServiceCorner_Text_LUCKY_EGGDesc,
-#endif
 	BattleFrontier_ExchangeServiceCorner_Text_SMOKE_BALLDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_LIGHT_BALLDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_DEEP_SEA_TOOTHDesc,
@@ -141,7 +129,7 @@ static const u8 *const sFrontierExchangeCorner_VitaminsDescriptions[] =
     BattleFrontier_ExchangeServiceCorner_Text_HEARTSCALEDesc,
     BattleFrontier_ExchangeServiceCorner_Text_PPMAXDesc,
     BattleFrontier_ExchangeServiceCorner_Text_WhiteHerbDesc,
-    BattleFrontier_ExchangeServiceCorner_Text_MentalHerbDesc,
+    BattleFrontier_ExchangeServiceCorner_Text_POWER_HERBDesc,
     BattleFrontier_ExchangeServiceCorner_Text_SOOTHEBELLDesc,
     BattleFrontier_ExchangeServiceCorner_Text_EXPSHAREDesc,
 	BattleFrontier_ExchangeServiceCorner_Text_LeftoversDesc,
@@ -153,7 +141,7 @@ static const u8 *const sFrontierExchangeCorner_HoldItemsDescriptions[] =
     BattleFrontier_ExchangeServiceCorner_Text_QuickClawDesc,
     BattleFrontier_ExchangeServiceCorner_Text_BrightpowderDesc,
     BattleFrontier_ExchangeServiceCorner_Text_KingsRockDesc,
-    BattleFrontier_ExchangeServiceCorner_Text_FocusBandDesc,
+    BattleFrontier_ExchangeServiceCorner_Text_FOCUS_SASHDesc,
     BattleFrontier_ExchangeServiceCorner_Text_ScopeLensDesc,	
 	BattleFrontier_ExchangeServiceCorner_Text_ChoiceBandDesc,		
 	BattleFrontier_ExchangeServiceCorner_Text_CHOICE_SPECSDesc,

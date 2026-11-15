@@ -20,7 +20,6 @@
 #define I_PREMIER_BALL_BONUS            GEN_3  // In LGPE onwards (Gen8+ here), you are given a Premier Ball for every 10 Poké Balls of any type and in the same purchase. Previously, it only applied to regular Poké Balls and only 1 could be obtained per purchase.
 #define I_ROTOM_CATALOG_THUNDER_SHOCK   GEN_LATEST  // In Gen9+, reverting Rotom to its base form will teach it Thunder Shock even if it knows another move.
 #define I_REPEL_INCLUDE_FAINTED         GEN_3  // In Gen1 and Gen6+, Repels always use the level of the first member of the party to check which wild Pokémon to prevent encounters with, even if that member is fainted. In Gen2-5, it only uses the level of the first non-fainted Pokémon.
-#define I_EON_LEGACY_ITEM_EFFECTS       TRUE   // If TRUE, Eon's old item slots are repurposed: Mental Herb becomes Power Herb, Cleanse Tag becomes Covert Cloak, Everstone becomes Eviolite, Focus Band becomes Focus Sash, Lucky Egg becomes Loaded Dice and Lucky Punch becomes Boxing Glove. Modern items remain available separately, so enable only when matching Eon's old item distribution.
 
 // TM config
 #define I_REUSABLE_TMS          FALSE       // In Gen5-8, TMs are reusable. Setting this to TRUE will make all vanilla TMs reusable, though they can also be cherry-picked by setting their importance to 1.
@@ -28,8 +27,8 @@
 // Exp. Share config
 // To use this feature, replace the 0 with the flag ID you're assigning it to.
 // Eg: Replace with FLAG_UNUSED_0x264 so you can use that flag to toggle the feature.
-#define I_EXP_SHARE_FLAG        0x494       // Eon Exp. All toggle flag. If set, every Pokémon in the party gains experience, regardless of participation.
-#define I_EXP_SHARE_ITEM        GEN_6       // Eon uses the key-item Exp. All toggle instead of the held Exp. Share.
+#define I_EXP_SHARE_FLAG        0x494       // FLAG_EXP_SHARE. Eon Exp. All toggle: if set, every Pokémon in the party gains experience, regardless of participation.
+#define I_EXP_SHARE_ITEM        GEN_3       // Eon keeps the held Exp. Share; Exp. All is a separate key item.
 
 // Repel/Lure config
 // These two settings are both independent and complementary.
