@@ -146,7 +146,8 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Eon's snow-themed hail battle text is used for weather start, continuation, end and
   hail damage.
 - Party menu QoL: nickname and move-relearner actions are available directly from the field
-  party menu, and SELECT starts a quick swap from the field party menu.
+  party menu, SELECT starts a quick swap, and held items can be moved or swapped between
+  party members from the item submenu.
 
 ## Pending / review
 
@@ -173,8 +174,6 @@ A full per-file inventory of the original 205 merge conflicts is in
   keeps expansion's Gen 3 held Exp. Share, so that once-per-battle party message is not used;
   expansion's Gen 6 Exp. Share team message remains available through `I_EXP_SHARE_FLAG` and
   `I_EXP_SHARE_ITEM`.
-- **Eon party-menu QoL leftover:** the move-held-item action is still pending; nickname,
-  move-relearner and SELECT quick-swap are ported.
 - **Eon cloud-over-water weather effect** is still not wired in; the snowflake timer fix was
   already present in expansion.
 - **Battle Frontier exchange corner / reward prices** and any remaining Frontier data beyond
