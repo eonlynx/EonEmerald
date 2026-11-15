@@ -152,6 +152,7 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Kanto/Sevii maps use `MUS_RG_SURF` for surfing, including map transitions and entering Surf.
 - Eon day/night palette filtering (DNS) is active in the overworld and battle loops, and
   battle terrain backgrounds use the time-of-day palettes (day, morning, sunset, night).
+- Eon's cloud weather effect only renders clouds over pond water and puddles.
 - Battle loss and prize-money messages use Eon's text and badge-based money values.
 - Eon's snow-themed hail battle text is used for weather start, continuation, end and
   hail damage.
@@ -185,8 +186,6 @@ A full per-file inventory of the original 205 merge conflicts is in
   keeps expansion's Gen 3 held Exp. Share, so that once-per-battle party message is not used;
   expansion's Gen 6 Exp. Share team message remains available through `I_EXP_SHARE_FLAG` and
   `I_EXP_SHARE_ITEM`.
-- **Eon cloud-over-water weather effect** is still not wired in; the snowflake timer fix was
-  already present in expansion.
 - **Remaining Battle Frontier data** beyond the 882 monster sets, the seven Brain parties and
   the exchange corner item lists/prices.
 - **Eon-only strings.** 286 Eon `gText_*` symbols are absent from current `src/strings.c`, but

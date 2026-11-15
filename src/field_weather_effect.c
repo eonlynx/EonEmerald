@@ -13,6 +13,8 @@
 #include "task.h"
 #include "trig.h"
 #include "gpu_regs.h"
+#include "metatile_behavior.h"
+#include "constants/metatile_behaviors.h"
 
 EWRAM_DATA static u8 sCurrentAbnormalWeather = 0;
 EWRAM_DATA static u16 sUnusedWeatherRelated = 0;
@@ -220,10 +222,21 @@ static void DestroyCloudSprites(void)
 
 static void UpdateCloudSprite(struct Sprite *sprite)
 {
+    int x, y;
+    u16 cameraX, cameraY;
+    u8 metatileBehavior;
+
     // Move 1 pixel left every 2 frames.
     sprite->data[0] = (sprite->data[0] + 1) & 1;
     if (sprite->data[0])
         sprite->x--;
+
+    // Only show clouds over pond water or puddles.
+    GetCameraFocusCoords(&cameraX, &cameraY);
+    x = cameraX + (sprite->x / 16) - 7;
+    y = cameraY + (sprite->y / 16) - 5;
+    metatileBehavior = MapGridGetMetatileBehaviorAt(x, y);
+    sprite->invisible = !(metatileBehavior == MB_POND_WATER || metatileBehavior == MB_PUDDLE);
 }
 
 //------------------------------------------------------------------------------
