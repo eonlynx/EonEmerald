@@ -439,6 +439,20 @@
 #define OBJ_EVENT_PAL_TAG_NPC_BLUE                0x1171
 #define OBJ_EVENT_PAL_TAG_NPC_WHITE               0x1172
 #define OBJ_EVENT_PAL_TAG_NPC_PINK                0x1173
+// EonEmerald: unique palette tags for Kanto/Johto leader overworld sprites.
+#define OBJ_EVENT_PAL_TAG_BROCK                   0x1180
+#define OBJ_EVENT_PAL_TAG_MISTY                   0x1181
+#define OBJ_EVENT_PAL_TAG_SURGE                   0x1182
+#define OBJ_EVENT_PAL_TAG_ERIKA                   0x1183
+#define OBJ_EVENT_PAL_TAG_KOGA                    0x1184
+#define OBJ_EVENT_PAL_TAG_SABRINA                 0x1185
+#define OBJ_EVENT_PAL_TAG_BLAINE                  0x1186
+#define OBJ_EVENT_PAL_TAG_GIOVANNI                0x1187
+#define OBJ_EVENT_PAL_TAG_LORELEI                 0x1188
+#define OBJ_EVENT_PAL_TAG_BRUNO                   0x1189
+#define OBJ_EVENT_PAL_TAG_AGATHA                  0x118A
+#define OBJ_EVENT_PAL_TAG_LANCE                   0x118B
+#define OBJ_EVENT_PAL_TAG_BLUE                    0x118C
 // Not a real OW palette tag; used for the white flash applied to followers
 #define OBJ_EVENT_PAL_TAG_WHITE                   (OBJ_EVENT_PAL_TAG_NONE - 1)
 #define OBJ_EVENT_PAL_TAG_NONE                    0x11FF
