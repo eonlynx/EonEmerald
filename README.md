@@ -11,6 +11,8 @@ Screenshots:
 ![pokeemerald](https://github.com/user-attachments/assets/966c6c8c-6985-4b23-baa2-1582861450e2)
 ![pokeemerald](https://github.com/user-attachments/assets/d0f7f0c5-f7ba-427b-943e-78f1262d2f5b)
 
+Based off RHH's pokeemerald-expansion 1.10.3 https://github.com/rh-hideout/pokeemerald-expansion/
+
 
 
 > # Pokémon Emerald
