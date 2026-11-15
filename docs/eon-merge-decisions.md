@@ -120,6 +120,13 @@ A full per-file inventory of the original 205 merge conflicts is in
 - Eon item/TM prices and Gen 3 item config defaults.
 - Gen 3 battle config sweep, verified Eon type chart (`B_UPDATED_TYPE_MATCHUPS GEN_5`), while
   keeping the per-move physical/special split.
+- Eon conditional physical/special split applied in the damage path: elemental punches for
+  Medicham/Hitmonchan/Electabuzz/Sneasel, Breloom Bullet Seed, Togetic/Clefable Tri Attack,
+  Delcatty Uproar, Wigglytuff Hyper Voice, Sludge Bomb, Leaf Blade, Solar Beam, Powder Snow,
+  Silver Wind, Air Cutter, Dive and Ghost moves for Eon's listed species. The battle move
+  menu icon, Battle TV scoring, AI move checks, Counter/Mirror Coat tracking and category-based
+  effects (Weak Armor, Toxic Debris, Jaboca/Rowap Berry, Hustle accuracy) use the same
+  per-battler category.
 - Missing `gPokedexCaughtScreen_Pal` definition and valid icons for Eon room keys and Endure TM.
 - Eon battle menu casing (`Fight`, `Type/`, `Wally`).
 - Kanto gym leader / Elite Four overworld graphics restored for the preserved Eon maps
@@ -145,10 +152,9 @@ A full per-file inventory of the original 205 merge conflicts is in
   category, target or priority (e.g. Eon's buffed Absorb/Aurora Beam/Dragon Breath and its
   per-move PSS assignments). Do not blindly overwrite expansion data; review in batches because
   Eon also contains quirks such as Arm Thrust priority 1 and special Fire Punch.
-- **Eon conditional PSS.** Eon's `src/pokemon.c` changes move categories for specific species
-  (Breloom/Bullet Seed, Togetic/Clefable/Tri Attack, several Ghost users, Hitmonchan/Medicham
-  elemental punches, etc.). Expansion has no per-species category override; decide whether to
-  implement it in the damage-calc path.
+- **Eon conditional PSS outside battle.** The summary screen, move relearner and Pokédex still
+  show the move's base category icon because they have no battle battler context. The battle
+  move menu and damage calculation use the per-species category.
 - **Remaining `battle_script_commands.c` / `battle_util.c` Eon effects** not covered by the
   custom abilities: move effects, item effects, weather damage exceptions, EXP distribution,
   trainer money and Pickup tables.

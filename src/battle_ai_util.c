@@ -3,6 +3,7 @@
 #include "malloc.h"
 #include "battle.h"
 #include "battle_anim.h"
+#include "battle_util.h"
 #include "battle_ai_util.h"
 #include "battle_ai_main.h"
 #include "battle_ai_switch_items.h"
@@ -360,7 +361,7 @@ bool32 MovesWithCategoryUnusable(u32 attacker, u32 target, u32 category)
     {
         if (moves[i] != MOVE_NONE
             && moves[i] != MOVE_UNAVAILABLE
-            && GetBattleMoveCategory(moves[i]) == category
+            && GetMoveCategoryForBattler(moves[i], attacker) == category
             && !(unusable & (1u << i)))
         {
             SetTypeBeforeUsingMove(moves[i], attacker);
@@ -1958,7 +1959,7 @@ bool32 HasOnlyMovesWithCategory(u32 battlerId, u32 category, bool32 onlyOffensiv
     {
         if (onlyOffensive && IS_MOVE_STATUS(moves[i]))
             continue;
-        if (moves[i] != MOVE_NONE && moves[i] != MOVE_UNAVAILABLE && GetBattleMoveCategory(moves[i]) != category)
+        if (moves[i] != MOVE_NONE && moves[i] != MOVE_UNAVAILABLE && GetMoveCategoryForBattler(moves[i], battlerId) != category)
             return FALSE;
     }
 
@@ -1972,7 +1973,7 @@ bool32 HasMoveWithCategory(u32 battler, u32 category)
 
     for (i = 0; i < MAX_MON_MOVES; i++)
     {
-        if (moves[i] != MOVE_NONE && moves[i] != MOVE_UNAVAILABLE && GetBattleMoveCategory(moves[i]) == category)
+        if (moves[i] != MOVE_NONE && moves[i] != MOVE_UNAVAILABLE && GetMoveCategoryForBattler(moves[i], battler) == category)
             return TRUE;
     }
     return FALSE;
@@ -3943,7 +3944,7 @@ bool32 ShouldUseZMove(u32 battlerAtk, u32 battlerDef, u32 chosenMove)
             return FALSE; // Don't waste a Z-Move busting disguise
         if (gBattleMons[battlerDef].ability == ABILITY_ICE_FACE
             && !gMovesInfo[zMove].ignoresTargetAbility
-            && gBattleMons[battlerDef].species == SPECIES_EISCUE_ICE && IS_MOVE_PHYSICAL(chosenMove))
+            && gBattleMons[battlerDef].species == SPECIES_EISCUE_ICE && IsMovePhysicalForBattler(chosenMove, battlerAtk))
             return FALSE; // Don't waste a Z-Move busting Ice Face
 
         if (IS_MOVE_STATUS(chosenMove) && !IS_MOVE_STATUS(zMove))

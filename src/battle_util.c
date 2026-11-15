@@ -38,6 +38,130 @@
 #include "constants/abilities.h"
 #include "constants/battle_anim.h"
 #include "constants/battle_move_effects.h"
+
+// EonEmerald conditional physical/special split overrides.
+// Eon's old engine intended these per-species category changes but its damage
+// code accidentally used comparison instead of assignment. Apply them here so
+// the damage calculation and the move-selection display agree.
+u32 GetMoveCategoryForBattler(u32 move, u32 battler)
+{
+    u32 category = GetBattleMoveCategory(move);
+    u16 species = gBattleMons[battler].species;
+    u8 moveType = gMovesInfo[move].type;
+
+    if (category == DAMAGE_CATEGORY_STATUS)
+        return category;
+
+    switch (species)
+    {
+    case SPECIES_MEDICHAM:
+    case SPECIES_HITMONCHAN:
+    case SPECIES_ELECTABUZZ:
+        if (move == MOVE_ICE_PUNCH || move == MOVE_FIRE_PUNCH || move == MOVE_THUNDER_PUNCH)
+            category = DAMAGE_CATEGORY_PHYSICAL;
+        break;
+    case SPECIES_SNEASEL:
+        if (move == MOVE_ICE_PUNCH)
+            category = DAMAGE_CATEGORY_PHYSICAL;
+        break;
+    case SPECIES_BRELOOM:
+        if (move == MOVE_BULLET_SEED)
+            category = DAMAGE_CATEGORY_PHYSICAL;
+        break;
+    case SPECIES_TOGETIC:
+    case SPECIES_CLEFABLE:
+        if (move == MOVE_TRI_ATTACK)
+            category = DAMAGE_CATEGORY_SPECIAL;
+        break;
+    case SPECIES_DELCATTY:
+        if (move == MOVE_UPROAR)
+            category = DAMAGE_CATEGORY_SPECIAL;
+        break;
+    case SPECIES_WIGGLYTUFF:
+        if (move == MOVE_HYPER_VOICE)
+            category = DAMAGE_CATEGORY_SPECIAL;
+        break;
+    case SPECIES_TROPIUS:
+    case SPECIES_VICTREEBEL:
+    case SPECIES_SHIFTRY:
+        if (move == MOVE_LEAF_BLADE)
+            category = DAMAGE_CATEGORY_PHYSICAL;
+        break;
+    case SPECIES_SOLROCK:
+        if (move == MOVE_SOLAR_BEAM)
+            category = DAMAGE_CATEGORY_PHYSICAL;
+        break;
+    case SPECIES_PILOSWINE:
+        if (move == MOVE_POWDER_SNOW)
+            category = DAMAGE_CATEGORY_PHYSICAL;
+        break;
+    case SPECIES_VENOMOTH:
+        if (move == MOVE_SLUDGE_BOMB || move == MOVE_SILVER_WIND)
+            category = DAMAGE_CATEGORY_SPECIAL;
+        break;
+    case SPECIES_ROSELIA:
+    case SPECIES_SEVIPER:
+        if (move == MOVE_SLUDGE_BOMB)
+            category = DAMAGE_CATEGORY_SPECIAL;
+        break;
+    case SPECIES_BUTTERFREE:
+    case SPECIES_BEAUTIFLY:
+    case SPECIES_DUSTOX:
+    case SPECIES_MASQUERAIN:
+        if (move == MOVE_SILVER_WIND)
+            category = DAMAGE_CATEGORY_SPECIAL;
+        break;
+    case SPECIES_NOCTOWL:
+    case SPECIES_XATU:
+    case SPECIES_CHARIZARD:
+    case SPECIES_ARTICUNO:
+    case SPECIES_ZAPDOS:
+    case SPECIES_MOLTRES:
+        if (move == MOVE_AIR_CUTTER)
+            category = DAMAGE_CATEGORY_SPECIAL;
+        break;
+    case SPECIES_YANMA:
+        if (move == MOVE_AIR_CUTTER || move == MOVE_SILVER_WIND)
+            category = DAMAGE_CATEGORY_SPECIAL;
+        break;
+    case SPECIES_DUSCLOPS:
+    case SPECIES_PRIMEAPE:
+    case SPECIES_MUK:
+    case SPECIES_BANETTE:
+    case SPECIES_SHEDINJA:
+    case SPECIES_MAWILE:
+        if (moveType == TYPE_GHOST)
+            category = DAMAGE_CATEGORY_PHYSICAL;
+        break;
+    case SPECIES_POLIWRATH:
+    case SPECIES_CLOYSTER:
+    case SPECIES_SEAKING:
+    case SPECIES_KINGLER:
+    case SPECIES_KABUTOPS:
+    case SPECIES_GYARADOS:
+    case SPECIES_DRAGONITE:
+    case SPECIES_FERALIGATR:
+    case SPECIES_AZUMARILL:
+    case SPECIES_QUAGSIRE:
+    case SPECIES_QWILFISH:
+    case SPECIES_SWAMPERT:
+    case SPECIES_WAILORD:
+    case SPECIES_WALREIN:
+    case SPECIES_CRAWDAUNT:
+    case SPECIES_HUNTAIL:
+    case SPECIES_RELICANTH:
+        if (move == MOVE_DIVE)
+            category = DAMAGE_CATEGORY_PHYSICAL;
+        break;
+    }
+
+    return category;
+}
+
+bool32 IsMovePhysicalForBattler(u32 move, u32 battler)
+{
+    return GetMoveCategoryForBattler(move, battler) == DAMAGE_CATEGORY_PHYSICAL;
+}
 #include "constants/battle_script_commands.h"
 #include "constants/battle_string_ids.h"
 #include "constants/hold_effects.h"
@@ -5740,7 +5864,7 @@ u32 AbilityBattleEffects(u32 caseID, u32 battler, u32 ability, u32 special, u32 
             if (!(gMoveResultFlags & MOVE_RESULT_NO_EFFECT)
              && TARGET_TURN_DAMAGED
              && IsBattlerAlive(battler)
-             && IS_MOVE_PHYSICAL(gCurrentMove)
+             && IsMovePhysicalForBattler(gCurrentMove, gBattlerAttacker)
              && (CompareStat(battler, STAT_SPEED, MAX_STAT_STAGE, CMP_LESS_THAN) // Don't activate if both Speed and Defense cannot be raised.
                || CompareStat(battler, STAT_DEF, MIN_STAT_STAGE, CMP_GREATER_THAN)))
             {
@@ -6250,7 +6374,7 @@ u32 AbilityBattleEffects(u32 caseID, u32 battler, u32 ability, u32 special, u32 
             if (!(gMoveResultFlags & MOVE_RESULT_NO_EFFECT)
              && (!gBattleStruct->isSkyBattle)
              && !gProtectStructs[gBattlerAttacker].confusionSelfDmg
-             && IS_MOVE_PHYSICAL(gCurrentMove)
+             && IsMovePhysicalForBattler(gCurrentMove, gBattlerAttacker)
              && TARGET_TURN_DAMAGED
              && (gSideTimers[GetBattlerSide(gBattlerAttacker)].toxicSpikesAmount != 2))
             {
@@ -8363,7 +8487,7 @@ u32 ItemBattleEffects(enum ItemCaseId caseID, u32 battler, bool32 moveTurn)
                 if (IsBattlerAlive(battler)
                  && TARGET_TURN_DAMAGED
                  && !DoesSubstituteBlockMove(gBattlerAttacker, battler, gCurrentMove)
-                 && IS_MOVE_PHYSICAL(gCurrentMove)
+                 && IsMovePhysicalForBattler(gCurrentMove, gBattlerAttacker)
                  && GetBattlerAbility(gBattlerAttacker) != ABILITY_MAGIC_GUARD)
                 {
                     gBattleMoveDamage = GetNonDynamaxMaxHP(gBattlerAttacker) / 8;
@@ -8383,7 +8507,7 @@ u32 ItemBattleEffects(enum ItemCaseId caseID, u32 battler, bool32 moveTurn)
                 if (IsBattlerAlive(battler)
                  && TARGET_TURN_DAMAGED
                  && !DoesSubstituteBlockMove(gBattlerAttacker, battler, gCurrentMove)
-                 && IS_MOVE_SPECIAL(gCurrentMove)
+                 && !IsMovePhysicalForBattler(gCurrentMove, gBattlerAttacker)
                  && GetBattlerAbility(gBattlerAttacker) != ABILITY_MAGIC_GUARD)
                 {
                     gBattleMoveDamage = GetNonDynamaxMaxHP(gBattlerAttacker) / 8;
@@ -9378,6 +9502,7 @@ static inline u32 CalcMoveBasePowerAfterModifiers(struct DamageCalculationData *
     u32 move = damageCalcData->move;
     u32 moveType = damageCalcData->moveType;
     u32 moveEffect = gMovesInfo[move].effect;
+    bool32 isPhysical = IsMovePhysicalForBattler(move, battlerAtk);
 
     uq4_12_t holdEffectModifier;
     uq4_12_t modifier = UQ_4_12(1.0);
@@ -9452,11 +9577,11 @@ static inline u32 CalcMoveBasePowerAfterModifiers(struct DamageCalculationData *
            modifier = uq4_12_multiply(modifier, UQ_4_12(1.5));
         break;
     case ABILITY_FLARE_BOOST:
-        if (gBattleMons[battlerAtk].status1 & STATUS1_BURN && IS_MOVE_SPECIAL(move))
+        if (gBattleMons[battlerAtk].status1 & STATUS1_BURN && !isPhysical)
            modifier = uq4_12_multiply(modifier, UQ_4_12(1.5));
         break;
     case ABILITY_TOXIC_BOOST:
-        if (gBattleMons[battlerAtk].status1 & STATUS1_PSN_ANY && IS_MOVE_PHYSICAL(move))
+        if (gBattleMons[battlerAtk].status1 & STATUS1_PSN_ANY && isPhysical)
            modifier = uq4_12_multiply(modifier, UQ_4_12(1.5));
         break;
     case ABILITY_RECKLESS:
@@ -9559,7 +9684,7 @@ static inline u32 CalcMoveBasePowerAfterModifiers(struct DamageCalculationData *
         switch (GetBattlerAbility(BATTLE_PARTNER(battlerAtk)))
         {
         case ABILITY_BATTERY:
-            if (IS_MOVE_SPECIAL(move))
+            if (!isPhysical)
                 modifier = uq4_12_multiply(modifier, UQ_4_12(1.3));
             break;
         case ABILITY_POWER_SPOT:
@@ -9592,7 +9717,7 @@ static inline u32 CalcMoveBasePowerAfterModifiers(struct DamageCalculationData *
         {
             u8 defHighestStat = GetHighestStatId(battlerDef);
             if (((weather & B_WEATHER_SUN && WEATHER_HAS_EFFECT) || gBattleStruct->boosterEnergyActivates & (1u << battlerDef))
-             && ((IS_MOVE_PHYSICAL(move) && defHighestStat == STAT_DEF) || (IS_MOVE_SPECIAL(move) && defHighestStat == STAT_SPDEF))
+             && ((isPhysical && defHighestStat == STAT_DEF) || (!isPhysical && defHighestStat == STAT_SPDEF))
              && !(gBattleMons[battlerDef].status2 & STATUS2_TRANSFORMED))
                 modifier = uq4_12_multiply(modifier, UQ_4_12(0.7));
         }
@@ -9601,7 +9726,7 @@ static inline u32 CalcMoveBasePowerAfterModifiers(struct DamageCalculationData *
         {
             u8 defHighestStat = GetHighestStatId(battlerDef);
             if ((gFieldStatuses & STATUS_FIELD_ELECTRIC_TERRAIN || gBattleStruct->boosterEnergyActivates & (1u << battlerDef))
-             && ((IS_MOVE_PHYSICAL(move) && defHighestStat == STAT_DEF) || (IS_MOVE_SPECIAL(move) && defHighestStat == STAT_SPDEF))
+             && ((isPhysical && defHighestStat == STAT_DEF) || (!isPhysical && defHighestStat == STAT_SPDEF))
              && !(gBattleMons[battlerDef].status2 & STATUS2_TRANSFORMED))
                 modifier = uq4_12_multiply(modifier, UQ_4_12(0.7));
         }
@@ -9618,11 +9743,11 @@ static inline u32 CalcMoveBasePowerAfterModifiers(struct DamageCalculationData *
     switch (holdEffectAtk)
     {
     case HOLD_EFFECT_MUSCLE_BAND:
-        if (IS_MOVE_PHYSICAL(move))
+        if (isPhysical)
             modifier = uq4_12_multiply(modifier, holdEffectModifier);
         break;
     case HOLD_EFFECT_WISE_GLASSES:
-        if (IS_MOVE_SPECIAL(move))
+        if (!isPhysical)
             modifier = uq4_12_multiply(modifier, holdEffectModifier);
         break;
     case HOLD_EFFECT_LUSTROUS_ORB:
@@ -9640,7 +9765,7 @@ static inline u32 CalcMoveBasePowerAfterModifiers(struct DamageCalculationData *
     case HOLD_EFFECT_SOUL_DEW:
         if ((gBattleMons[battlerAtk].species == SPECIES_LATIAS || gBattleMons[battlerAtk].species == SPECIES_LATIOS)
             && ((B_SOUL_DEW_BOOST >= GEN_7 && (moveType == TYPE_PSYCHIC || moveType == TYPE_DRAGON))
-             || (B_SOUL_DEW_BOOST < GEN_7 && !(gBattleTypeFlags & BATTLE_TYPE_FRONTIER) && IS_MOVE_SPECIAL(move))))
+             || (B_SOUL_DEW_BOOST < GEN_7 && !(gBattleTypeFlags & BATTLE_TYPE_FRONTIER) && !isPhysical)))
             modifier = uq4_12_multiply(modifier, holdEffectModifier);
         break;
     case HOLD_EFFECT_BUG_POWER:
@@ -9713,12 +9838,13 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
     u32 battlerDef = damageCalcData->battlerDef;
     u32 move = damageCalcData->move;
     u32 moveType = damageCalcData->moveType;
+    bool32 isPhysical = IsMovePhysicalForBattler(move, battlerAtk);
 
     atkBaseSpeciesId = GET_BASE_SPECIES_ID(gBattleMons[battlerAtk].species);
 
     if (gMovesInfo[move].effect == EFFECT_FOUL_PLAY)
     {
-        if (IS_MOVE_PHYSICAL(move))
+        if (isPhysical)
         {
             atkStat = gBattleMons[battlerDef].attack;
             atkStage = gBattleMons[battlerDef].statStages[STAT_ATK];
@@ -9731,7 +9857,7 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
     }
     else if (gMovesInfo[move].effect == EFFECT_BODY_PRESS)
     {
-        if (IS_MOVE_PHYSICAL(move))
+        if (isPhysical)
         {
             atkStat = gBattleMons[battlerAtk].defense;
             // Edge case: Body Press used during Wonder Room. For some reason, it still uses Defense over Sp.Def, but uses Sp.Def stat changes
@@ -9748,7 +9874,7 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
     }
     else
     {
-        if (IS_MOVE_PHYSICAL(move))
+        if (isPhysical)
         {
             atkStat = gBattleMons[battlerAtk].attack;
             atkStage = gBattleMons[battlerAtk].statStages[STAT_ATK];
@@ -9778,7 +9904,7 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
     {
     case ABILITY_HUGE_POWER:
     case ABILITY_PURE_POWER:
-        if (IS_MOVE_PHYSICAL(move))
+        if (isPhysical)
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(2.0));
         break;
     case ABILITY_SLOW_START:
@@ -9786,7 +9912,7 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(0.5));
         break;
     case ABILITY_SOLAR_POWER:
-        if (IS_MOVE_SPECIAL(move) && IsBattlerWeatherAffected(battlerAtk, B_WEATHER_SUN))
+        if (!isPhysical && IsBattlerWeatherAffected(battlerAtk, B_WEATHER_SUN))
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.5));
         break;
     case ABILITY_DEFEATIST:
@@ -9814,7 +9940,7 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.5));
         break;
     case ABILITY_PLUS:
-        if (IS_MOVE_SPECIAL(move) && IsBattlerAlive(BATTLE_PARTNER(battlerAtk)))
+        if (!isPhysical && IsBattlerAlive(BATTLE_PARTNER(battlerAtk)))
         {
             u32 partnerAbility = GetBattlerAbility(BATTLE_PARTNER(battlerAtk));
             if (partnerAbility == ABILITY_MINUS
@@ -9823,7 +9949,7 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
         }
         break;
     case ABILITY_MINUS:
-        if (IS_MOVE_SPECIAL(move) && IsBattlerAlive(BATTLE_PARTNER(battlerAtk)))
+        if (!isPhysical && IsBattlerAlive(BATTLE_PARTNER(battlerAtk)))
         {
             u32 partnerAbility = GetBattlerAbility(BATTLE_PARTNER(battlerAtk));
             if (partnerAbility == ABILITY_PLUS
@@ -9832,11 +9958,11 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
         }
         break;
     case ABILITY_FLOWER_GIFT:
-        if (gBattleMons[battlerAtk].species == SPECIES_CHERRIM_SUNSHINE && IsBattlerWeatherAffected(battlerAtk, B_WEATHER_SUN) && IS_MOVE_PHYSICAL(move))
+        if (gBattleMons[battlerAtk].species == SPECIES_CHERRIM_SUNSHINE && IsBattlerWeatherAffected(battlerAtk, B_WEATHER_SUN) && isPhysical)
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.5));
         break;
     case ABILITY_HUSTLE:
-        if (IS_MOVE_PHYSICAL(move))
+        if (isPhysical)
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.5));
         break;
     case ABILITY_STAKEOUT:
@@ -9844,7 +9970,7 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(2.0));
         break;
     case ABILITY_GUTS:
-        if (gBattleMons[battlerAtk].status1 & STATUS1_ANY && IS_MOVE_PHYSICAL(move))
+        if (gBattleMons[battlerAtk].status1 & STATUS1_ANY && isPhysical)
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.5));
         break;
     case ABILITY_TRANSISTOR:
@@ -9861,7 +9987,7 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
             modifier = uq4_12_multiply(modifier, UQ_4_12(1.5));
         break;
     case ABILITY_GORILLA_TACTICS:
-        if (IS_MOVE_PHYSICAL(move))
+        if (isPhysical)
             modifier = uq4_12_multiply(modifier, UQ_4_12(1.5));
         break;
     case ABILITY_ROCKY_PAYLOAD:
@@ -9874,7 +10000,7 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
             u32 atkHighestStat = GetHighestStatId(battlerAtk);
             if (((weather & B_WEATHER_SUN) && WEATHER_HAS_EFFECT) || gBattleStruct->boosterEnergyActivates & (1u << battlerAtk))
             {
-                if ((IS_MOVE_PHYSICAL(move) && atkHighestStat == STAT_ATK) || (IS_MOVE_SPECIAL(move) && atkHighestStat == STAT_SPATK))
+                if ((isPhysical && atkHighestStat == STAT_ATK) || (!isPhysical && atkHighestStat == STAT_SPATK))
                     modifier = uq4_12_multiply(modifier, UQ_4_12(1.3));
             }
         }
@@ -9885,17 +10011,17 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
             u32 atkHighestStat = GetHighestStatId(battlerAtk);
             if (gFieldStatuses & STATUS_FIELD_ELECTRIC_TERRAIN || gBattleStruct->boosterEnergyActivates & (1u << battlerAtk))
             {
-                if ((IS_MOVE_PHYSICAL(move) && atkHighestStat == STAT_ATK) || (IS_MOVE_SPECIAL(move) && atkHighestStat == STAT_SPATK))
+                if ((isPhysical && atkHighestStat == STAT_ATK) || (!isPhysical && atkHighestStat == STAT_SPATK))
                     modifier = uq4_12_multiply(modifier, UQ_4_12(1.3));
             }
         }
         break;
     case ABILITY_ORICHALCUM_PULSE:
-        if ((weather & B_WEATHER_SUN) && WEATHER_HAS_EFFECT && IS_MOVE_PHYSICAL(move))
+        if ((weather & B_WEATHER_SUN) && WEATHER_HAS_EFFECT && isPhysical)
            modifier = uq4_12_multiply(modifier, UQ_4_12(1.33));
         break;
     case ABILITY_HADRON_ENGINE:
-        if (gFieldStatuses & STATUS_FIELD_ELECTRIC_TERRAIN && IS_MOVE_SPECIAL(move))
+        if (gFieldStatuses & STATUS_FIELD_ELECTRIC_TERRAIN && !isPhysical)
            modifier = uq4_12_multiply(modifier, UQ_4_12(1.33));
         break;
     }
@@ -9919,49 +10045,49 @@ static inline u32 CalcAttackStat(struct DamageCalculationData *damageCalcData, u
         switch (GetBattlerAbility(BATTLE_PARTNER(battlerAtk)))
         {
         case ABILITY_FLOWER_GIFT:
-            if (gBattleMons[BATTLE_PARTNER(battlerAtk)].species == SPECIES_CHERRIM_SUNSHINE && IsBattlerWeatherAffected(BATTLE_PARTNER(battlerAtk), B_WEATHER_SUN) && IS_MOVE_PHYSICAL(move))
+            if (gBattleMons[BATTLE_PARTNER(battlerAtk)].species == SPECIES_CHERRIM_SUNSHINE && IsBattlerWeatherAffected(BATTLE_PARTNER(battlerAtk), B_WEATHER_SUN) && isPhysical)
                 modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.5));
             break;
         }
     }
 
     // field abilities
-    if (IsAbilityOnField(ABILITY_VESSEL_OF_RUIN) && atkAbility != ABILITY_VESSEL_OF_RUIN && IS_MOVE_SPECIAL(move))
+    if (IsAbilityOnField(ABILITY_VESSEL_OF_RUIN) && atkAbility != ABILITY_VESSEL_OF_RUIN && !isPhysical)
         modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(0.75));
 
-    if (IsAbilityOnField(ABILITY_TABLETS_OF_RUIN) && atkAbility != ABILITY_TABLETS_OF_RUIN && IS_MOVE_PHYSICAL(move))
+    if (IsAbilityOnField(ABILITY_TABLETS_OF_RUIN) && atkAbility != ABILITY_TABLETS_OF_RUIN && isPhysical)
         modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(0.75));
 
     // attacker's hold effect
     switch (holdEffectAtk)
     {
     case HOLD_EFFECT_THICK_CLUB:
-        if ((atkBaseSpeciesId == SPECIES_CUBONE || atkBaseSpeciesId == SPECIES_MAROWAK) && IS_MOVE_PHYSICAL(move))
+        if ((atkBaseSpeciesId == SPECIES_CUBONE || atkBaseSpeciesId == SPECIES_MAROWAK) && isPhysical)
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(2.0));
         break;
     case HOLD_EFFECT_DEEP_SEA_TOOTH:
-        if (gBattleMons[battlerAtk].species == SPECIES_CLAMPERL && IS_MOVE_SPECIAL(move))
+        if (gBattleMons[battlerAtk].species == SPECIES_CLAMPERL && !isPhysical)
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(2.0));
         break;
     case HOLD_EFFECT_LIGHT_BALL:
-        if (atkBaseSpeciesId == SPECIES_PIKACHU && (B_LIGHT_BALL_ATTACK_BOOST >= GEN_4 || IS_MOVE_SPECIAL(move)))
+        if (atkBaseSpeciesId == SPECIES_PIKACHU && (B_LIGHT_BALL_ATTACK_BOOST >= GEN_4 || !isPhysical))
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(2.0));
         break;
     case HOLD_EFFECT_CHOICE_BAND:
-        if (IS_MOVE_PHYSICAL(move) && GetActiveGimmick(battlerAtk) != GIMMICK_DYNAMAX)
+        if (isPhysical && GetActiveGimmick(battlerAtk) != GIMMICK_DYNAMAX)
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.5));
         break;
     case HOLD_EFFECT_CHOICE_SPECS:
-        if (IS_MOVE_SPECIAL(move) && GetActiveGimmick(battlerAtk) != GIMMICK_DYNAMAX)
+        if (!isPhysical && GetActiveGimmick(battlerAtk) != GIMMICK_DYNAMAX)
             modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.5));
         break;
     }
 
     // The offensive stats of a Player's Pokémon are boosted by x1.1 (+10%) if they have the 1st badge and 7th badges.
     // Having the 1st badge boosts physical attack while having the 7th badge boosts special attack.
-    if (ShouldGetStatBadgeBoost(FLAG_BADGE01_GET, battlerAtk) && IS_MOVE_PHYSICAL(move))
+    if (ShouldGetStatBadgeBoost(FLAG_BADGE01_GET, battlerAtk) && isPhysical)
         modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.1));
-    if (ShouldGetStatBadgeBoost(FLAG_BADGE07_GET, battlerAtk) && IS_MOVE_SPECIAL(move))
+    if (ShouldGetStatBadgeBoost(FLAG_BADGE07_GET, battlerAtk) && !isPhysical)
         modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.1));
 
     return uq4_12_multiply_by_int_half_down(modifier, atkStat);
@@ -9993,6 +10119,8 @@ static inline u32 CalcDefenseStat(struct DamageCalculationData *damageCalcData, 
     u32 battlerDef = damageCalcData->battlerDef;
     u32 move = damageCalcData->move;
     u32 moveType = damageCalcData->moveType;
+    u32 battlerAtk = damageCalcData->battlerAtk;
+    bool32 isPhysical = IsMovePhysicalForBattler(move, battlerAtk);
 
     if (gFieldStatuses & STATUS_FIELD_WONDER_ROOM) // the defense stats are swapped
     {
@@ -10005,7 +10133,7 @@ static inline u32 CalcDefenseStat(struct DamageCalculationData *damageCalcData, 
         spDef = gBattleMons[battlerDef].spDefense;
     }
 
-    if (gMovesInfo[move].effect == EFFECT_PSYSHOCK || IS_MOVE_PHYSICAL(move)) // uses defense stat instead of sp.def
+    if (gMovesInfo[move].effect == EFFECT_PSYSHOCK || isPhysical) // uses defense stat instead of sp.def
     {
         defStat = def;
         defStage = gBattleMons[battlerDef].statStages[STAT_DEF];
@@ -10131,9 +10259,9 @@ static inline u32 CalcDefenseStat(struct DamageCalculationData *damageCalcData, 
 
     // The defensive stats of a Player's Pokémon are boosted by x1.1 (+10%) if they have the 5th badge and 7th badges.
     // Having the 5th badge boosts physical defense while having the 7th badge boosts special defense.
-    if (ShouldGetStatBadgeBoost(FLAG_BADGE05_GET, battlerDef) && IS_MOVE_PHYSICAL(move))
+    if (ShouldGetStatBadgeBoost(FLAG_BADGE05_GET, battlerDef) && isPhysical)
         modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.1));
-    if (ShouldGetStatBadgeBoost(FLAG_BADGE07_GET, battlerDef) && IS_MOVE_SPECIAL(move))
+    if (ShouldGetStatBadgeBoost(FLAG_BADGE07_GET, battlerDef) && !isPhysical)
         modifier = uq4_12_multiply_half_down(modifier, UQ_4_12(1.1));
 
     return uq4_12_multiply_by_int_half_down(modifier, defStat);
@@ -10206,14 +10334,15 @@ static inline uq4_12_t GetBurnOrFrostBiteModifier(struct DamageCalculationData *
 {
     u32 battlerAtk = damageCalcData->battlerAtk;
     u32 move = damageCalcData->move;
+    bool32 isPhysical = IsMovePhysicalForBattler(move, battlerAtk);
 
     if (gBattleMons[battlerAtk].status1 & STATUS1_BURN
-        && IS_MOVE_PHYSICAL(move)
+        && isPhysical
         && (B_BURN_FACADE_DMG < GEN_6 || gMovesInfo[move].effect != EFFECT_FACADE)
         && abilityAtk != ABILITY_GUTS)
         return UQ_4_12(0.5);
     if (gBattleMons[battlerAtk].status1 & STATUS1_FROSTBITE
-        && IS_MOVE_SPECIAL(move)
+        && !isPhysical
         && (B_BURN_FACADE_DMG < GEN_6 || gMovesInfo[move].effect != EFFECT_FACADE))
         return UQ_4_12(0.5);
     return UQ_4_12(1.0);
@@ -10270,9 +10399,10 @@ static inline uq4_12_t GetAirborneModifier(u32 move, u32 battlerDef)
 
 static inline uq4_12_t GetScreensModifier(u32 move, u32 battlerAtk, u32 battlerDef, bool32 isCrit, u32 abilityAtk)
 {
+    bool32 isPhysical = IsMovePhysicalForBattler(move, battlerAtk);
     u32 sideStatus = gSideStatuses[GetBattlerSide(battlerDef)];
-    bool32 lightScreen = (sideStatus & SIDE_STATUS_LIGHTSCREEN) && IS_MOVE_SPECIAL(move);
-    bool32 reflect = (sideStatus & SIDE_STATUS_REFLECT) && IS_MOVE_PHYSICAL(move);
+    bool32 lightScreen = (sideStatus & SIDE_STATUS_LIGHTSCREEN) && !isPhysical;
+    bool32 reflect = (sideStatus & SIDE_STATUS_REFLECT) && isPhysical;
     bool32 auroraVeil = sideStatus & SIDE_STATUS_AURORA_VEIL;
 
     if (isCrit || abilityAtk == ABILITY_INFILTRATOR || gProtectStructs[battlerAtk].confusionSelfDmg)
@@ -10311,6 +10441,7 @@ static inline uq4_12_t GetAttackerAbilitiesModifier(u32 battlerAtk, uq4_12_t typ
 
 static inline uq4_12_t GetDefenderAbilitiesModifier(u32 move, u32 moveType, u32 battlerAtk, u32 battlerDef, uq4_12_t typeEffectivenessModifier, u32 abilityDef)
 {
+    bool32 isPhysical = IsMovePhysicalForBattler(move, battlerAtk);
     switch (abilityDef)
     {
     case ABILITY_MULTISCALE:
@@ -10335,11 +10466,11 @@ static inline uq4_12_t GetDefenderAbilitiesModifier(u32 move, u32 moveType, u32 
             return UQ_4_12(0.5);
         break;
     case ABILITY_ICE_SCALES:
-        if (IS_MOVE_SPECIAL(move))
+        if (!isPhysical)
             return UQ_4_12(0.5);
         break;
     case ABILITY_GALVANIZED:
-        if (IS_MOVE_PHYSICAL(move))
+        if (isPhysical)
             return UQ_4_12(0.7);
         break;
     }
