@@ -54,7 +54,7 @@
       "trainer_type": "TRAINER_TYPE_NONE",
       "trainer_sight_or_berry_tree_id": "ITEM_PP_MAX",
       "script": "Common_EventScript_FindItem",
-      "flag": "FLAG_UNUSED_0x472"
+      "flag": "FLAG_ITEM_FIVE_ISLE_MEADOW_PP_MAX"
     },
     {
       "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
@@ -67,7 +67,7 @@
       "trainer_type": "TRAINER_TYPE_NONE",
       "trainer_sight_or_berry_tree_id": "ITEM_MAX_ELIXIR",
       "script": "Common_EventScript_FindItem",
-      "flag": "FLAG_UNUSED_0x470"
+      "flag": "FLAG_ITEM_FIVE_ISLE_MEADOW_MAX_ELIXIR"
     },
     {
       "graphics_id": "OBJ_EVENT_GFX_AQUA_MEMBER_M",

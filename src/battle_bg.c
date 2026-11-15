@@ -777,18 +777,18 @@ static const u32 *GetTimeBasedBattlePalette(u8 terrain)
 
     switch (timelapse)
     {
-    case 1: // Dawn
+    case DNS_TIME_DAWN:
         time = 2;
         break;
-    case 2: // Day
+    case DNS_TIME_DAY:
         time = 0;
         break;
-    case 3: // Sunset
+    case DNS_TIME_SUNSET:
         time = 3;
         break;
-    case 4: // Nightfall
-    case 5: // Night
-    case 0: // Midnight
+    case DNS_TIME_NIGHTFALL:
+    case DNS_TIME_NIGHT:
+    case DNS_TIME_MIDNIGHT:
         time = 1;
         break;
     default:
@@ -1496,7 +1496,7 @@ bool8 LoadChosenBattleElement(u8 caseId)
             {
             default:
             case MAP_BATTLE_SCENE_NORMAL:
-                LoadCompressedPalette(sBattleTerrainTable[gBattleTerrain].palette, BG_PLTT_ID(2), 3 * PLTT_SIZE_4BPP);
+                LoadCompressedPalette(GetTimeBasedBattlePalette(gBattleTerrain), BG_PLTT_ID(2), 3 * PLTT_SIZE_4BPP);
                 break;
             case MAP_BATTLE_SCENE_GYM:
                 LoadCompressedPalette(gBattleTerrainPalette_BuildingGym, BG_PLTT_ID(2), 3 * PLTT_SIZE_4BPP);

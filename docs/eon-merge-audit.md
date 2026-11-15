@@ -194,11 +194,11 @@ actual prioriza que los entrenadores usen el efecto que Eon quería.
 - Falta probar que el menú de items, el registro, el guardado y el Exchange Corner manejen
   correctamente el nuevo ID.
 
-### 4.4 DNS y paletas de batalla: riesgo bajo-medio
+### 4.4 DNS y paletas de batalla: riesgo bajo
 
-- `DnsApplyFilters` está activo en overworld y batalla.
-- `LoadChosenBattleElement` todavía carga la paleta base en algunos flujos de entrada a
-  batalla; si se ejecuta después, puede sobrescribir la paleta horaria.
+- `DnsApplyFilters` ahora solo se ejecuta en overworld. En batalla se usa la transferencia
+  normal de paletas, que es lo que Eon hacía de todos modos (no aplicaba filtro en combate).
+- `LoadChosenBattleElement` ya usa `GetTimeBasedBattlePalette` en las dos rutas de carga.
 - `GetTimeBasedBattlePalette` no cubre terrenos nuevos de expansion; usa la paleta base.
 
 ### 4.5 Detalles menores
@@ -209,12 +209,11 @@ actual prioriza que los entrenadores usen el efecto que Eon quería.
   como strings muertos; no afectan.
 - `B_EON_EXP_ALL_MESSAGE` ya no existe; el mensaje de Eon es siempre el usado cuando Exp. All
   está activo.
-- `I_EXP_SHARE_FLAG 0x494` está hardcodeado en config; es el antiguo “Unused Flag”.
-- Los scripts de item balls de Eon se portaron tal cual. Varias etiquetas no coinciden con el
-  item que entregan (por ejemplo, `NewMauville_Inside_EventScript_ItemUltraBall` da Water
-  Stone y `AbandonedShip_Rooms2_1F_EventScript_ItemRevive` da TM Flamethrower) y algunos
-  eventos de FieryPath/RusturfTunnel/ShoalCave reutilizan flags de New Mauville. Es un
-  problema de datos preexistente de Eon; no impide compilar.
+- `I_EXP_SHARE_FLAG` usa el valor de `FLAG_EXP_SHARE` (0x494), ahora documentado en
+  `include/constants/flags.h`.
+- Los item balls duplicados de Eon se normalizaron: FieryPath, ShoalCave y Slateport usan
+  `Common_EventScript_FindItem` con flags propias, y RusturfTunnel usa un item ball de Revive.
+  Se eliminaron los 165 scripts de item balls de Eon que quedaron sin uso.
 
 ## 5. Decisiones que considero correctas
 
@@ -250,6 +249,63 @@ actual prioriza que los entrenadores usen el efecto que Eon quería.
 - Compilación completa con `make -j12` (modern); se generó un ROM de 32 MB.
 - Segunda pasada de `make -j12` sin errores.
 - Correcciones de build: TM Endure/Exp. All, CRLF en `.party`/`.s`, clases de facility,
-  heal locations, conflicto DNS `TIME_*`, campo de graphics info, textos del Exchange Corner
-  y item balls de Eon.
+  heal locations, conflicto DNS `TIME_*`, campo de graphics info y textos del Exchange Corner.
+- Limpieza posterior: mapa duplicado de Cerulean Cave, item balls/flags duplicados, scripts de
+  item balls sin uso y ruta de DNS en batalla.
 - No se ejecutó el ROM ni se hicieron pruebas runtime.
+
+## 8. Auditoría de duplicados y día/noche
+
+### 8.1 Mapas y eventos
+
+- Hay 573 mapas y 573 IDs únicos, con 496 layouts únicos.
+- Se eliminó `CeruleanCave_1F`, que duplicaba `MAP_CERULEAN_CAVE_1F` y no estaba referenciado
+  por `map_groups.json`. También se eliminó su layout huérfano y su `.include` de
+  `data/event_scripts.s`.
+- Los item balls duplicados de Eon se corrigieron:
+  - FieryPath, ShoalCave y Slateport usan `Common_EventScript_FindItem` con flags propias.
+  - RusturfTunnel usa un item ball de Revive con `FLAG_ITEM_RUSTURF_TUNNEL_REVIVE`.
+  - Se eliminaron los 165 scripts de item balls de Eon que ya no se usan.
+- Las flags `FLAG_UNUSED_0x470` y `FLAG_UNUSED_0x472` de Five Isle Meadow se renombraron a
+  `FLAG_ITEM_FIVE_ISLE_MEADOW_MAX_ELIXIR` y `FLAG_ITEM_FIVE_ISLE_MEADOW_PP_MAX`.
+
+### 8.2 Entrenadores y gráficos
+
+- `trainers.party` tiene 864 entrenadores y todos los IDs son únicos. Brock, Misty, Surge,
+  Erika, Koga, Sabrina, Blaine, Giovanni, Lorelei, Bruno, Agatha, Lance, Blue, Glacia y Drake
+  existen una sola vez como entrenadores normales.
+- Battle Frontier usa 300 slots. Hay 34 nombres repetidos dos veces con el mismo `monSet`
+  (por ejemplo, `FRONTIER_TRAINER_JORDAN` y `FRONTIER_TRAINER_ARMANDO` son Brock). Son slots
+  distintos, no IDs duplicados, pero sí contenido repetido. Se pueden deduplicar si se quiere
+  que cada líder aparezca una sola vez.
+- No hay funciones globales duplicadas; el linker las rechazaría. Tampoco hay object graphics
+  ni trainer pics con el mismo nombre.
+
+### 8.3 Día y noche
+
+- Expansion ya tiene un sistema nativo de hora: `GetTimeOfDay`, `OW_TIMES_OF_DAY` y los
+  rangos de `include/rtc.h`. Ese sistema controla evoluciones, encuentros y otros checks de
+  gameplay, pero **no tiñe paletas**.
+- `dns.c` de Eon no duplica ese sistema: añade la capa visual (filtros de paleta, luces de
+  ventanas y paletas de batalla por hora). Son complementarios.
+- DNS usa 6 fases visuales (midnight, dawn, day, sunset, nightfall, night) y expansion usa 4
+  fases de gameplay (morning, day, evening, night). Se movió el enum de DNS a `dns.h` para que
+  `battle_bg.c` use nombres en vez de números.
+- Lo que se podría portar al sistema nativo: las tablas de filtros, la iluminación y las
+  paletas de batalla, usando `GetTimeOfDay` para la fase amplia y `gLocalTime.hours/minutes`
+  solo para las transiciones suaves. Unificarlo del todo obliga a elegir una sola frontera
+  horaria; no se hizo porque cambiaría el aspecto de Eon.
+
+### 8.4 Rendimiento de DNS
+
+- `DnsApplyFilters` ya no se ejecuta en batalla; allí se usa la transferencia normal de
+  paletas. Antes se recorrían 512 colores por frame para copiarlos sin filtrar.
+- Durante el día, cuando el filtro es 0 y no hay luces activas, tampoco se reconstruye el
+  buffer: se transfiere directamente `gPlttBufferFaded`.
+- Si el mapa es una excepción de DNS, `DnsApplyFilters` sale inmediatamente.
+- Se eliminaron `gCombatPalExceptions`, `IsCombat` y `DnsApplyFilterToColour`, que ya no se
+  usaban.
+- `LoadChosenBattleElement` ahora usa `GetTimeBasedBattlePalette` en ambas rutas de carga.
+- El log de mGBA con `Bad BIOS Load` y `Bad memory Load` viene del HLE/BIOS y del nivel de
+  log INFO; no es un error del ROM. Si vuelve a ir lento, poner el log de mGBA en `Fatal` o
+  desactivarlo y cargar un BIOS real evita el spam de mensajes.

@@ -213,6 +213,20 @@ or intentionally excluded:
   behavior to port; DNS palette filtering is wired in.
 - **`hns/master`:** not merged, per instruction.
 
+## Duplication cleanup
+
+- Removed the orphan `CeruleanCave_1F` map and layout, which duplicated
+  `MAP_CERULEAN_CAVE_1F` but was not in `map_groups.json`.
+- Normalized the duplicated Eon item-ball events: FieryPath, ShoalCave and Slateport now use
+  `Common_EventScript_FindItem` with unique flags, and RusturfTunnel has a Revive item ball.
+  The 165 unused Eon item-ball scripts were removed.
+- Renamed the remaining `FLAG_UNUSED_*` item flags in Five Isle Meadow.
+- DNS is a visual palette layer, not a duplicate of expansion's time-of-day gameplay. The DNS
+  phase enum now lives in `dns.h`, battle backgrounds use named phases, and the DNS battle
+  path (which only copied palettes without filtering) was removed.
+- No duplicate global functions, object graphics or trainer pics were found. Trainer IDs are
+  unique; some Battle Frontier leader slots share display names and `monSet`s on purpose.
+
 ## Build and validation
 
 ```text

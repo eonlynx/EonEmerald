@@ -4,6 +4,17 @@
 #define DNS_PAL_EXCEPTION   FALSE
 #define DNS_PAL_ACTIVE      TRUE
 
+/* Visual time phases used by the DNS palette filters. */
+enum DnsTimeLapse
+{
+    DNS_TIME_MIDNIGHT,
+    DNS_TIME_DAWN,
+    DNS_TIME_DAY,
+    DNS_TIME_SUNSET,
+    DNS_TIME_NIGHTFALL,
+    DNS_TIME_NIGHT
+};
+
 /* End hours for each of the timelapses */
 #define MIDNIGHT_END_HOUR   7       //00 - 07
 #define DAWN_END_HOUR       8       //07 - 08

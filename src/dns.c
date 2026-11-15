@@ -23,16 +23,7 @@
  * options, to understand how the dns works.            *
  * ******************************************************/
  
-/* Timelapses */
-enum
-{
-    DNS_TIME_MIDNIGHT,
-    DNS_TIME_DAWN,
-    DNS_TIME_DAY,
-    DNS_TIME_SUNSET,
-    DNS_TIME_NIGHTFALL,
-    DNS_TIME_NIGHT
-};
+/* Timelapses are defined in dns.h so battle backgrounds use the same phases. */
 
 /* End hours for each of the timelapses */
 #define MIDNIGHT_END_HOUR   7       //00 - 07
@@ -154,46 +145,6 @@ const struct DnsPalExceptions gOWPalExceptions =
         DNS_PAL_ACTIVE,     //29
         DNS_PAL_ACTIVE,     //30
         DNS_PAL_ACTIVE,     //31
-    }
-};
-
-/* Configure each palette slot to be affected or not by DNS *
- * while in combat.                                         */
-const struct DnsPalExceptions gCombatPalExceptions =  
-{
-    .pal = {
-        DNS_PAL_EXCEPTION,  //0
-        DNS_PAL_EXCEPTION,  //1
-        DNS_PAL_ACTIVE,     //2
-        DNS_PAL_ACTIVE,     //3
-        DNS_PAL_ACTIVE,     //4
-        DNS_PAL_EXCEPTION,  //5
-        DNS_PAL_ACTIVE,     //6
-        DNS_PAL_ACTIVE,     //7
-        DNS_PAL_ACTIVE,     //8
-        DNS_PAL_ACTIVE,     //9
-        DNS_PAL_ACTIVE,     //10
-        DNS_PAL_ACTIVE,     //11
-        DNS_PAL_ACTIVE,     //12
-        DNS_PAL_ACTIVE,     //13
-        DNS_PAL_ACTIVE,     //14
-        DNS_PAL_ACTIVE,     //15
-        DNS_PAL_EXCEPTION,  //16
-        DNS_PAL_EXCEPTION,  //17
-        DNS_PAL_EXCEPTION,  //18
-        DNS_PAL_EXCEPTION,  //19
-        DNS_PAL_EXCEPTION,  //20
-        DNS_PAL_EXCEPTION,  //21
-        DNS_PAL_EXCEPTION,  //22
-        DNS_PAL_EXCEPTION,  //23
-        DNS_PAL_EXCEPTION,  //24
-        DNS_PAL_EXCEPTION,  //25
-        DNS_PAL_EXCEPTION,  //26
-        DNS_PAL_EXCEPTION,  //27
-        DNS_PAL_EXCEPTION,  //28
-        DNS_PAL_EXCEPTION,  //29
-        DNS_PAL_EXCEPTION,  //30
-        DNS_PAL_EXCEPTION,  //31
     }
 };
 
@@ -375,18 +326,17 @@ const u16 gPaletteTagExceptions[] =
 
 
 //Functions
-static u16 DnsApplyFilterToColour(u16 colour, u16 filter);
 static u16 DnsApplyProportionalFilterToColour(u16 colour, u16 filter);
 static void DoDnsLightning();
 static u16 GetDNSFilter();
 static bool8 IsMapDNSException();
 static bool8 IsSpritePaletteTagDnsException(u8 palNum);
 static bool8 IsOverworld();
-static bool8 IsCombat();
 static bool8 IsLightActive();
 
 //Dns palette buffer in EWRAM
 ALIGNED(4) EWRAM_DATA static u16 sDnsPaletteDmaBuffer[512] = {0};
+static bool8 sDnsPaletteActive = FALSE;
 
 
 /* **************************************************** *
@@ -400,7 +350,7 @@ ALIGNED(4) EWRAM_DATA static u16 sDnsPaletteDmaBuffer[512] = {0};
 //Called from TransferPlttBuffer
 void DnsTransferPlttBuffer(void *src, void *dest)
 {
-    if ((IsOverworld() || IsCombat()) && !IsMapDNSException()) 
+    if (IsOverworld() && !IsMapDNSException() && sDnsPaletteActive)
     {
         DmaCopy16(3, sDnsPaletteDmaBuffer, dest, PLTT_SIZE);
     }
@@ -416,22 +366,25 @@ void DnsTransferPlttBuffer(void *src, void *dest)
 void DnsApplyFilters(void)
 {
     u8 palNum, colNum;
-    u16 colour, rgbFilter;
+    u16 rgbFilter;
     struct DnsPalExceptions palExceptionFlags;
 
+    // DNS is an overworld visual effect. Battle palettes are loaded directly.
+    if (gMain.inBattle || IsMapDNSException())
+        return;
+
     rgbFilter = GetDNSFilter();
-    palExceptionFlags = gMain.inBattle ? gCombatPalExceptions : gOWPalExceptions;
+    if (rgbFilter == 0 && !IsLightActive())
+    {
+        sDnsPaletteActive = FALSE;
+        return;
+    }
+    sDnsPaletteActive = TRUE;
+    palExceptionFlags = gOWPalExceptions;
 
     for (palNum = 0; palNum < 32; palNum++)
     {
-        // If we are in battle, we want to bypass the filter math but STILL copy the data
-        if (gMain.inBattle)
-        {
-            for (colNum = 0; colNum < 16; colNum++)
-                sDnsPaletteDmaBuffer[palNum * 16 + colNum] = gPlttBufferFaded[palNum * 16 + colNum];
-        }
-        // Otherwise, use the standard Overworld logic
-        else if (palExceptionFlags.pal[palNum] && (palNum < 15 || !IsSpritePaletteTagDnsException(palNum - 16)))
+        if (palExceptionFlags.pal[palNum] && (palNum < 15 || !IsSpritePaletteTagDnsException(palNum - 16)))
         {
             for (colNum = 0; colNum < 16; colNum++)
                 sDnsPaletteDmaBuffer[palNum * 16 + colNum] = DnsApplyProportionalFilterToColour(gPlttBufferFaded[palNum * 16 + colNum], rgbFilter);
@@ -443,21 +396,8 @@ void DnsApplyFilters(void)
         }
     }
 
-    if (!IsMapDNSException() && IsLightActive() && !gMain.inBattle)
+    if (IsLightActive())
         DoDnsLightning();
-}
-
-//Applies filter to a colour. Filters RGB channels are substracted from colour RGB channels.
-//Based on Andrea's DNS filtering system 
-static u16 DnsApplyFilterToColour(u16 colour, u16 filter)
-{
-    u16 red, green, blue;
-
-    red = (colour & 0x1F) - (filter & 0x1F);
-    green = ((colour & 0x3E0) - (filter & 0x3E0)) >> 5;
-    blue = ((colour & 0x7C00) - (filter & 0x7C00)) >> 10;
-
-    return RGB2(red <= 31 ? red : 0, green <= 31 ? green : 0, blue <= 31 ? blue : 0);
 }
 
 /*Alternative way to apply filter. Works similar to the first one, but colours are substracted PROPORTIONALLY.
@@ -569,15 +509,6 @@ static bool8 IsSpritePaletteTagDnsException(u8 palNum)
 static bool8 IsOverworld()
 {
     if (gMain.callback2 == CB2_Overworld || gMain.callback2 ==CB2_OverworldBasic)
-        return TRUE;
-    else
-        return FALSE;
-}
-
-//Returns true if combat is running
-static bool8 IsCombat()
-{
-    if (gMain.callback2 == BattleMainCB2)
         return TRUE;
     else
         return FALSE;

@@ -1230,8 +1230,6 @@ EventScript_VsSeekerChargingDone::
 	.include "data/text/save.inc"
 	.include "data/text/birch_speech.inc"
 
-	.include "data/maps/CeruleanCave_1F/scripts.inc"
-
 	.include "data/maps/Cerulean_Cave_1F/scripts.inc"
 
 	.include "data/maps/Cerulean_Cave_B1F/scripts.inc"
