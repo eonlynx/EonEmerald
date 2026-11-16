@@ -39,7 +39,7 @@
 #include "constants/characters.h"
 #include "string_util.h"
 
-#if !defined(NDEBUG) || EON_DEBUG_MEMORY_LOG
+#ifndef NDEBUG
 
 struct mini_buff
 {

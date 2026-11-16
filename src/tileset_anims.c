@@ -6,7 +6,6 @@
 #include "task.h"
 #include "battle_transition.h"
 #include "fieldmap.h"
-#include "eon_debug.h"
 
 static EWRAM_DATA struct {
     const u16 *src;
@@ -561,17 +560,6 @@ static void AppendTilesetAnimToBuffer(const u16 *src, u16 *dest, u16 size)
         sTilesetDMA3TransferBuffer[sTilesetDMA3TransferBufferSize].src = src;
         sTilesetDMA3TransferBuffer[sTilesetDMA3TransferBufferSize].dest = dest;
         sTilesetDMA3TransferBuffer[sTilesetDMA3TransferBufferSize].size = size;
-
-        if (!EonIsValidPointer(src) || !EonIsValidPointer(dest) || size == 0 || size > 0x4000)
-        {
-            EonLog("TILESETANIM APPEND BAD idx=%u src=%08X dst=%08X size=%u lr=%08X",
-                   sTilesetDMA3TransferBufferSize,
-                   (u32)src,
-                   (u32)dest,
-                   size,
-                   (u32)__builtin_return_address(0));
-        }
-
         sTilesetDMA3TransferBufferSize ++;
     }
 }
@@ -581,23 +569,7 @@ void TransferTilesetAnimsBuffer(void)
     int i;
 
     for (i = 0; i < sTilesetDMA3TransferBufferSize; i ++)
-    {
-        if (!EonIsValidPointer(sTilesetDMA3TransferBuffer[i].src)
-         || !EonIsValidPointer(sTilesetDMA3TransferBuffer[i].dest)
-         || sTilesetDMA3TransferBuffer[i].size == 0
-         || sTilesetDMA3TransferBuffer[i].size > 0x4000)
-        {
-            EonLog("TILESETANIM DMA BAD idx=%d src=%08X dst=%08X size=%u count=%u",
-                   i,
-                   (u32)sTilesetDMA3TransferBuffer[i].src,
-                   (u32)sTilesetDMA3TransferBuffer[i].dest,
-                   sTilesetDMA3TransferBuffer[i].size,
-                   sTilesetDMA3TransferBufferSize);
-            continue;
-        }
-
         DmaCopy16(3, sTilesetDMA3TransferBuffer[i].src, sTilesetDMA3TransferBuffer[i].dest, sTilesetDMA3TransferBuffer[i].size);
-    }
 
     sTilesetDMA3TransferBufferSize = 0;
 }

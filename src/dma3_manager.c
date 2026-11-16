@@ -1,6 +1,5 @@
 #include "global.h"
 #include "dma3.h"
-#include "eon_debug.h"
 
 #define MAX_DMA_REQUESTS 128
 
@@ -100,16 +99,6 @@ s16 RequestDma3Copy(const void *src, void *dest, u16 size, u32 mode)
 {
     int cursor;
     int i = 0;
-
-    if (!EonIsValidPointer(src) || !EonIsValidPointer(dest) || size == 0 || size > 0x4000)
-    {
-        EonLog("DMA3REQ BAD src=%08X dst=%08X size=%u mode=%u",
-               (u32)src,
-               (u32)dest,
-               size,
-               mode);
-        return -1;
-    }
 
     sDma3ManagerLocked = TRUE;
     cursor = sDma3RequestCursor;

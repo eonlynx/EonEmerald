@@ -18,7 +18,6 @@
 #include "task.h"
 #include "trig.h"
 #include "gpu_regs.h"
-#include "eon_debug.h"
 #include "field_camera.h"
 #include "overworld.h"
 
@@ -199,10 +198,7 @@ void StartWeather(void)
     if (!FuncIsActiveTask(Task_WeatherMain))
     {
         u8 index = AllocSpritePalette(PALTAG_WEATHER);
-        if (index >= 16)
-            EonLog("WEATHER PAL FULL tag=%04X", PALTAG_WEATHER);
-        else
-            CpuCopy32(gFogPalette, &gPlttBufferUnfaded[OBJ_PLTT_ID(index)], PLTT_SIZE_4BPP);
+        CpuCopy32(gFogPalette, &gPlttBufferUnfaded[OBJ_PLTT_ID(index)], PLTT_SIZE_4BPP);
 
         sPaletteColorMapTypes = sBasePaletteColorMapTypes;
 
@@ -850,12 +846,6 @@ void UpdateSpritePaletteWithWeather(u8 spritePaletteIndex, bool8 allowFog)
     u16 paletteIndex = 16 + spritePaletteIndex;
     u16 i;
 
-    if (spritePaletteIndex >= 16)
-    {
-        EonLog("WEATHER SPR PAL OOB index=%u", spritePaletteIndex);
-        return;
-    }
-
     switch (gWeatherPtr->palProcessingState)
     {
     case WEATHER_PAL_STATE_SCREEN_FADING_IN:
@@ -921,12 +911,9 @@ static bool8 UNUSED IsFirstFrameOfWeatherFadeIn(void)
 
 void LoadCustomWeatherSpritePalette(const u16 *palette)
 {
-    if (gWeatherPtr->weatherPicSpritePalIndex >= 16 // haven't allocated palette yet
-    && (gWeatherPtr->weatherPicSpritePalIndex = AllocSpritePalette(PALTAG_WEATHER_2)) >= 16)
-    {
-        EonLog("WEATHER PIC PAL FULL tag=%04X", PALTAG_WEATHER_2);
+    if (gWeatherPtr->weatherPicSpritePalIndex > 16 // haven't allocated palette yet
+    && (gWeatherPtr->weatherPicSpritePalIndex = AllocSpritePalette(PALTAG_WEATHER_2)) > 16)
         return;
-    }
     LoadPalette(palette, OBJ_PLTT_ID(gWeatherPtr->weatherPicSpritePalIndex), PLTT_SIZE_4BPP);
     UpdateSpritePaletteWithWeather(gWeatherPtr->weatherPicSpritePalIndex, TRUE);
 }

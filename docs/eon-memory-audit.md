@@ -1,53 +1,30 @@
-# Eon memory and save-layout audit (expansion 1.13.0)
+# Eon memory, save-layout and TallGrass audit
 
 Date: 2026-11-16
-Branch: `port/eon-features` (diagnostic build on top of `f533701fba`)
+Branch: `port/eon-features`
 
-## Build totals
+## Memory usage (expansion 1.13.0 build)
 
 | Region | Used | Capacity | Used % | Free |
 |---|---:|---:|---:|---:|
 | EWRAM | 228,960 B | 262,144 B | 87.34% | 33,184 B |
-| IWRAM | 28,705 B | 32,768 B | 87.60% | 4,063 B |
-| ROM | 25,171,244 B | 33,554,432 B | 75.02% | 8,383,188 B |
+| IWRAM | 28,685 B | 32,768 B | 87.54% | 4,083 B |
+| ROM | 25,169,120 B | 33,554,432 B | 75.01% | 8,385,312 B |
 
-## Largest EWRAM consumers
+Largest EWRAM consumers are `gHeap` (115,456 B), `gPokemonStorage`
+(34,272 B including 128 B ASLR padding), `sBackupMapData` (20,480 B) and
+`gSaveblock1` (15,696 B including 128 B ASLR padding).
 
-| Symbol | Bytes | Notes |
-|---|---:|---|
-| `gHeap` | 115,456 | Fixed `HEAP_SIZE` (0x1C300), shared with expansion |
-| `gPokemonStorage` | 34,272 | Includes 128 B ASLR padding |
-| `sBackupMapData` | 20,480 | 80x80 max map fits |
-| `gSaveblock1` | 15,696 | Includes 128 B ASLR padding |
-| `gSprites` | 4,420 | |
-| `gSaveDataBuffer` | 4,096 | Save sector buffer |
-| `gSaveblock2` | 4,012 | Includes 128 B ASLR padding |
-| `gScanlineEffectRegBuffers` | 3,840 | |
-| `sBattleRecords` | 2,656 | |
-| `sPlaceDecorationGraphicsDataBuffer` | 2,212 | |
-| `gLoadedSaveData` | 1,320 | |
-| `gBlockRecvBuffer` | 1,280 | |
-| `sDnsPaletteDmaBuffer` | 1,024 | Eon-only DNS buffer |
-| `gStringVar4` | 1,000 | |
-
-## Eon-specific deltas vs `expansion/1.13.0`
-
-The diff of RAM declarations between `expansion/1.13.0` and HEAD adds only:
-
-- `sDnsPaletteDmaBuffer[512]` (`u16`): 1,024 B
-- `sPlayerSelectHoldFrames`: 1 B
-- `gSysPcFromPokenav`: 1 B
-
-`registeredLongItem` reuses two existing filler bytes in `SaveBlock1`, so it does
-not grow the save block. `PokemonStorage::fusions`, the ASLR saveblock wrappers
-and `SaveBlock3` are already present in the expansion 1.13.0 baseline.
-
-Total Eon-only RAM delta: about **1.03 KB**, roughly **0.4% of EWRAM**.
+The Eon-specific RAM delta over the expansion 1.13.0 baseline is about 1 KB:
+`sDnsPaletteDmaBuffer[512]` (1,024 B) plus two one-byte flags. `registeredLongItem`
+reuses two existing filler bytes in `SaveBlock1`, so it does not grow the block.
+The fusion storage, ASLR wrappers and `SaveBlock3` are already part of the
+expansion 1.13.0 baseline.
 
 ## Save sector layout
 
 `SECTOR_DATA_SIZE` is 3,968 B. The compile-time `STATIC_ASSERT`s in `src/save.c`
-guarantee that each block fits; the current spare space is:
+guarantee that every block fits.
 
 | Block | Size | Capacity | Spare |
 |---|---:|---:|---:|
@@ -56,101 +33,23 @@ guarantee that each block fits; the current spare space is:
 | `PokemonStorage` | 34,144 B | 35,712 B (9 sectors) | 1,568 B |
 | `SaveBlock3` | 4 B | 3,584 B | 3,580 B |
 
-No sector is missing space. The tightest block is `SaveBlock2` with 84 B free,
-so any new persistent field should be checked against that margin.
+No save sector was missing space. The tightest block is `SaveBlock2` with 84 B
+free, so any new persistent field must be checked against that margin.
 
-## DNS observations
+## TallGrass frame-table fix
 
-- DNS runs every frame from `OverworldBasic()` and rewrites the whole palette
-  copy (`32 palettes x 16 colours = 512 u16 = 1,024 B`).
-- `sDnsPaletteDmaBuffer` is exactly 1,024 B and is followed in EWRAM by
-  `sGame`; an off-by-one write would corrupt that pointer, but the loop bound is
-  currently correct (`palNum < 32`, `colNum < 16`).
-- There was a real out-of-bounds **read** in `DnsApplyFilters`: for `palNum == 15`
-  the old condition `palNum < 15` passed `255` to
-  `GetSpritePaletteTagByPaletteNum()`, which indexed `sSpritePaletteTags[16]`
-  out of bounds. This has been fixed to `palNum < 16` and the getter now
-  bounds-checks. This was a read only, so it is not sufficient by itself to
-  explain the `0x1200D617` write/read.
-- The value `0x1200` in the bad address is exactly `TAG_WEATHER_START`
-  (`include/field_weather.h`), used by weather graphics and object-event shadows.
-  This suggests a 16-bit tag/size overwriting the upper half of a 32-bit pointer
-  rather than ordinary RAM exhaustion.
+The overworld error was caused by a bad merge in
+`src/data/field_effects/field_effect_objects.h`:
 
-## Additional safeguards found during the audit
+- `sPicTable_TallGrass` had only four entries: frames `0, 1, 3, 4`.
+- The 96x16 `tall_grass.png` contains six frames, and `sAnim_TallGrass` uses
+  frames `1, 2, 3, 4, 5, 0`.
+- Frame index 5 read past the table into
+  `gFieldEffectObjectTemplate_ShadowExtraLarge`, interpreting `0x0842A7B0` as
+  the data pointer and `0xA7D0` (42,896) as the size.
+- That queued a 42 KB copy past the end of VRAM and corrupted memory, producing
+  the `0x1200...` invalid reads.
 
-- `StartWeather()` did not check `AllocSpritePalette(PALTAG_WEATHER)` for failure.
-  If all 16 sprite palette slots were busy it would use `0xFF` as a palette
-  number and write 32 bytes far past `gPlttBufferUnfaded` (inside
-  `gSaveDataBuffer`). The code now skips the copy and logs `WEATHER PAL FULL`.
-- `LoadCustomWeatherSpritePalette()` used `> 16` instead of `>= 16`; it now
-  rejects a failed allocation and logs `WEATHER PIC PAL FULL`.
-- `UpdateSpritePaletteWithWeather()` now rejects indices `>= 16` and logs
-  `WEATHER SPR PAL OOB`.
-- `LoadSpritePaletteInSlot()` now validates the palette data pointer.
-- The diagnostic build runs `CheckHeap()` every 64 frames and logs
-  `HEAP CHECK FAILED` if the allocator metadata is corrupted.
-
-These are real robustness fixes, but none of them writes a pointer value of
-`0x1200xxxx`; they do not fully explain the observed invalid read.
-
-## Root cause found: TallGrass frame table
-
-The readable diagnostic log showed:
-
-```text
-FRAMEIMG BAD request=0 index=5 tile=111 images=0842A6B0 src=0842A7B0 size=42896 rel=0
-SPRCPY BAD idx=0 src=0842A7B0 dst=06010DE0 size=42896 count=2
-```
-
-`0x0842A6B0` is `sPicTable_TallGrass`. The merged table had only four entries
-(frames 0, 1, 3, 4), but the animation and the 96x16 `tall_grass.png` use six
-frames (0-5). Frame index 5 read past the table into
-`gFieldEffectObjectTemplate_ShadowExtraLarge`, taking `0x0842A7B0` as the data
-pointer and `0xA7D0` (42,896) as the size. That queued a 42 KB copy past the end
-of VRAM, corrupting memory and producing the `0x1200...` bad reads.
-
-The table was restored to frames 0-5. The diagnostic build also rejects invalid
-sprite frame copies before queueing them, so a future table mismatch cannot
-execute the oversized copy.
-
-## Diagnostic build
-
-`include/config/general.h` currently sets `EON_DEBUG_MEMORY_LOG TRUE`. The logger
-writes to the mGBA debug console at **ERROR** level so it is visible even when
-the log view filters INFO, and is compiled out when the option is FALSE.
-At boot it prints `EONLOG READY diag=1` followed by `EONMEM ...`.
-
-The ROMs are `pokeemerald_diag.gba` (title `POKEMON DIAG`, game code `BPEE`,
-uses the normal save) and `pokeemerald_diag_clean.gba` (title `POKEMON NEW`,
-game code `BPED`, separate/clean save). Boot them from scratch; do not load a
-savestate made with an older ROM.
-
-Logs added:
-
-| Tag | Location | Meaning |
-|---|---|---|
-| `EONMEM` | `src/main.c` | Struct sizes and save-sector spare at boot |
-| `CORE PTRS` | `src/main.c` | Save/palette pointers became invalid |
-| `SHEET BAD` | `src/sprite.c` | Invalid `SpriteSheet` pointer/size |
-| `FRAMEIMG BAD` | `src/sprite.c` | Invalid sprite frame image pointer |
-| `SPRCPY BAD` / `SPRREQ BAD` | `src/sprite.c` | Invalid queued sprite copy |
-| `PAL BAD` / `PALF BAD` | `src/palette.c` | Invalid palette source/range |
-| `SPAL BAD` | `src/sprite.c` | Invalid `SpritePalette` |
-| `PALTAG OOB` | `src/sprite.c` | Palette-number out-of-bounds access |
-| `GFXINFO BAD` / `OBJGFX BAD` | `src/event_object_movement.c` | Invalid object graphics info/images |
-| `SPECIES OOB` | `src/event_object_movement.c` | Invalid follower species |
-| `CSHEET BAD` / `CTEMPL BAD` | `src/decompress.c` | Invalid compressed sprite source |
-| `DNSXFER BAD` / `DNSFILT BAD` | `src/dns.c` | Invalid DNS palette pointer |
-| `TILESETANIM DMA BAD` | `src/tileset_anims.c` | Invalid animated-tileset DMA source |
-| `DMA3REQ BAD` | `src/dma3_manager.c` | Invalid queued DMA3 source |
-| `DMA BAD` | `include/gba/macro.h` | Any invalid `DmaCopy16/32` source or destination |
-| `CPUCOPY BAD` | `include/gba/macro.h` | Any invalid `CpuCopy16/32` source or destination |
-
-The diagnostic ROM is `pokeemerald_diag.gba`. Reproduce the error and collect
-the last `[EON]`/`EON... BAD` line before the first `Bad memory Load16`.
-
-If no `EONLOG READY` appears, mGBA is not showing the GBA debug console: open
-`Tools > View Logs`, set the level to Debug/All, and make sure the `GBA Debug`
-category is enabled. Also make sure the title bar reads `POKEMON DIAG` and that
-the game was booted normally, not resumed from an older savestate.
+The table now contains all six frames (`0-5`), matching the graphic and the
+animation. The temporary diagnostic logger and pointer checks used to locate
+the bug have been removed.

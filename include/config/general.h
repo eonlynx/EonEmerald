@@ -12,10 +12,6 @@
 // the various AGBPrint functions to be used. (See include/gba/isagbprint.h).
 // See below for enabling different pretty printing versions.
 
-// Eon-only temporary diagnostic logger. Prints invalid pointer/size values
-// to the mGBA debug console without enabling the whole assert/printf system.
-#define EON_DEBUG_MEMORY_LOG TRUE
-
 #ifndef NDEBUG
 
 #define PRETTY_PRINT_MINI_PRINTF (0)

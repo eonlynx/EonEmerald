@@ -25,10 +25,6 @@
 #include "trainer_hill.h"
 #include "test_runner.h"
 #include "constants/rgb.h"
-#include "pokemon_storage_system.h"
-#include "save.h"
-#include "eon_debug.h"
-#include "palette.h"
 
 static void VBlankIntr(void);
 static void HBlankIntr(void);
@@ -121,14 +117,6 @@ void AgbMain(void)
     SetDefaultFontsPointer();
     InitHeap(gHeap, HEAP_SIZE);
 
-    EonLog("EONLOG READY diag=1");
-    EonLog("EONMEM heap=%u SB2=%u/%u SB1=%u/%u PS=%u/%u SB3=%u",
-           HEAP_SIZE,
-           sizeof(struct SaveBlock2), SECTOR_DATA_SIZE - sizeof(struct SaveBlock2),
-           sizeof(struct SaveBlock1), SECTOR_DATA_SIZE * 4 - sizeof(struct SaveBlock1),
-           sizeof(struct PokemonStorage), SECTOR_DATA_SIZE * 9 - sizeof(struct PokemonStorage),
-           sizeof(struct SaveBlock3));
-
     gSoftResetDisabled = FALSE;
 
     if (gFlashMemoryPresent != TRUE)
@@ -149,36 +137,8 @@ void AgbMain(void)
 
 void AgbMainLoop(void)
 {
-    static u32 sLastBadPointers = 0;
-    static u32 sHeapCheckCounter = 0;
-    u32 badPointers;
-
     for (;;)
     {
-        if ((sHeapCheckCounter++ & 63) == 0 && !CheckHeap())
-            EonLog("HEAP CHECK FAILED");
-
-        badPointers = 0;
-        if (gPokemonStoragePtr != NULL && !EonIsValidPointer(gPokemonStoragePtr))
-            badPointers |= 1;
-        if (gSaveBlock1Ptr != NULL && !EonIsValidPointer(gSaveBlock1Ptr))
-            badPointers |= 2;
-        if (gSaveBlock2Ptr != NULL && !EonIsValidPointer(gSaveBlock2Ptr))
-            badPointers |= 4;
-        if (!EonIsValidPointer(gPlttBufferFaded))
-            badPointers |= 8;
-
-        if (badPointers != sLastBadPointers)
-        {
-            EonLog("CORE PTRS bad=%u storage=%08X sb1=%08X sb2=%08X faded=%08X",
-                   badPointers,
-                   (u32)gPokemonStoragePtr,
-                   (u32)gSaveBlock1Ptr,
-                   (u32)gSaveBlock2Ptr,
-                   (u32)gPlttBufferFaded);
-            sLastBadPointers = badPointers;
-        }
-
         ReadKeys();
 
         if (gSoftResetDisabled == FALSE

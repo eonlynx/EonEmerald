@@ -11,7 +11,6 @@
 #include "event_data.h"
 #include "event_object_movement.h"
 #include "event_scripts.h"
-#include "eon_debug.h"
 #include "faraway_island.h"
 #include "field_camera.h"
 #include "field_effect.h"
@@ -1628,24 +1627,6 @@ static s16 ReallocSpriteTiles(struct Sprite *sprite, u32 byteSize)
 u16 LoadSheetGraphicsInfo(const struct ObjectEventGraphicsInfo *info, u16 uuid, struct Sprite *sprite)
 {
     u16 tag = info->tileTag;
-
-    if (!EonIsValidPointer(info)
-     || !EonIsValidPointer(info->oam)
-     || ((tag != TAG_NONE || info->compressed) && (!EonIsValidPointer(info->images) || !EonIsValidPointer(info->images->data))))
-    {
-        EonLog("GFXINFO BAD info=%08X uuid=%04X tile=%04X pal=%04X oam=%08X images=%08X data=%08X size=%u comp=%u",
-               (u32)info,
-               uuid,
-               EonIsValidPointer(info) ? info->tileTag : 0,
-               EonIsValidPointer(info) ? info->paletteTag : 0,
-               EonIsValidPointer(info) ? (u32)info->oam : 0,
-               EonIsValidPointer(info) ? (u32)info->images : 0,
-               EonIsValidPointer(info) && EonIsValidPointer(info->images) ? (u32)info->images->data : 0,
-               EonIsValidPointer(info) && EonIsValidPointer(info->images) ? info->images->size : 0,
-               EonIsValidPointer(info) ? info->compressed : 0);
-        return TAG_NONE;
-    }
-
     if (tag != TAG_NONE || info->compressed)
     {
         // sheet-based gfx
@@ -2020,13 +2001,6 @@ struct ObjectEvent *GetFollowerObject(void)
 const struct ObjectEventGraphicsInfo *SpeciesToGraphicsInfo(u32 species, bool32 shiny, bool32 female)
 {
     const struct ObjectEventGraphicsInfo *graphicsInfo = NULL;
-
-    if (species >= NUM_SPECIES)
-    {
-        EonLog("SPECIES OOB species=%u shiny=%u female=%u", species, shiny, female);
-        return NULL;
-    }
-
 #if OW_POKEMON_OBJECT_EVENTS
     switch (species)
     {
@@ -2999,23 +2973,7 @@ u8 UpdateSpritePaletteByTemplate(const struct SpriteTemplate *template, struct S
 static void ObjectEventSetGraphics(struct ObjectEvent *objectEvent, const struct ObjectEventGraphicsInfo *graphicsInfo)
 {
     struct Sprite *sprite = &gSprites[objectEvent->spriteId];
-    u32 i;
-
-    if (!EonIsValidPointer(graphicsInfo)
-     || !EonIsValidPointer(graphicsInfo->oam)
-     || (graphicsInfo->images != NULL && !EonIsValidPointer(graphicsInfo->images)))
-    {
-        EonLog("OBJGFX BAD obj=%08X gfxId=%04X sprite=%u info=%08X oam=%08X images=%08X",
-               (u32)objectEvent,
-               objectEvent->graphicsId,
-               objectEvent->spriteId,
-               (u32)graphicsInfo,
-               EonIsValidPointer(graphicsInfo) ? (u32)graphicsInfo->oam : 0,
-               EonIsValidPointer(graphicsInfo) ? (u32)graphicsInfo->images : 0);
-        return;
-    }
-
-    i = FindObjectEventPaletteIndexByTag(graphicsInfo->paletteTag);
+    u32 i = FindObjectEventPaletteIndexByTag(graphicsInfo->paletteTag);
     if (i != 0xFF)
         UpdateSpritePalette(&sObjectEventSpritePalettes[i], sprite);
 

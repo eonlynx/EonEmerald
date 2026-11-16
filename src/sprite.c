@@ -2,7 +2,6 @@
 #include "sprite.h"
 #include "main.h"
 #include "palette.h"
-#include "eon_debug.h"
 
 #define MAX_SPRITE_COPY_REQUESTS 64
 
@@ -725,21 +724,6 @@ void ProcessSpriteCopyRequests(void)
 
         while (sSpriteCopyRequestCount > 0)
         {
-            if (!EonIsValidPointer(sSpriteCopyRequests[i].src)
-             || !EonIsValidPointer(sSpriteCopyRequests[i].dest)
-             || sSpriteCopyRequests[i].size == 0
-             || sSpriteCopyRequests[i].size > 0x4000)
-            {
-                EonLog("SPRCPY BAD idx=%u src=%08X dst=%08X size=%u count=%u",
-                       i,
-                       (u32)sSpriteCopyRequests[i].src,
-                       (u32)sSpriteCopyRequests[i].dest,
-                       sSpriteCopyRequests[i].size,
-                       sSpriteCopyRequestCount);
-                sSpriteCopyRequestCount--;
-                i++;
-                continue;
-            }
             CpuCopy16(sSpriteCopyRequests[i].src, sSpriteCopyRequests[i].dest, sSpriteCopyRequests[i].size);
             sSpriteCopyRequestCount--;
             i++;
@@ -764,22 +748,6 @@ void RequestSpriteFrameImageCopy(u16 index, u16 tileNum, const struct SpriteFram
             sSpriteCopyRequests[sSpriteCopyRequestCount].size = images[0].size;
         }
         sSpriteCopyRequests[sSpriteCopyRequestCount].dest = (u8 *)OBJ_VRAM0 + TILE_SIZE_4BPP * tileNum;
-
-        if (!EonIsValidPointer(sSpriteCopyRequests[sSpriteCopyRequestCount].src)
-         || sSpriteCopyRequests[sSpriteCopyRequestCount].size == 0
-         || sSpriteCopyRequests[sSpriteCopyRequestCount].size > 0x4000)
-        {
-            EonLog("FRAMEIMG BAD request=%u index=%u tile=%u images=%08X src=%08X size=%u rel=%u",
-                   sSpriteCopyRequestCount,
-                   index,
-                   tileNum,
-                   (u32)images,
-                   (u32)sSpriteCopyRequests[sSpriteCopyRequestCount].src,
-                   sSpriteCopyRequests[sSpriteCopyRequestCount].size,
-                   images[0].relativeFrames);
-            return;
-        }
-
         sSpriteCopyRequestCount++;
     }
 }
@@ -791,17 +759,6 @@ void RequestSpriteCopy(const u8 *src, u8 *dest, u16 size)
         sSpriteCopyRequests[sSpriteCopyRequestCount].src = src;
         sSpriteCopyRequests[sSpriteCopyRequestCount].dest = dest;
         sSpriteCopyRequests[sSpriteCopyRequestCount].size = size;
-
-        if (!EonIsValidPointer(src) || !EonIsValidPointer(dest) || size == 0 || size > 0x4000)
-        {
-            EonLog("SPRREQ BAD request=%u src=%08X dst=%08X size=%u",
-                   sSpriteCopyRequestCount,
-                   (u32)src,
-                   (u32)dest,
-                   size);
-            return;
-        }
-
         sSpriteCopyRequestCount++;
     }
 }
@@ -1496,24 +1453,7 @@ void SetOamMatrixRotationScaling(u8 matrixNum, s16 xScale, s16 yScale, u16 rotat
 
 static u16 LoadSpriteSheetWithOffset(const struct SpriteSheet *sheet, u32 offset)
 {
-    s16 tileStart;
-
-    if (!EonIsValidPointer(sheet)
-     || !EonIsValidPointer(sheet->data)
-     || sheet->size == 0
-     || sheet->size > 0x4000
-     || offset > sheet->size)
-    {
-        EonLog("SHEET BAD sheet=%08X data=%08X size=%u tag=%04X offset=%u",
-               (u32)sheet,
-               EonIsValidPointer(sheet) ? (u32)sheet->data : 0,
-               EonIsValidPointer(sheet) ? sheet->size : 0,
-               EonIsValidPointer(sheet) ? sheet->tag : 0,
-               offset);
-        return 0;
-    }
-
-    tileStart = AllocSpriteTiles(sheet->size / TILE_SIZE_4BPP);
+    s16 tileStart = AllocSpriteTiles(sheet->size / TILE_SIZE_4BPP);
 
     if (tileStart < 0)
     {
@@ -1641,18 +1581,7 @@ void FreeAllSpritePalettes(void)
 
 u32 LoadSpritePalette(const struct SpritePalette *palette)
 {
-    u32 index;
-
-    if (!EonIsValidPointer(palette) || !EonIsValidPointer(palette->data))
-    {
-        EonLog("SPAL BAD palette=%08X data=%08X tag=%04X",
-               (u32)palette,
-               EonIsValidPointer(palette) ? (u32)palette->data : 0,
-               EonIsValidPointer(palette) ? palette->tag : 0);
-        return 0xFF;
-    }
-
-    index = IndexOfSpritePaletteTag(palette->tag);
+    u32 index = IndexOfSpritePaletteTag(palette->tag);
 
     if (index != 0xFF)
         return index;
@@ -1689,16 +1618,6 @@ void LoadSpritePalettes(const struct SpritePalette *palettes)
 
 u8 LoadSpritePaletteInSlot(const struct SpritePalette *palette, u8 paletteNum)
 {
-    if (!EonIsValidPointer(palette) || !EonIsValidPointer(palette->data))
-    {
-        EonLog("SPAL SLOT BAD palette=%08X data=%08X tag=%04X slot=%u",
-               (u32)palette,
-               EonIsValidPointer(palette) ? (u32)palette->data : 0,
-               EonIsValidPointer(palette) ? palette->tag : 0,
-               paletteNum);
-        return 0xFF;
-    }
-
     paletteNum = min(15, paletteNum);
     sSpritePaletteTags[paletteNum] = palette->tag;
     DoLoadSpritePalette(palette->data, paletteNum * 16);
@@ -1736,11 +1655,6 @@ u32 IndexOfSpritePaletteTag(u16 tag)
 
 u16 GetSpritePaletteTagByPaletteNum(u8 paletteNum)
 {
-    if (paletteNum >= 16)
-    {
-        EonLog("PALTAG OOB pal=%u", paletteNum);
-        return TAG_NONE;
-    }
     return sSpritePaletteTags[paletteNum];
 }
 
