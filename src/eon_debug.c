@@ -6,6 +6,11 @@
 #include <stdarg.h>
 #include "mini_printf.h"
 
+// With NDEBUG, mini_printf.h defines mini_vsnprintf as an empty macro. The
+// implementation is compiled for this diagnostic build, so call it directly.
+#undef mini_vsnprintf
+s32 mini_vsnprintf(char *buffer, u32 buffer_len, const char *fmt, va_list va);
+
 // mGBA debug console registers (see include/gba/isagbprint.h).
 #define REG_DEBUG_ENABLE ((vu16 *)0x04FFF780)
 #define REG_DEBUG_FLAGS  ((vu16 *)0x04FFF700)
