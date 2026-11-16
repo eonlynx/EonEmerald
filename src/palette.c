@@ -10,6 +10,7 @@
 #include "constants/field_weather.h"
 #include "constants/rgb.h"
 #include "dns.h"
+#include "eon_debug.h"
 
 enum
 {
@@ -47,6 +48,10 @@ static const u8 sRoundedDownGrayscaleMap[] = {
 
 void LoadPalette(const void *src, u32 offset, u32 size)
 {
+    if (!EonIsValidPointer(src) || size > PLTT_SIZE || offset * 2 + size > PLTT_SIZE)
+    {
+        EonLog("PAL BAD src=%08X offset=%u size=%u", (u32)src, offset, size);
+    }
     CpuCopy16(src, &gPlttBufferUnfaded[offset], size);
     CpuCopy16(src, &gPlttBufferFaded[offset], size);
 }
@@ -54,6 +59,10 @@ void LoadPalette(const void *src, u32 offset, u32 size)
 // Drop in replacement for LoadPalette, uses CpuFastCopy, size must be 0 % 32
 void LoadPaletteFast(const void *src, u32 offset, u32 size)
 {
+    if (!EonIsValidPointer(src) || size > PLTT_SIZE || offset * 2 + size > PLTT_SIZE)
+    {
+        EonLog("PALF BAD src=%08X offset=%u size=%u", (u32)src, offset, size);
+    }
     if ((u32)src & 3) // In case palette is not 4 byte aligned
         return LoadPalette(src, offset, size);
     CpuFastCopy(src, &gPlttBufferUnfaded[offset], size);

@@ -7,6 +7,7 @@
 #include "pokemon_sprite_visualizer.h"
 #include "text.h"
 #include "menu.h"
+#include "eon_debug.h"
 
 //  === WARNING === WARNING === WARNING ===
 //  === No user serviceable code before ===
@@ -206,8 +207,21 @@ static inline u32 DoLoadCompressedSpriteSheet(const struct CompressedSpriteSheet
 
 u32 LoadCompressedSpriteSheet(const struct CompressedSpriteSheet *src)
 {
-    void *buffer = malloc_and_decompress(src->data, NULL);
-    u32 ret = DoLoadCompressedSpriteSheet(src, buffer);
+    void *buffer;
+    u32 ret;
+
+    if (!EonIsValidPointer(src) || !EonIsValidPointer(src->data))
+    {
+        EonLog("CSHEET BAD src=%08X data=%08X size=%u tag=%04X",
+               (u32)src,
+               EonIsValidPointer(src) ? (u32)src->data : 0,
+               EonIsValidPointer(src) ? src->size : 0,
+               EonIsValidPointer(src) ? src->tag : 0);
+        return 0;
+    }
+
+    buffer = malloc_and_decompress(src->data, NULL);
+    ret = DoLoadCompressedSpriteSheet(src, buffer);
     Free(buffer);
 
     return ret;
@@ -215,6 +229,17 @@ u32 LoadCompressedSpriteSheet(const struct CompressedSpriteSheet *src)
 
 u32 LoadCompressedSpriteSheetOverrideBuffer(const struct CompressedSpriteSheet *src, void *buffer)
 {
+    if (!EonIsValidPointer(src) || !EonIsValidPointer(src->data) || !EonIsValidPointer(buffer))
+    {
+        EonLog("CSHEETOVR BAD src=%08X data=%08X buf=%08X size=%u tag=%04X",
+               (u32)src,
+               EonIsValidPointer(src) ? (u32)src->data : 0,
+               (u32)buffer,
+               EonIsValidPointer(src) ? src->size : 0,
+               EonIsValidPointer(src) ? src->tag : 0);
+        return 0;
+    }
+
     DecompressDataWithHeaderWram(src->data, buffer);
     return DoLoadCompressedSpriteSheet(src, buffer);
 }
@@ -225,6 +250,15 @@ u32 LoadCompressedSpriteSheetByTemplate(const struct SpriteTemplate *template, s
     struct SpriteTemplate myTemplate;
     struct SpriteFrameImage myImage;
     u32 size;
+
+    if (!EonIsValidPointer(template) || !EonIsValidPointer(template->images) || !EonIsValidPointer(template->images->data))
+    {
+        EonLog("CTEMPL BAD template=%08X images=%08X data=%08X",
+               (u32)template,
+               EonIsValidPointer(template) ? (u32)template->images : 0,
+               EonIsValidPointer(template) && EonIsValidPointer(template->images) ? (u32)template->images->data : 0);
+        return 0;
+    }
 
     // Check for LZ77 header and read uncompressed size, or fallback if not compressed (zero size)
     if (IsCompressedData(template->images->data))

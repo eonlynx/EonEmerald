@@ -8,6 +8,7 @@
 #include "rtc.h"
 #include "constants/map_types.h"
 #include "constants/rgb.h"
+#include "eon_debug.h"
 
   /*******************************************************/
  /*********    Day and Night Configuration     **********/
@@ -350,6 +351,12 @@ static bool8 sDnsPaletteActive = FALSE;
 //Called from TransferPlttBuffer
 void DnsTransferPlttBuffer(void *src, void *dest)
 {
+    if (!EonIsValidPointer(src) || !EonIsValidPointer(dest))
+    {
+        EonLog("DNSXFER BAD src=%08X dest=%08X active=%u", (u32)src, (u32)dest, sDnsPaletteActive);
+        return;
+    }
+
     if (IsOverworld() && !IsMapDNSException() && sDnsPaletteActive)
     {
         DmaCopy16(3, sDnsPaletteDmaBuffer, dest, PLTT_SIZE);
@@ -373,6 +380,12 @@ void DnsApplyFilters(void)
     if (gMain.inBattle || IsMapDNSException())
         return;
 
+    if (!EonIsValidPointer(gPlttBufferFaded))
+    {
+        EonLog("DNSFILT BAD faded=%08X buffer=%08X", (u32)gPlttBufferFaded, (u32)sDnsPaletteDmaBuffer);
+        return;
+    }
+
     rgbFilter = GetDNSFilter();
     if (rgbFilter == 0 && !IsLightActive())
     {
@@ -384,7 +397,7 @@ void DnsApplyFilters(void)
 
     for (palNum = 0; palNum < 32; palNum++)
     {
-        if (palExceptionFlags.pal[palNum] && (palNum < 15 || !IsSpritePaletteTagDnsException(palNum - 16)))
+        if (palExceptionFlags.pal[palNum] && (palNum < 16 || !IsSpritePaletteTagDnsException(palNum - 16)))
         {
             for (colNum = 0; colNum < 16; colNum++)
                 sDnsPaletteDmaBuffer[palNum * 16 + colNum] = DnsApplyProportionalFilterToColour(gPlttBufferFaded[palNum * 16 + colNum], rgbFilter);
