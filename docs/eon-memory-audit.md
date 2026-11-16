@@ -124,6 +124,8 @@ Logs added:
 | `DNSXFER BAD` / `DNSFILT BAD` | `src/dns.c` | Invalid DNS palette pointer |
 | `TILESETANIM DMA BAD` | `src/tileset_anims.c` | Invalid animated-tileset DMA source |
 | `DMA3REQ BAD` | `src/dma3_manager.c` | Invalid queued DMA3 source |
+| `DMA BAD` | `include/gba/macro.h` | Any invalid `DmaCopy16/32` source or destination |
+| `CPUCOPY BAD` | `include/gba/macro.h` | Any invalid `CpuCopy16/32` source or destination |
 
 The diagnostic ROM is `pokeemerald_diag.gba`. Reproduce the error and collect
 the last `[EON]`/`EON... BAD` line before the first `Bad memory Load16`.

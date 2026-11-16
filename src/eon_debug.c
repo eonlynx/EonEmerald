@@ -60,4 +60,33 @@ bool32 EonIsValidPointer(const void *ptr)
         || (value >= 0x0E000000 && value < 0x0E010000);  // Save flash window
 }
 
+void EonDmaCheck(u32 dmaNum, const void *src, void *dest, u32 size, u32 bit)
+{
+    if (size > 0x10000
+     || (size != 0 && (!EonIsValidPointer(src) || !EonIsValidPointer(dest))))
+    {
+        EonLog("DMA BAD dma=%u src=%08X dst=%08X size=%u bit=%u lr=%08X",
+               dmaNum,
+               (u32)src,
+               (u32)dest,
+               size,
+               bit,
+               (u32)__builtin_return_address(0));
+    }
+}
+
+void EonCpuCopyCheck(const void *src, void *dest, u32 size, u32 bit)
+{
+    if (size > 0x10000
+     || (size != 0 && (!EonIsValidPointer(src) || !EonIsValidPointer(dest))))
+    {
+        EonLog("CPUCOPY BAD src=%08X dst=%08X size=%u bit=%u lr=%08X",
+               (u32)src,
+               (u32)dest,
+               size,
+               bit,
+               (u32)__builtin_return_address(0));
+    }
+}
+
 #endif // EON_DEBUG_MEMORY_LOG

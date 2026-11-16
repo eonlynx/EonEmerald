@@ -25,16 +25,29 @@
 
 #define CPU_COPY_UNCHECKED(src, dest, size, bit) CpuSet(src, dest, CPU_SET_##bit##BIT | ((size)/(bit/8) & 0x1FFFFF))
 
+#if EON_DEBUG_MEMORY_LOG
+void EonCpuCopyCheck(const void *src, void *dest, u32 size, u32 bit);
+#define EON_CPU_CHECK(src, dest, size, bit) EonCpuCopyCheck((const void *)(src), (void *)(dest), size, bit)
+#else
+#define EON_CPU_CHECK(src, dest, size, bit)
+#endif
+
 #if MODERN
 #define CPU_COPY(src, dest, size, bit) \
     do \
     { \
         _Static_assert(_Alignof(src) >= (bit / 8), "source potentially unaligned"); \
         _Static_assert(_Alignof(dest) >= (bit / 8), "destination potentially unaligned"); \
+        EON_CPU_CHECK(src, dest, size, bit); \
         CPU_COPY_UNCHECKED(src, dest, size, bit); \
     } while (0)
 #else
-#define CPU_COPY(src, dest, size, bit) CPU_COPY_UNCHECKED(src, dest, size, bit)
+#define CPU_COPY(src, dest, size, bit) \
+    do \
+    { \
+        EON_CPU_CHECK(src, dest, size, bit); \
+        CPU_COPY_UNCHECKED(src, dest, size, bit); \
+    } while (0)
 #endif
 
 #define CpuCopy16(src, dest, size) CPU_COPY(src, dest, size, 16)
@@ -170,16 +183,29 @@
            (DMA_ENABLE | DMA_START_NOW | DMA_##bit##BIT | DMA_SRC_INC | DMA_DEST_INC) << 16 \
          | ((size)/(bit/8)))
 
+#if EON_DEBUG_MEMORY_LOG
+void EonDmaCheck(u32 dmaNum, const void *src, void *dest, u32 size, u32 bit);
+#define EON_DMA_CHECK(dmaNum, src, dest, size, bit) EonDmaCheck(dmaNum, (const void *)(src), (void *)(dest), size, bit)
+#else
+#define EON_DMA_CHECK(dmaNum, src, dest, size, bit)
+#endif
+
 #if MODERN
 #define DMA_COPY(dmaNum, src, dest, size, bit) \
     do \
     { \
         _Static_assert(_Alignof(src) >= (bit / 8), "source potentially unaligned"); \
         _Static_assert(_Alignof(dest) >= (bit / 8), "destination potentially unaligned"); \
+        EON_DMA_CHECK(dmaNum, src, dest, size, bit); \
         DMA_COPY_UNCHECKED(dmaNum, src, dest, size, bit); \
     } while (0)
 #else
-#define DMA_COPY(dmaNum, src, dest, size, bit) DMA_COPY_UNCHECKED(dmaNum, src, dest, size, bit)
+#define DMA_COPY(dmaNum, src, dest, size, bit) \
+    do \
+    { \
+        EON_DMA_CHECK(dmaNum, src, dest, size, bit); \
+        DMA_COPY_UNCHECKED(dmaNum, src, dest, size, bit); \
+    } while (0)
 #endif
 
 #define DmaCopy16(dmaNum, src, dest, size) DMA_COPY(dmaNum, src, dest, size, 16)
