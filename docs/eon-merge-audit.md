@@ -409,3 +409,16 @@ object gfx: 254 / NUM 254
   duplicadas, firmas nuevas de accuracy/contacto/estado, acciones de item menu,
   `CheckPCHasSpace` sobre la nueva API de bolsas y eliminacion de textos de
   whiteout obsoletos.
+
+### 1.13.0: cierre runtime y fix de TallGrass
+
+- Prueba runtime del overworld completada: el fallo de `Bad memory Load16`
+  ocurría al usar el efecto de hierba alta.
+- Causa: `sPicTable_TallGrass` quedó con 4 frames (`0,1,3,4`) mientras el PNG
+  de 96x16 y la animación usan 6 (`0-5`). El frame 5 leía datos adyacentes como
+  un frame de 42.896 bytes y encolaba una copia fuera de VRAM.
+- Fix: tabla restaurada a los 6 frames. El diagnóstico temporal se eliminó; el
+  único cambio funcional sobre 1.13.0 es esa tabla.
+- Pendiente de probar antes de abrir 1.13.4: batalla normal/doble,
+  Mega/Teracristal/Dynamax, Battle Frontier/Trainer Hill, guardado/carga,
+  Exp. All y transiciones DNS.
