@@ -42,7 +42,7 @@ void EonLog(const char *fmt, ...)
         REG_DEBUG_STRING[i] = buffer[i];
     REG_DEBUG_STRING[i] = '\0';
 
-    *REG_DEBUG_FLAGS = 3 | 0x100; // MGBA_LOG_INFO
+    *REG_DEBUG_FLAGS = 1 | 0x100; // MGBA_LOG_ERROR (visible even with INFO filtered)
 }
 
 bool32 EonIsValidPointer(const void *ptr)

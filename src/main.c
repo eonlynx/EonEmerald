@@ -121,6 +121,7 @@ void AgbMain(void)
     SetDefaultFontsPointer();
     InitHeap(gHeap, HEAP_SIZE);
 
+    EonLog("EONLOG READY diag=1");
     EonLog("EONMEM heap=%u SB2=%u/%u SB1=%u/%u PS=%u/%u SB3=%u",
            HEAP_SIZE,
            sizeof(struct SaveBlock2), SECTOR_DATA_SIZE - sizeof(struct SaveBlock2),

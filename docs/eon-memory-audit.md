@@ -97,7 +97,14 @@ These are real robustness fixes, but none of them writes a pointer value of
 ## Diagnostic build
 
 `include/config/general.h` currently sets `EON_DEBUG_MEMORY_LOG TRUE`. The logger
-writes to the mGBA debug console and is compiled out when the option is FALSE.
+writes to the mGBA debug console at **ERROR** level so it is visible even when
+the log view filters INFO, and is compiled out when the option is FALSE.
+At boot it prints `EONLOG READY diag=1` followed by `EONMEM ...`.
+
+The ROMs are `pokeemerald_diag.gba` (title `POKEMON DIAG`, game code `BPEE`,
+uses the normal save) and `pokeemerald_diag_clean.gba` (title `POKEMON NEW`,
+game code `BPED`, separate/clean save). Boot them from scratch; do not load a
+savestate made with an older ROM.
 
 Logs added:
 
@@ -120,3 +127,8 @@ Logs added:
 
 The diagnostic ROM is `pokeemerald_diag.gba`. Reproduce the error and collect
 the last `[EON]`/`EON... BAD` line before the first `Bad memory Load16`.
+
+If no `EONLOG READY` appears, mGBA is not showing the GBA debug console: open
+`Tools > View Logs`, set the level to Debug/All, and make sure the `GBA Debug`
+category is enabled. Also make sure the title bar reads `POKEMON DIAG` and that
+the game was booted normally, not resumed from an older savestate.
