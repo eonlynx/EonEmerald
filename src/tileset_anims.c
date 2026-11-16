@@ -564,11 +564,12 @@ static void AppendTilesetAnimToBuffer(const u16 *src, u16 *dest, u16 size)
 
         if (!EonIsValidPointer(src) || !EonIsValidPointer(dest) || size == 0 || size > 0x4000)
         {
-            EonLog("TILESETANIM APPEND BAD idx=%u src=%08X dst=%08X size=%u",
+            EonLog("TILESETANIM APPEND BAD idx=%u src=%08X dst=%08X size=%u lr=%08X",
                    sTilesetDMA3TransferBufferSize,
                    (u32)src,
                    (u32)dest,
-                   size);
+                   size,
+                   (u32)__builtin_return_address(0));
         }
 
         sTilesetDMA3TransferBufferSize ++;
