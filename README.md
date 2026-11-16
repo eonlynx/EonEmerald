@@ -11,7 +11,7 @@ Screenshots:
 ![pokeemerald](https://github.com/user-attachments/assets/966c6c8c-6985-4b23-baa2-1582861450e2)
 ![pokeemerald](https://github.com/user-attachments/assets/d0f7f0c5-f7ba-427b-943e-78f1262d2f5b)
 
-Based off RHH's pokeemerald-expansion 1.13.0 https://github.com/rh-hideout/pokeemerald-expansion/
+Based off RHH's pokeemerald-expansion 1.13.4 https://github.com/rh-hideout/pokeemerald-expansion/
 
 
 
@@ -26,4 +26,4 @@ Based off RHH's pokeemerald-expansion 1.13.0 https://github.com/rh-hideout/pokee
 
 ## Credits
 
-Based on RHH's pokeemerald-expansion 1.10.2: https://github.com/rh-hideout/pokeemerald-expansion/
+Based on RHH's pokeemerald-expansion 1.13.4: https://github.com/rh-hideout/pokeemerald-expansion/
