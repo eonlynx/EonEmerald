@@ -736,6 +736,9 @@ void ProcessSpriteCopyRequests(void)
                        (u32)sSpriteCopyRequests[i].dest,
                        sSpriteCopyRequests[i].size,
                        sSpriteCopyRequestCount);
+                sSpriteCopyRequestCount--;
+                i++;
+                continue;
             }
             CpuCopy16(sSpriteCopyRequests[i].src, sSpriteCopyRequests[i].dest, sSpriteCopyRequests[i].size);
             sSpriteCopyRequestCount--;
