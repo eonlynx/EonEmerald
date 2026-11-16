@@ -94,6 +94,26 @@ so any new persistent field should be checked against that margin.
 These are real robustness fixes, but none of them writes a pointer value of
 `0x1200xxxx`; they do not fully explain the observed invalid read.
 
+## Root cause found: TallGrass frame table
+
+The readable diagnostic log showed:
+
+```text
+FRAMEIMG BAD request=0 index=5 tile=111 images=0842A6B0 src=0842A7B0 size=42896 rel=0
+SPRCPY BAD idx=0 src=0842A7B0 dst=06010DE0 size=42896 count=2
+```
+
+`0x0842A6B0` is `sPicTable_TallGrass`. The merged table had only four entries
+(frames 0, 1, 3, 4), but the animation and the 96x16 `tall_grass.png` use six
+frames (0-5). Frame index 5 read past the table into
+`gFieldEffectObjectTemplate_ShadowExtraLarge`, taking `0x0842A7B0` as the data
+pointer and `0xA7D0` (42,896) as the size. That queued a 42 KB copy past the end
+of VRAM, corrupting memory and producing the `0x1200...` bad reads.
+
+The table was restored to frames 0-5. The diagnostic build also rejects invalid
+sprite frame copies before queueing them, so a future table mismatch cannot
+execute the oversized copy.
+
 ## Diagnostic build
 
 `include/config/general.h` currently sets `EON_DEBUG_MEMORY_LOG TRUE`. The logger
