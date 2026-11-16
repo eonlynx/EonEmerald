@@ -1,424 +1,155 @@
-# Auditoría del merge EonEmerald + expansion 1.10.2
+# EonEmerald + pokeemerald-expansion merge audit
 
-Rama: `port/eon-features`
-Fecha: 2026-11-15
+Branch: `merge/1.14.4`
+Date: 2026-11-16
 
-Esta es la auditoría consolidada después de la pasada final de decisiones y de la primera
-compilación completa. El ROM compila; las pruebas en emulador siguen pendientes.
+This document records the current state of the incremental merge of
+pokeemerald-expansion into EonEmerald. Expansion provides the architecture; EonEmerald
+provides the content, data, balance and custom behavior. `hns/master` is intentionally not
+merged.
 
-## 1. Estado general
+## 1. Merge chain
 
-- Merge base: expansion 1.10.2 sobre pret `50d325f081`; EonEmerald injertado desde
-  `main-grafted`.
-- Conflictos originales: 205. Inventario por archivo en `docs/eon-merge-resolution.md`.
-- `trainers.party` es la fuente de verdad; `trainers.h` está generado desde ella.
-- No se ha mergeado `hns/master`, por decisión expresa.
-- El ROM compila con `make -j12` (modern) usando devkitARM. No se han ejecutado pruebas de
-  batalla, guardado o mapas.
+| Expansion version | Status |
+| --- | --- |
+| 1.10.2 | Merged |
+| 1.10.3 | Merged |
+| 1.11.0 | Merged |
+| 1.12.0 | Merged |
+| 1.13.0 | Merged |
+| 1.13.4 | Merged, built and committed (`fcfb6880eb`, learnsets `e2a3c4a93d`) |
+| 1.14.4 | Merge resolved; build validation in progress |
+| 1.15.3 | Pending |
+| 1.16.4 | Pending |
+| 1.17.2 | Pending |
 
-Conteos estáticos actuales:
+The project must always use the latest patch release of each minor line:
+1.13.4, 1.14.4, 1.15.3, 1.16.4 and 1.17.2.
+
+## 2. Standing decisions
+
+### 2.1 Items
+
+- `I_EON_ITEM_EFFECTS` defaults to `TRUE`. Both `TRUE` and `FALSE` builds must compile.
+- With `TRUE`, the old item slots keep Eon's identities: Everstone acts as Eviolite,
+  Focus Band as Focus Sash, Lucky Egg as Loaded Dice, Lucky Punch as Punching Glove,
+  Mental Herb as Power Herb and Cleanse Tag as Covert Cloak.
+- Modern items (Eviolite, Focus Sash, Loaded Dice, Punching Glove, Power Herb,
+  Covert Cloak) remain available.
+- Eon-only items are assigned IDs 855-860. `ITEM_EXP_ALL` is 861 and
+  `ITEMS_COUNT` is 862.
+- Electabuzz still evolves with `ITEM_ELECTIRIZER`.
+- Battle Tent, Trainer Hill, Frontier and wild held-item tables use the modern item IDs
+  that match Eon's intended effects.
+
+### 2.2 Experience All
+
+- `ITEM_EXP_ALL` is a key item that toggles party-wide experience.
+- The held Exp. Share remains available through `I_EXP_SHARE_ITEM GEN_3`.
+- `I_EXP_SHARE_FLAG` (`0x494`) remains the flag that enables the party effect.
+- Eon's message and shared experience rules are used whenever Exp. All is active.
+
+### 2.3 Moves
+
+- Conflicting vanilla move data uses expansion 1.14 values.
+- The 95 experimental Eon move changes (repurposed effects, unusual targets,
+  unusual priorities and accuracy rewrites) are deliberately excluded.
+- The 67 Eon changes whose effects did not change are kept.
+
+### 2.4 Conditional physical/special split
+
+- Eon's per-species category overrides are implemented by
+  `GetMoveCategoryForSpecies`, `GetMoveCategoryForBattler` and
+  `IsMovePhysicalForBattler`.
+- The override uses the base species, so Mega Evolutions keep their species override.
+- It uses the effective move type, so dynamic Ghost-type moves also receive the
+  Ghost-type override.
+- The effective category is used by the battle move menu, summary screen,
+  move relearner and Pokédex.
+
+### 2.5 Custom abilities
+
+- `ABILITY_PERMAFROST` = 311 ("Frost Body"): Fire immunity, burn immunity,
+  hail immunity, Clear Body-style stat-loss protection and a 1/3 contact freeze chance.
+- `ABILITY_ROCK_BODY` = 312: absorbs Rock moves to restore 1/4 HP, hail immunity
+  and Clear Body-style stat-loss protection.
+- `ABILITY_GALVANIZED` = 313 ("Chrome Body"): 30% reduction to physical damage,
+  hail immunity and Clear Body-style stat-loss protection.
+- `ABILITIES_COUNT_EON` = 314.
+
+### 2.6 Berries and Heart Scale
+
+- Razz/Bluk/Nanab/Pinap/Wepear Berries cure infatuation.
+- Belue/Durin/Pamtre/Watmel Berries restore lowered stats.
+- Cornn/Magost/Nomel/Rabuta/Spelon Berries restore HP.
+- Heart Scale heals a held Luvdisc for 1/8 max HP at the end of the turn.
+- In 1.14 these effects live in `src/battle_hold_effects.c` and
+  `src/data/hold_effects.h`, not in the old `ItemBattleEffects` block in
+  `src/battle_util.c`.
+
+## 3. 1.14.4 integration notes
+
+- 30 conflicts were resolved.
+- Expansion 1.14 moved item battle effects from `src/battle_util.c` to the new
+  `src/battle_hold_effects.c` and `src/data/hold_effects.h`. Eon's Heart Scale and
+  Cure Attract effects were ported to that architecture.
+- `include/constants/heal_locations.h` was removed because heal locations are JSON-based.
+- Map constants are generated as an `enum`; stale `#define` output must be deleted before
+  regenerating `include/constants/map_groups.h`.
+- API changes handled during the merge:
+  - `GetMoveType` is now a static inline in `include/move.h`.
+  - `GetBattlerHoldEffect` takes one argument.
+  - Move damage tracking uses Eon's per-battler PSS helper in
+    `MoveDamageDataHpUpdate`.
+  - New 1.14 config macros were restored (`B_CRITICAL_CAPTURE_IF_OWNED`,
+    `B_PARTING_SHOT_SWITCH`, `B_BATON_PASS_TRAPPING`, `B_TRANSFORM_*`,
+    `B_TAUNT_ME_FIRST`, `I_ORAS_DOWSING_*`).
+  - Fishing config moved to `include/config/fishing.h`; Eon values were kept there.
+  - The obsolete party-menu `MENU_MOVES` action was removed in favor of expansion's
+    `MENU_SUB_MOVES` move-relearner flow.
+- Eon's 53 battle-environment palettes and time-of-day battle palette selection are kept.
+- The Eon region map layout, Sevii/Kanto heal locations and Kanto/Johto trainers are kept.
+
+## 4. Static counts
 
 ```text
-movimientos: 935
-items: 836 / ITEMS_COUNT 836
-habilidades: 314 / ABILITIES_COUNT_EON 314
 trainers.party: 864
-object gfx: 254 / NUM 254
-JSON de mapas: válido
-marcadores de conflicto: 0
-worktree: limpio
+items: 862 (ITEMS_COUNT 862)
+maps: 573
+abilities: 314 (ABILITIES_COUNT_EON 314)
+object graphics: 256 (NUM_OBJ_EVENT_GFX 256)
+conflict markers: 0
 ```
 
-### 1.1 Correcciones de compilación
-
-La primera compilación completa requirió estos ajustes, todos incluidos en el árbol:
-
-- `ITEM_TM_ENDURE` vuelve a ser el TM45 generado por `FOREACH_TM`; se eliminó el ID manual
-  que colisionaba con el enum de `include/item.h`. `ITEM_EXP_ALL` queda en el ID 835 y
-  `ITEMS_COUNT` en 836.
-- Las reglas de `Makefile` y `map_data_rules.mk` convierten los `.party`/`.s` a LF antes de
-  `trainerproc`/`preproc`. En Windows, `cpp` emite CRLF y el parser de enums de `preproc` no
-  lo tolera.
-- Se restauraron las clases de facility de Kanto/Johto (`FACILITY_CLASS_BROCK`..`DRAKE`) y
-  `TRAINER_CLASS_LEADER_2` como alias de `TRAINER_CLASS_LEADER` para los lookups de Frontier.
-- Se restauraron los heal locations de Eon (Islas Sete, Ruta 121/123, Faraway, Navel Rock,
-  Birth Island e Indigo Plateau).
-- `src/dns.c` usa `DNS_TIME_*` para no chocar con los macros `TIME_DAY`/`TIME_NIGHT` de
-  `rtc.h`.
-- Se eliminó `.disableReflectionPaletteLoad` de los graphics info de Eon: expansion usa ese
-  bit para `compressed` y el campo no tenía código que lo leyera.
-- Se añadieron las declaraciones de texto del Exchange Corner y los scripts de item balls de
-  Eon que faltaban (`item_ball_scripts.inc`).
-- `teachable_learnsets.h` y `battle_partners.h` se regeneraron durante la compilación.
-
-## 2. Decisiones consolidadas en esta pasada
-
-### 2.1 Items viejos: se conservan ambos mundos
-
-Se reintrodujo el control como `I_EON_ITEM_EFFECTS` (por defecto `TRUE`) para que Eon y
-expansion puedan convivir sin perder los cambios de Eon:
-
-- Con `TRUE`, Poke Doll oculta el equipo al ojo de los entrenadores y los slots viejos usan
-  las identidades de Eon: Everstone→Eviolite, Focus Band→Focus Sash, Lucky Egg→Loaded Dice,
-  Lucky Punch→Punching Glove, Mental Herb→Power Herb y Cleanse Tag→Covert Cloak.
-- Con `FALSE`, los slots viejos conservan sus efectos originales de expansion: Everstone
-  previene evolución, Focus Band da el 10%, Lucky Egg sube EXP, Mental Herb cura, Cleanse Tag
-  reduce encuentros y Lucky Punch boostea a Chansey.
-- Los items modernos siguen existiendo en ambos casos: Power Herb, Covert Cloak, Eviolite,
-  Focus Sash, Loaded Dice y Punching Glove.
-- Los entrenadores, Frontier y Exchange Corner usan esos items modernos donde Eon usaba el
-  efecto repurposado.
-
-Esto mantiene la intención de Eon sin romper el ecosistema de items de expansion.
-
-### 2.2 Exp. All: item separado, no flag de mensaje
-
-Se eliminó `B_EON_EXP_ALL_MESSAGE` y se separaron las dos cosas:
-
-- `ITEM_EXP_ALL` es un key item nuevo (ID 835) que activa/desactiva el reparto de EXP.
-- El held Exp. Share sigue existiendo con `I_EXP_SHARE_ITEM GEN_3`.
-- `I_EXP_SHARE_FLAG 0x494` sigue siendo el flag que enciende el efecto de party.
-- El mensaje de Eon y la cantidad compartida se usan siempre que Exp. All está activo.
-- Rustboro entrega Exp. All; el Exchange Corner sigue ofreciendo el held Exp. Share.
-
-La ventaja es que no hay que elegir entre el held Exp. Share de expansion y el key item de Eon.
-
-### 2.3 Movimientos: se eliminaron los híbridos
-
-Se revirtió el segundo lote de stats que había quedado a medias: movimientos cuyo efecto Eon
-también cambiaba (Waterfall, Strength, Mega Punch, Cut, Take Down, Blast Burn/Frenzy
-Plant/Hydro Cannon, Sky Attack, etc.) vuelven a los valores de expansion. Así no hay
-movimientos “ni de Eon ni de expansion”.
-
-Se mantienen los 67 movimientos cuyo efecto no cambió y que por tanto son seguros:
-Absorb, Mega Drain, Aurora Beam, Dragon Breath, Rock Slide, Poison Tail, los cambios de tipo
-Comet Punch/Fury Attack/Dizzy Punch/Twineedle/Spike Cannon y los buffs de precisión de estado.
-
-Quedan 95 movimientos con diferencias de efecto, objetivo o prioridad, excluidos a propósito.
-
-### 2.4 PSS condicional: corregido para formas y tipos dinámicos
-
-`GetMoveCategoryForSpecies` ahora:
-
-- Usa la especie base, así que las Mega Evoluciones conservan el override de su especie.
-- Usa el tipo efectivo del movimiento, así que movimientos Ghost dinámicos también reciben el
-  override de Ghost.
-- Sigue mostrando la categoría efectiva en el menú de batalla, resumen, move relearner y
-  Pokédex.
-
-### 2.5 Exp. All, berries y Heart Scale
-
-- Razz/Bluk/Nanab/Pinap/Wepear curan enamoramiento.
-- Belue/Durin/Pamtre/Watmel restauran stats bajados.
-- Cornn/Magost/Nomel/Rabuta/Spelon restauran HP.
-- Heart Scale cura 1/8 a un Luvdisc que la lleve al final del turno.
-
-## 3. Pendiente real
-
-### 3.1 Los 95 movimientos restantes
-
-Son los cambios experimentales de Eon:
-
-- Efectos repurposados: Charge → Volt Switch, Flash/Water Sport/Spider Web dañinos, etc.
-- Objetivos raros: clima, Haze, Perish Song, Petal Dance, Sing, Supersonic, etc.
-- Prioridades raras: Arm Thrust +1, Memento +4, Transform +3, Zap Cannon -1, Teleport 0, etc.
-- Precisión 0 → 100 en movimientos que expansion considera “siempre aciertan”.
-
-No se portan porque introducen comportamientos raros o rotos en dobles/IA. Están documentados
-como exclusión deliberada.
-
-### 3.2 Compilación y pruebas
-
-La compilación completa pasa con `make -j12` (modern). Faltan pruebas de:
-
-- Batalla normal y doble.
-- Mega Evolución, Teracristal y Dynamax.
-- Battle Frontier, Trainer Hill y Battle Tent.
-- Guardado/carga y compatibilidad de saves.
-- DNS, nubes, Exp. All y el nuevo item ID 835.
-
-### 3.3 Consistencia de items
-
-- `battle_tent.h` y `trainer_hill.h` siguen usando IDs viejos (`ITEM_FOCUS_BAND`,
-  `ITEM_MENTAL_HERB`). Ahora conservan sus efectos originales, lo cual es coherente con
-  expansion, pero no con los entrenadores normales/Frontier que usan items modernos.
-- Los held items salvajes siguen usando IDs viejos; por tanto conservan efectos originales.
-  Eon los habría repurposado. Es una diferencia menor pero real.
-- El Exchange Corner ya usa items modernos para Focus Sash, Eviolite, Punching Glove, Loaded
-  Dice y Power Herb.
-
-### 3.4 Contenido no referenciado
-
-- 286 símbolos `gText_*` de Eon no existen en `src/strings.c`; ninguno está referenciado.
-- Quedan posibles assets de object-event/overworld que solo existirían en Eon y no están
-  referenciados por mapas.
-
-### 3.5 `hns/master`
-
-No mergeado, por decisión expresa. No debe hacerse hasta cerrar las pruebas de regresión.
-
-## 4. Riesgos que quedan
-
-### 4.1 Escalado dinámico de niveles: riesgo medio
-
-`B_EON_DYNAMIC_TRAINER_LEVELS = TRUE` sigue siendo el único flag Eon-specific que queda.
-Implementa el promedio del equipo y el ajuste de Eon, con estas diferencias:
-
-- Se saltan huevos.
-- Se limita el nivel a `MAX_LEVEL`.
-- Usa `Random() % 5`, así que la party puede variar entre intentos.
-- Se aplica a entrenadores partner y rematches.
-- Frontier/eReader/Trainer Hill quedan fuera.
-
-Es una diferencia de balance grande. Si se busca una experiencia más cercana a expansion,
-ponerlo en `FALSE`; si se busca Eon, dejarlo en `TRUE`.
-
-### 4.2 Remapeo de items en entrenadores/Frontier: riesgo medio
-
-Los datos convertidos usan items modernos:
-
-- 24 Focus Band → Focus Sash.
-- 5 Everstone → Eviolite.
-- 1 Lucky Punch → Punching Glove.
-- 1 Electirizer → Macho Brace.
-- Frontier: 52 Focus Sash, 3 Loaded Dice, 1 Punching Glove, 1 Macho Brace, 2 Eviolite.
-- Frontier Brains: 4 Focus Sash.
-
-Eon en varios casos conservaba el efecto viejo, así que esto cambia el comportamiento real.
-La alternativa sería volver a los IDs viejos y aceptar los efectos originales. La decisión
-actual prioriza que los entrenadores usen el efecto que Eon quería.
-
-### 4.3 Exp. All nuevo item: riesgo bajo-medio
-
-- `ITEM_EXP_ALL` ocupa el ID 835 y `ITEMS_COUNT` pasa a 836.
-- Es un key item con `ItemUseOutOfBattle_ExpAll`.
-- El held Exp. Share sigue en su ID original.
-- Falta probar que el menú de items, el registro, el guardado y el Exchange Corner manejen
-  correctamente el nuevo ID.
-
-### 4.4 DNS y paletas de batalla: riesgo bajo
-
-- `DnsApplyFilters` ahora solo se ejecuta en overworld. En batalla se usa la transferencia
-  normal de paletas, que es lo que Eon hacía de todos modos (no aplicaba filtro en combate).
-- `LoadChosenBattleElement` ya usa `GetTimeBasedBattlePalette` en las dos rutas de carga.
-- `GetTimeBasedBattlePalette` no cubre terrenos nuevos de expansion; usa la paleta base.
-
-### 4.5 Detalles menores
-
-- `trainers.h` se editó a mano aunque es generado; `trainers.party` está sincronizado, pero
-  conviene regenerarlo con `trainerproc` y comparar.
-- Las descripciones del Exchange Corner para los items viejos que ya no se usan pueden quedar
-  como strings muertos; no afectan.
-- `B_EON_EXP_ALL_MESSAGE` ya no existe; el mensaje de Eon es siempre el usado cuando Exp. All
-  está activo.
-- `I_EXP_SHARE_FLAG` usa el valor de `FLAG_EXP_SHARE` (0x494), ahora documentado en
-  `include/constants/flags.h`.
-- Los item balls duplicados de Eon se normalizaron: FieryPath, ShoalCave y Slateport usan
-  `Common_EventScript_FindItem` con flags propias, y RusturfTunnel usa un item ball de Revive.
-  Se eliminaron los 165 scripts de item balls de Eon que quedaron sin uso.
-
-## 5. Decisiones que considero correctas
-
-- Mantener `B_PHYSICAL_SPECIAL_SPLIT = GEN_LATEST` y resolver Eon con PSS condicional.
-- `B_UPDATED_TYPE_MATCHUPS = GEN_5`.
-- `B_WHITEOUT_MONEY = GEN_4`.
-- Mantener modernos `B_UPDATED_MOVE_DATA`, `B_UPDATED_MOVE_TYPES`, `B_UPDATED_MOVE_FLAGS` y
-  `B_UPDATED_ABILITY_DATA`.
-- No importar los 95 movimientos experimentales.
-- No mergear `hns/master`.
-- Conservar los items modernos y los items viejos originales, en vez de duplicar nombres.
-- No aceptar híbridos de stats sin efectos.
-- No mergear `hns/master`.
-
-## 6. Siguiente orden recomendado
-
-1. Probar batalla normal, doble, Mega, Frontier, guardado y Exp. All.
-2. Decidir si el escalado dinámico se queda en `TRUE` o se desactiva por defecto.
-3. Revisar Battle Tent/Trainer Hill y wild held items si se quiere consistencia total.
-4. Regenerar `trainers.h` con `trainerproc` y comparar.
-5. Probar DNS en transiciones de batalla.
-6. No mergear `hns/master` hasta cerrar 1–5.
-
-## 7. Validación realizada
-
-- Conteo de items, habilidades, movimientos, entrenadores y object graphics.
-- JSON de mapas y marcadores de conflicto.
-- Balance de llaves en los archivos modificados.
-- Preprocesado de `src/data/items.h` y comprobación de que las ramas de items modernos/Exp. All
-  expanden correctamente.
-- Revisión de nombres de items usados por `trainers.party`.
-- Revisión de las diferencias de movimientos contra `main-grafted` (95 restantes).
-- Compilación completa con `make -j12` (modern); se generó un ROM de 32 MB.
-- Segunda pasada de `make -j12` sin errores.
-- Correcciones de build: TM Endure/Exp. All, CRLF en `.party`/`.s`, clases de facility,
-  heal locations, conflicto DNS `TIME_*`, campo de graphics info y textos del Exchange Corner.
-- Limpieza posterior: mapa duplicado de Cerulean Cave, item balls/flags duplicados, scripts de
-  item balls sin uso y ruta de DNS en batalla.
-- No se ejecutó el ROM ni se hicieron pruebas runtime.
-
-## 8. Auditoría de duplicados y día/noche
-
-### 8.1 Mapas y eventos
-
-- Hay 573 mapas y 573 IDs únicos, con 496 layouts únicos.
-- Se eliminó `CeruleanCave_1F`, que duplicaba `MAP_CERULEAN_CAVE_1F` y no estaba referenciado
-  por `map_groups.json`. También se eliminó su layout huérfano y su `.include` de
-  `data/event_scripts.s`.
-- Los item balls duplicados de Eon se corrigieron:
-  - FieryPath, ShoalCave y Slateport usan `Common_EventScript_FindItem` con flags propias.
-  - RusturfTunnel usa un item ball de Revive con `FLAG_ITEM_RUSTURF_TUNNEL_REVIVE`.
-  - Se eliminaron los 165 scripts de item balls de Eon que ya no se usan.
-- Las flags `FLAG_UNUSED_0x470` y `FLAG_UNUSED_0x472` de Five Isle Meadow se renombraron a
-  `FLAG_ITEM_FIVE_ISLE_MEADOW_MAX_ELIXIR` y `FLAG_ITEM_FIVE_ISLE_MEADOW_PP_MAX`.
-
-### 8.2 Entrenadores y gráficos
-
-- `trainers.party` tiene 864 entrenadores y todos los IDs son únicos. Brock, Misty, Surge,
-  Erika, Koga, Sabrina, Blaine, Giovanni, Lorelei, Bruno, Agatha, Lance, Blue, Glacia y Drake
-  existen una sola vez como entrenadores normales.
-- Battle Frontier usa 300 slots. Hay 34 nombres repetidos dos veces con el mismo `monSet`
-  (por ejemplo, `FRONTIER_TRAINER_JORDAN` y `FRONTIER_TRAINER_ARMANDO` son Brock). Son slots
-  distintos, no IDs duplicados, pero sí contenido repetido. Se pueden deduplicar si se quiere
-  que cada líder aparezca una sola vez.
-- No hay funciones globales duplicadas; el linker las rechazaría. Tampoco hay object graphics
-  ni trainer pics con el mismo nombre.
-
-### 8.3 Día y noche
-
-- Expansion ya tiene un sistema nativo de hora: `GetTimeOfDay`, `OW_TIMES_OF_DAY` y los
-  rangos de `include/rtc.h`. Ese sistema controla evoluciones, encuentros y otros checks de
-  gameplay, pero **no tiñe paletas**.
-- `dns.c` de Eon no duplica ese sistema: añade la capa visual (filtros de paleta, luces de
-  ventanas y paletas de batalla por hora). Son complementarios.
-- DNS usa 6 fases visuales (midnight, dawn, day, sunset, nightfall, night) y expansion usa 4
-  fases de gameplay (morning, day, evening, night). Se movió el enum de DNS a `dns.h` para que
-  `battle_bg.c` use nombres en vez de números.
-- Lo que se podría portar al sistema nativo: las tablas de filtros, la iluminación y las
-  paletas de batalla, usando `GetTimeOfDay` para la fase amplia y `gLocalTime.hours/minutes`
-  solo para las transiciones suaves. Unificarlo del todo obliga a elegir una sola frontera
-  horaria; no se hizo porque cambiaría el aspecto de Eon.
-
-### 8.4 Rendimiento de DNS
-
-- `DnsApplyFilters` ya no se ejecuta en batalla; allí se usa la transferencia normal de
-  paletas. Antes se recorrían 512 colores por frame para copiarlos sin filtrar.
-- Durante el día, cuando el filtro es 0 y no hay luces activas, tampoco se reconstruye el
-  buffer: se transfiere directamente `gPlttBufferFaded`.
-- Si el mapa es una excepción de DNS, `DnsApplyFilters` sale inmediatamente.
-- Se eliminaron `gCombatPalExceptions`, `IsCombat` y `DnsApplyFilterToColour`, que ya no se
-  usaban.
-- `LoadChosenBattleElement` ahora usa `GetTimeBasedBattlePalette` en ambas rutas de carga.
-- El log de mGBA con `Bad BIOS Load` y `Bad memory Load` viene del HLE/BIOS y del nivel de
-  log INFO; no es un error del ROM. Si vuelve a ir lento, poner el log de mGBA en `Fatal` o
-  desactivarlo y cargar un BIOS real evita el spam de mensajes.
-
-## 9. Merges incrementales
-
-- `expansion/1.10.3`: mergeado y compilado. Se conservaron las decisiones de Eon en
-  `include/config/battle.h` y se regeneró `trainers.h`.
-- `expansion/1.11.0`: mergeado y compilado. Se adaptaron:
-  - El escalado dinámico de Eon convive con `DoTrainerPartyPool`.
-  - El PSS por battler se mantiene frente a los nuevos helpers globales.
-  - `IsAlly` se sustituyó por `IsBattlerAlly`.
-  - Se conservaron los datos de Battle Frontier de Eon en vez de la consolidación
-    interna de 1.11.0, porque el struct y el conteo de 300 trainers no cambiaron.
-  - Se mantuvieron los menús de party/item de Eon y se añadieron los textos nuevos
-    de expansion como `COMPOUND_STRING`.
-- Estado tras 1.11.0:
-
-```text
-mapas: 573 con IDs únicos
-items: 836 / ITEMS_COUNT 836
-habilidades: 314 / ABILITIES_COUNT_EON 314
-trainers.party: 864
-object gfx: 254 / NUM 254
-```
-
-- Siguiente: `expansion/1.12.0`. Esa versión añade paletas de batalla nativas por
-  hora (morning/night/sunset) y cambios de region map. Hay que integrarlas con DNS
-  en lugar de mantener dos sistemas de paletas de batalla.
-- Después: 1.13.0, 1.14.0, 1.15.0, 1.16.0 y 1.17.2, en orden.
-
-### 1.12.0: preparación de paletas
-
-- Se copiaron las 53 paletas de Eon de `graphics/battle_terrain/` a la ruta nueva de
-  expansion 1.12.0, `graphics/battle_environment/`, incluyendo las variantes
-  `morning`, `night` y `sunset`.
-- Cuando se haga el merge de 1.12.0, la resolución debe conservar estas paletas de Eon
-  (no las de expansion) y adaptar `src/data/graphics/battle_environment.h` para declarar
-  las variantes horarias con `INCBIN_U16` y `LoadPalette`.
-- El merge de 1.12.0 no se completó en esta pasada: además de las paletas, 1.12.0 mueve
-  heal locations y region map a JSON y cambia el generador de teachable learnsets, con
-  57 archivos en conflicto. Se abortó el merge para no dejar el árbol a medias.
-
-### 1.12.0: merge completado
-
-- Merge de `expansion/1.12.0` resuelto y compilado con `make -j12`.
-- Paletas de batalla: se conservaron las 53 paletas de Eon en
-  `graphics/battle_environment/`. `src/data/graphics/battle_environment.h` declara las
-  variantes horarias con `INCBIN_U16` y `src/battle_bg.c` las carga con
-  `GetTimeBasedBattlePalette` + `LoadPalette`, usando el enum
-  `BATTLE_ENVIRONMENT_*` de expansion.
-- Heal locations: se migraron las 13 ubicaciones de Sevii/Kanto de Eon a
-  `src/data/heal_locations.json`; `include/constants/heal_locations.h` y
-  `src/data/heal_locations.h` se regeneran desde el JSON (35 entradas).
-- Region map: se adopto el formato JSON de expansion (`id` en vez de `map_section`)
-  conservando coordenadas y nombres personalizados de Eon para Sevii, Islas Naranja,
-  Kanto reutilizado y Trainer Hill. El mapa grafico de Eon se mantiene.
-- `src/map_name_popup.c`: la tabla de temas paso a tamano completo (`MAPSEC_COUNT`) y
-  ya no descarta las secciones Kanto, porque Eon las usa para localizaciones de Sevii.
-- `trainers.h` y `test/battle/trainer_control.h` se regeneraron desde sus `.party`;
-  se conservan los 9 lideres de Kanto de Eon (864 trainers en total).
-- `teachable_learnsets.h` se regenero desde la base limpia de 1.12.0 y los learnables
-  de Eon. Los helpers de learnsets ahora abren archivos como UTF-8 para funcionar en
-  Windows.
-- Se resolvieron colisiones de `LOCALID_*` entre scripts propios de Eon y
-  `include/constants/map_event_ids.h` renombrando los alias de Four Island, Indigo
-  Plateau y Pokemon League.
-- Items: los Poke Doll y efectos antiguos siguen bajo `I_EON_ITEM_EFFECTS` (TRUE por
-  defecto). Las bayas Pamtre/Watmel/Durin/Belue de Eon usan `HOLD_EFFECT_WHITE_HERB`.
-- Verificado con `I_EON_ITEM_EFFECTS TRUE` y `FALSE`: ambos builds enlazan.
-
-### 1.13.0: merge completado
-
-- Merge de `expansion/1.13.0` resuelto y compilado con `make -j12`, con
-  `I_EON_ITEM_EFFECTS TRUE` y `FALSE`.
-- Se adopto la nueva tabla `gBattleEnvironmentInfo` de 1.13. Eon conserva sus
-  53 paletas base y `GetTimeBasedBattlePalette` se integro en
-  `LoadBattleEnvironmentGfx`/`LoadBattleEnvironmentPalette` para seguir usando
-  morning/night/sunset sin el sistema antiguo de `sBattleEnvironmentTable`.
-- Se conservaron los 864 trainers de Eon exactamente igual que antes del merge,
-  incluidos los lideres de Kanto/Johto. `trainers.h`, `battle_partners.h`,
-  `debug_trainers.h` y `trainer_control.h` se regeneran con `trainer_rules.mk`
-  adaptado a Windows (`-P` y `tr -d '\r'`).
-- Los 836 items conservan precios, efectos, descripciones y parametros de Eon;
-  solo se adopto el nuevo formato `ITEM_NAME`/`ITEM_PLURAL_NAME` de 1.13. Los
-  items exclusivos de Eon (Exp. All, Link Stone, llaves de Battle Pyramid, etc.)
-  siguen presentes.
-- Se adaptaron al nuevo motor de 1.13:
-  - `PERMAFROST` (Frost Body): inmunidad a Fuego y congelacion por contacto.
-  - `ROCK_BODY`: absorcion de Roca mediante `CanAbilityAbsorbMove`.
-  - `GALVANIZED`: reduccion de dano fisico.
-  - `HOLD_EFFECT_CURE_ATTRACT` usa `volatiles.infatuation`.
-  - PSS por battler en precision, pantallas, quemadura, stats y AI.
-- Heal locations: 35 entradas, incluidas las 13 de Sevii/Kanto; el JSON conserva
-  los campos nuevos `respawn_map`/`respawn_npc` de 1.13.
-- Region map: se mantienen los nombres/coordenadas de Sevii y los graficos del
-  mapa de Eon con el formato y secciones de 1.13.
-- Correcciones de integracion: BOM en `include/config/general.h`, macros
-  duplicadas, firmas nuevas de accuracy/contacto/estado, acciones de item menu,
-  `CheckPCHasSpace` sobre la nueva API de bolsas y eliminacion de textos de
-  whiteout obsoletos.
-
-### 1.13.0: cierre runtime y fix de TallGrass
-
-- Prueba runtime del overworld completada: el fallo de `Bad memory Load16`
-  ocurría al usar el efecto de hierba alta.
-- Causa: `sPicTable_TallGrass` quedó con 4 frames (`0,1,3,4`) mientras el PNG
-  de 96x16 y la animación usan 6 (`0-5`). El frame 5 leía datos adyacentes como
-  un frame de 42.896 bytes y encolaba una copia fuera de VRAM.
-- Fix: tabla restaurada a los 6 frames. El diagnóstico temporal se eliminó; el
-  único cambio funcional sobre 1.13.0 es esa tabla.
-- Pendiente de probar antes de abrir 1.13.4: batalla normal/doble,
-  Mega/Teracristal/Dynamax, Battle Frontier/Trainer Hill, guardado/carga,
-  Exp. All y transiciones DNS.
+## 5. Runtime status
+
+- 1.13.0 overworld runtime test passed.
+- The TallGrass crash (`Bad memory Load16`) was fixed by restoring the six-frame
+  `sPicTable_TallGrass`; all temporary diagnostics were removed.
+- 1.13.4 builds successfully.
+- 1.14.4 builds successfully with `I_EON_ITEM_EFFECTS TRUE`:
+  - EWRAM: 228,996 B (87.36%)
+  - IWRAM: 28,684 B (87.54%)
+  - ROM: 25,229,652 B (75.19%)
+- The 1.14.4 build with `I_EON_ITEM_EFFECTS FALSE` is being validated.
+- Battle, save, Frontier and DNS runtime tests are still pending for the 1.14 line.
+
+## 6. Known risks
+
+- The Eon dynamic trainer-level scaling (`B_EON_DYNAMIC_TRAINER_LEVELS`) remains
+  enabled. It averages the player's party and can vary between attempts. Frontier,
+  eReader and Trainer Hill are excluded.
+- The 95 excluded move changes are a deliberate difference from the original Eon hack.
+- 1.14 introduced new move, item and ability data. Data-only differences must be
+  reviewed before the 1.14 line is considered final.
+- Save compatibility must be re-tested after each minor merge because of expansion's
+  save-layout changes.
+- `hns/master` must remain unmerged.
+
+## 7. Next steps
+
+1. Complete the 1.14.4 build with `I_EON_ITEM_EFFECTS TRUE` and `FALSE`.
+2. Commit 1.14.4 and regenerate generated files.
+3. Merge 1.15.3, 1.16.4 and 1.17.2 in order.
+4. Run runtime tests: normal/double battles, Mega/Terastal/Dynamax, Battle Frontier,
+   Trainer Hill, Battle Tent, saving/loading, Exp. All and DNS transitions.

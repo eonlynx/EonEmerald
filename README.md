@@ -1,6 +1,6 @@
-**Overview:**
+﻿**Overview:**
 
-EonEmerald is a hack that aims to provide a modern-ish and unique experience while still feeling vanilla. I wanted to see a hack that let players see as much content as gen 3 had to offer, even being compatible with vanilla saves while offering numerous QoL changes. I felt it was also important for the hack to be somewhat PKhex compatible for some players as well for ease of access or transferring old mons. There are no cross gen evolutions added as PKhex wouldn’t be able to detect them, but I don’t believe they would be a bad addition as an option for players.
+EonEmerald is a hack that aims to provide a modern-ish and unique experience while still feeling vanilla. I wanted to see a hack that let players see as much content as gen 3 had to offer, even being compatible with vanilla saves while offering numerous QoL changes. I felt it was also important for the hack to be somewhat PKhex compatible for some players as well for ease of access or transferring old mons. There are no cross gen evolutions added as PKhex wouldnâ€™t be able to detect them, but I donâ€™t believe they would be a bad addition as an option for players.
 
 [You can find the hack's documentation here](https://docs.google.com/spreadsheets/d/1CpPiIwOjtla2IpimvYV5ud4QEYM3cf64GHh-ZYKtDrw/edit?usp=sharing).
 
@@ -11,12 +11,12 @@ Screenshots:
 ![pokeemerald](https://github.com/user-attachments/assets/966c6c8c-6985-4b23-baa2-1582861450e2)
 ![pokeemerald](https://github.com/user-attachments/assets/d0f7f0c5-f7ba-427b-943e-78f1262d2f5b)
 
-Based off RHH's pokeemerald-expansion 1.13.4 https://github.com/rh-hideout/pokeemerald-expansion/
+Based off RHH's pokeemerald-expansion 1.14.4 https://github.com/rh-hideout/pokeemerald-expansion/
 
 
 
-> # Pokémon Emerald
-> This is a decompilation of Pokémon Emerald.
+> # PokÃ©mon Emerald
+> This is a decompilation of PokÃ©mon Emerald.
 > 
 > It builds the following ROM:
 > * [**pokeemerald.gba**](https://datomatic.no-intro.org/index.php?page=show_record&s=23&n=1961) `sha1: f3ae088181bf583e55daf962a92bb46f4f1d07b7`
@@ -26,4 +26,5 @@ Based off RHH's pokeemerald-expansion 1.13.4 https://github.com/rh-hideout/pokee
 
 ## Credits
 
-Based on RHH's pokeemerald-expansion 1.13.4: https://github.com/rh-hideout/pokeemerald-expansion/
+Based on RHH's pokeemerald-expansion 1.14.4: https://github.com/rh-hideout/pokeemerald-expansion/
+

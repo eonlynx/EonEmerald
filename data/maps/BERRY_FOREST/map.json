@@ -159,7 +159,7 @@
       "y": 10,
       "elevation": 0,
       "item": "ITEM_WIKI_BERRY",
-      "flag": "FLAG_TEMP_1A"
+      "flag": "FLAG_HIDDEN_ITEM_BERRY_FOREST_WIKI_BERRY_1"
     },
     {
       "type": "hidden_item",
@@ -167,7 +167,7 @@
       "y": 10,
       "elevation": 0,
       "item": "ITEM_FIGY_BERRY",
-      "flag": "FLAG_TEMP_16"
+      "flag": "FLAG_HIDDEN_ITEM_BERRY_FOREST_FIGY_BERRY"
     },
     {
       "type": "hidden_item",
@@ -175,7 +175,7 @@
       "y": 22,
       "elevation": 0,
       "item": "ITEM_AGUAV_BERRY",
-      "flag": "FLAG_TEMP_1B"
+      "flag": "FLAG_HIDDEN_ITEM_BERRY_FOREST_AGUAV_BERRY"
     },
     {
       "type": "hidden_item",
@@ -183,7 +183,7 @@
       "y": 5,
       "elevation": 0,
       "item": "ITEM_MAGO_BERRY",
-      "flag": "FLAG_TEMP_18"
+      "flag": "FLAG_HIDDEN_ITEM_BERRY_FOREST_MAGO_BERRY"
     },
     {
       "type": "hidden_item",
@@ -191,7 +191,7 @@
       "y": 3,
       "elevation": 0,
       "item": "ITEM_IAPAPA_BERRY",
-      "flag": "FLAG_TEMP_19"
+      "flag": "FLAG_HIDDEN_ITEM_BERRY_FOREST_IAPAPA_BERRY"
     },
     {
       "type": "hidden_item",
@@ -199,7 +199,7 @@
       "y": 13,
       "elevation": 0,
       "item": "ITEM_WIKI_BERRY",
-      "flag": "FLAG_TEMP_17"
+      "flag": "FLAG_HIDDEN_ITEM_BERRY_FOREST_WIKI_BERRY_2"
     },
     {
       "type": "hidden_item",
@@ -207,7 +207,7 @@
       "y": 21,
       "elevation": 0,
       "item": "ITEM_LUM_BERRY",
-      "flag": "FLAG_TEMP_1C"
+      "flag": "FLAG_HIDDEN_ITEM_BERRY_FOREST_LUM_BERRY"
     },
     {
       "type": "hidden_item",
@@ -215,7 +215,7 @@
       "y": 42,
       "elevation": 0,
       "item": "ITEM_BELUE_BERRY",
-      "flag": "FLAG_TEMP_1F"
+      "flag": "FLAG_HIDDEN_ITEM_BERRY_FOREST_BELUE_BERRY"
     }
   ]
 }
