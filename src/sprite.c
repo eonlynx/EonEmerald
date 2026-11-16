@@ -777,6 +777,7 @@ void RequestSpriteFrameImageCopy(u16 index, u16 tileNum, const struct SpriteFram
                    (u32)sSpriteCopyRequests[sSpriteCopyRequestCount].src,
                    sSpriteCopyRequests[sSpriteCopyRequestCount].size,
                    images[0].relativeFrames);
+            return;
         }
 
         sSpriteCopyRequestCount++;
@@ -798,6 +799,7 @@ void RequestSpriteCopy(const u8 *src, u8 *dest, u16 size)
                    (u32)src,
                    (u32)dest,
                    size);
+            return;
         }
 
         sSpriteCopyRequestCount++;
