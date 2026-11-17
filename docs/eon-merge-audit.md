@@ -207,12 +207,81 @@ The project must always use the latest patch release of each minor line:
 - Object graphics, item IDs (`ITEMS_COUNT 881`), map count and trainer pic count are
   unchanged from 1.16.4.
 
+## 3.4 Post-1.17.2 fixes (2026-11-17)
+
+### Map region and constant desync
+
+- 14 non-FRLG maps were tagged `REGION_KANTO` inside Emerald groups: `UnusedContestHall1`,
+  `MtPyre_6F`, `ShoalCave_LowTideLowerRoom`, `NewMauville_Inside`, `ScorchedSlab`,
+  `AquaHideout_UnusedRubyMap1/2/3`, `MagmaHideout_2F_3R`, `SafariZone_Southwest`,
+  `NavelRock_Up2`, `NavelRock_Up3`, `NavelRock_Top` and `NavelRock_Bottom`.
+- `mapjson groups` filters maps whose region does not match the target game, but
+  `generate_map_constants_text` still assigned their constants. Every later map was
+  shifted by one: `InsideOfTruck` (40) loaded `SSTidalCorridor` (41).
+- All 14 maps were changed to `REGION_HOENN` and `groups.inc`, `headers.inc`,
+  `connections.inc`, `events.inc` and `include/constants/map_groups.h` were regenerated.
+- Verified all 573 compiled maps: every `MAP_*` constant matches its group and index in
+  `groups.inc`. `InsideOfTruck` is group 25, index 40
+  (`MAP_INSIDE_OF_TRUCK = (40 | (25 << 8))`).
+- The FRLG map set remains excluded: 981 maps in `map_groups.json`, 573 compiled after
+  filtering the 408 `*_Frlg` maps.
+
+### Day/night
+
+- Expansion's `OW_ENABLE_DNS` and Eon's `src/dns.c` were both tinting the overworld,
+  which double-darkened night maps. `OW_ENABLE_DNS` is now `FALSE` and Eon's DNS remains
+  the only active system.
+- `OW_BATTLE_ONLY_FORMS` is `FALSE`, matching `OW_FOLLOWERS_ENABLED FALSE`.
+
+### Species and content trimming
+
+- EonEmerald is a Generation 3 project. `P_GEN_4_POKEMON` through `P_GEN_9_POKEMON`,
+  Mega Evolutions, Primal Reversions, Ultra Burst, Gigantamax, Tera, fusion forms,
+  regional forms, Pikachu extra forms and `P_NEW_EVOS_IN_REGIONAL_DEX` are `FALSE`.
+- `P_CROSS_GENERATION_EVOS` is `FALSE`, but `P_GEN_2_CROSS_EVOS` and
+  `P_GEN_3_CROSS_EVOS` remain `TRUE` so the babies and evolutions introduced in
+  Gen 2 and Gen 3 stay available.
+- `NATIONAL_DEX_COUNT` now resolves to `NATIONAL_DEX_DEOXYS` (386).
+- `OW_POKEMON_OBJECT_EVENTS` had to stay `TRUE`: expansion's `wild_encounter_ow.c`
+  references `overworldShinyPaletteFemale` unconditionally, so disabling it requires a
+  guard in expansion code. EonEmerald does not use species overworld graphics.
+- Gen 4+ species data, cries and overworld graphics are no longer linked. No
+  `Cry_*`/`gMonFrontPic_*` symbols exist for disabled species.
+
+### Still compiled
+
+- Items: `ITEMS_COUNT` is 881. Expansion 1.17.2 has no per-item enable config, so all
+  item data and icons are linked, including Gen 4+ items.
+- Moves: `MOVES_COUNT` is 848. Expansion 1.17.2 has no per-move enable config.
+- FRLG: map, layout, tileset, trainer and map-script bulk data are excluded in Emerald
+  builds. Only small shared FRLG-labelled helpers remain (for example
+  `data/scripts/set_gym_trainers.inc`).
+
+### Build result
+
+- EWRAM: 227,284 B (86.70%)
+- IWRAM: 28,380 B (86.61%)
+- ROM used: 15,414,156 B (45.94%)
+- Final `pokeemerald.gba`: 16,777,216 B
+- Previous 1.17.2 build: 27,091,748 B used, 33,554,432 B file.
+
+### Pending regressions
+
+- Eon's regional Hoenn dex had 411 entries in `pre-main`; the merged expansion list has
+  202. Restoring it is a data merge task, not a config change.
+- The start menu refuses to open the Pokédex when
+  `GetNationalPokedexCount(FLAG_GET_SEEN)` is 0. This guard also exists in `pre-main`.
+  Changing the species count also invalidates old saves.
+- `UpdateOverworldWildEncounter()` still runs every frame and linearly scans
+  `gWildMonHeaders` even with `WE_OW_ENCOUNTERS FALSE`. Removing that cost requires
+  touching expansion code.
+
 ## 4. Static counts
 
 ```text
 trainers.party: 864
 items: 881 (ITEMS_COUNT 881)
-maps: 981 (including the imported FRLG map set)
+maps: 981 in map_groups.json; 573 compiled in Emerald builds (408 FRLG maps filtered)
 abilities: 323 (ABILITIES_COUNT_EON 323)
 object graphics: 389 (NUM_OBJ_EVENT_GFX 389)
 trainer pics: 171 (front and back, including TRAINER_PIC_NONE)
@@ -261,6 +330,13 @@ conflict markers: 0
   - IWRAM: 28,380 B (86.61%)
   - ROM: 27,091,644 B (80.74%)
 - Runtime tests for the 1.17 line are still pending.
+- 1.17.2 post-merge fixes (map regions, single DNS, Gen 3-only species) build with
+  `I_EON_ITEM_EFFECTS TRUE`:
+  - EWRAM: 227,284 B (86.70%)
+  - IWRAM: 28,380 B (86.61%)
+  - ROM: 15,414,156 B (45.94%), final `pokeemerald.gba` 16,777,216 B
+- Runtime tests for the post-merge fixes are still pending. A new save is required
+  because the species count changed the Pokédex flag layout.
 
 ## 6. Known risks
 

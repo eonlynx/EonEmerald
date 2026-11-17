@@ -3,7 +3,7 @@
   "name": "NavelRock_Up3",
   "layout": "LAYOUT_NAVEL_ROCK_LADDER_ROOM1",
   "music": "MUS_RG_SEVII_CAVE",
-  "region": "REGION_KANTO",
+  "region": "REGION_HOENN",
   "region_map_section": "MAPSEC_SEAFOAM_ISLANDS",
   "requires_flash": false,
   "weather": "WEATHER_SNOW",
