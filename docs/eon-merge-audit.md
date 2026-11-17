@@ -21,7 +21,7 @@ merged.
 | 1.14.4 | Merged, built and committed (`ccb1943df2`) |
 | 1.15.3 | Merged, built and committed (`4f9f378a96`) |
 | 1.16.4 | Merged, built and committed (`286344b0e5`) |
-| 1.17.2 | Merged and built; commit pending |
+| 1.17.2 | Merged, built and committed (`3eff72f60d`) |
 
 The project must always use the latest patch release of each minor line:
 1.13.4, 1.14.4, 1.15.3, 1.16.4 and 1.17.2.
