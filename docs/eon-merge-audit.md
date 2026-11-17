@@ -1,6 +1,6 @@
 # EonEmerald + pokeemerald-expansion merge audit
 
-Branch: `merge/1.15.3`
+Branch: `merge/1.16.4`
 Date: 2026-11-17
 
 This document records the current state of the incremental merge of
@@ -20,7 +20,7 @@ merged.
 | 1.13.4 | Merged, built and committed (`fcfb6880eb`, learnsets `e2a3c4a93d`) |
 | 1.14.4 | Merged, built and committed (`ccb1943df2`) |
 | 1.15.3 | Merged, built and committed (`4f9f378a96`) |
-| 1.16.4 | Pending |
+| 1.16.4 | Merged and built; commit pending |
 | 1.17.2 | Pending |
 
 The project must always use the latest patch release of each minor line:
@@ -148,15 +148,48 @@ The project must always use the latest patch release of each minor line:
   scripts and their shared confirmation text, and added the Pokemon constants include
   needed by Eon's Jirachi/Celebi mystery gifts.
 
+## 3.2 1.16.4 integration notes
+
+- 25 conflicts were resolved.
+- `TrainerPicID` was reorganized: back pics now come first and front pics lost the
+  `_FRONT_` prefix. Compatibility macros preserve the old `TRAINER_PIC_FRONT_*` and
+  `TRAINER_PIC_BACK_*` names. The 13 Eon Kanto leader pics were added as
+  `TRAINER_PIC_BROCK` through `TRAINER_PIC_BLUE` before `TRAINER_PIC_COUNT`.
+- The old `gTrainerSprites` table was replaced by `gTrainerPicInfo[TRAINER_PIC_COUNT]`;
+  the Eon leader entries were appended in the new format.
+- Facility classes are now an enum. The Eon Kanto/Johto classes were appended before
+  `FACILITY_CLASSES_COUNT`, both lookup arrays were extended, and
+  `TRAINER_CLASS_LEADER_2` still aliases `TRAINER_CLASS_LEADER`.
+- Object graphics became an enum. Eon's custom Kanto leader overworld graphics remain
+  mapped in the Emerald table, expansion's FRLG sprites remain in the FRLG section,
+  and `OBJ_EVENT_GFX_SURGE` is kept as an extra entry for Eon's Kanto maps.
+- Berries now use `BERRY_ID_*` and the nested `struct Berry` layout. Eon's Gen 3 yield
+  values were reapplied to the 43 affected berries.
+- `DamageContext` now uses `abilities[]` instead of `abilityDef`. Eon's per-species
+  physical/special split is preserved through `IsMovePhysicalForBattler`, and weather
+  checks use the new `IsBattlerWeatherAffected(holdEffect, weather, flag)` signature.
+- Stat-change move effects were removed from the effect enum. Eon AI checks now use
+  `IsStatLoweringMove`, and the Eon abilities were added to the new
+  `CanAbilityPreventStatLoss` in `src/battle_stat_change.c`.
+- Rain Dish has a single merged case: expansion's rain heal plus Eon's Hydration-style
+  status cure. Eon's custom healing abilities now use `BattleScript_AbilityHpHeal`.
+- The obsolete party-menu move-relearner callbacks were removed in favor of the 1.16
+  move-relearner flow; the category icon still uses Eon's per-species PSS.
+- Script-menu strings moved to `src/data/script_menu.h`; their duplicate definitions
+  were removed from `src/strings.c`. Expansion's missing text symbols were added back.
+- Item IDs remain 874-879 for Eon items, `ITEM_EXP_ALL` 880 and `ITEMS_COUNT` 881.
+- Eon's save-block `registeredLongItem` field and expansion's `dailySeed` now coexist,
+  and time events use the new `gParties` storage.
+
 ## 4. Static counts
 
 ```text
 trainers.party: 864
 items: 881 (ITEMS_COUNT 881)
 maps: 981 (including the imported FRLG map set)
-abilities: 314 (ABILITIES_COUNT_EON 314)
-object graphics: 401 (NUM_OBJ_EVENT_GFX 401)
-trainer front pics: 168
+abilities: 322 (ABILITIES_COUNT_EON 322)
+object graphics: 389 (NUM_OBJ_EVENT_GFX 389)
+trainer pics: 171 (front and back, including TRAINER_PIC_NONE)
 conflict markers: 0
 ```
 
@@ -184,6 +217,15 @@ conflict markers: 0
   - IWRAM: 28,504 B (86.99%)
   - ROM: 26,692,820 B (79.55%)
 - Runtime tests for the 1.15 line are still pending.
+- 1.16.4 builds successfully with `I_EON_ITEM_EFFECTS TRUE`:
+  - EWRAM: 227,608 B (86.83%)
+  - IWRAM: 28,384 B (86.62%)
+  - ROM: 26,857,152 B (80.04%)
+- The 1.16.4 build with `I_EON_ITEM_EFFECTS FALSE` also links:
+  - EWRAM: 227,608 B (86.83%)
+  - IWRAM: 28,384 B (86.62%)
+  - ROM: 26,857,296 B (80.04%)
+- Runtime tests for the 1.16 line are still pending.
 
 ## 6. Known risks
 
@@ -193,15 +235,15 @@ conflict markers: 0
 - The 95 excluded move changes are a deliberate difference from the original Eon hack.
 - 1.14 introduced new move, item and ability data. Data-only differences must be
   reviewed before the 1.14 line is considered final.
-- The 1.15.3 FRLG map set is imported and builds, but its runtime behavior in an
-  Emerald-mode save has not been tested yet.
+- The imported FRLG map set builds, but its runtime behavior in an Emerald-mode save
+  has not been tested yet.
 - Save compatibility must be re-tested after each minor merge because of expansion's
   save-layout changes.
 - `hns/master` must remain unmerged.
 
 ## 7. Next steps
 
-1. Publish the 1.15.3 ROM artifact and commit the merge.
-2. Merge 1.16.4 and 1.17.2 in order.
+1. Publish the 1.16.4 ROM artifact and commit the merge.
+2. Merge 1.17.2.
 3. Run runtime tests: normal/double battles, Mega/Terastal/Dynamax, Battle Frontier,
    Trainer Hill, Battle Tent, saving/loading, Exp. All and DNS transitions.
