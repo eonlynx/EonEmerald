@@ -3,6 +3,7 @@
 #include "constants/items.h"
 #include "constants/map_scripts.h"
 #include "constants/mystery_gift.h"
+#include "constants/pokemon.h"
 #include "constants/moves.h"
 #include "constants/region_map_sections.h"
 #include "constants/songs.h"

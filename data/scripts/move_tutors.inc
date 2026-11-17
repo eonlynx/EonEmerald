@@ -481,6 +481,12 @@ EventScript_SwordsDanceTaught::
 
 MoveTutor_EventScript_OpenPartyMenu::
 	special ChooseMonForMoveTutor
+	lock
+	faceplayer
+	return
+
+MoveTutor_EventScript_OpenBox::
+	chooseboxmon SELECT_PC_MON_MOVE_TUTOR
 	waitstate
 	lock
 	faceplayer
@@ -488,6 +494,12 @@ MoveTutor_EventScript_OpenPartyMenu::
 
 MoveTutor_EventScript_CanOnlyBeLearnedOnce::
 	msgbox MoveTutor_Text_ThisMoveCanOnlyBeLearnedOnce, MSGBOX_YESNO
+	return
+
+MoveTutor_AfterChooseBoxMon::
+	waitstate
+	special CanTeachMoveBoxMon
+	waitstate
 	return
 	
 MoveTutor_Text_FIRE_PUNCH_Teach::

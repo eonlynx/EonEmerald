@@ -73,6 +73,9 @@
 #define B_UPDATED_CONVERSION_2      GEN_3 // In Gen5+, Conversion 2 changes the user's type to a type that resists the last move used by the selected target. Before, it would consider the last move being successfully hit by. Additionally, Struggle is considered Normal type before Gen 5.
 #define B_PP_REDUCED_BY_SPITE       GEN_3 // In Gen4+, Spite reduces the foe's last move's PP by 4, instead of 2 to 5.
 #define B_EXTRAPOLATED_MOVE_FLAGS   TRUE       // Adds move flags to moves that they don't officially have but would likely have if they were in the latest core series game.
+#define B_HIDDEN_POWER_COUNTER      GEN_LATEST // Prior to Gen4, Counter and Mirror Coat treat Hidden Power as Physical regardless of type.
+#define B_MODERN_TRICK_CHOICE_LOCK  GEN_LATEST // In Gen5+, if a Choice Item is swapped for a Choice Item, the Trick/Switcheroo user can pick another move, and then they'll be locked into it.
+#define B_PROTECT_FAILURE_RATE      GEN_LATEST // In Gen5+, protect moves fails 1/3 of the time instead of 1/2
 
 // Ability data settings
 #define B_UPDATED_ABILITY_DATA      GEN_LATEST // Affects flags
@@ -145,6 +148,16 @@
                                                // If OW_TIMES_OF_DAY is set to Gen 3, then Morning Sun is boosted during the day.
 #define B_DREAM_EATER_LIQUID_OOZE   GEN_LATEST // In Gen5+, Dream Eater is affected by Liquid Ooze.
 #define B_DREAM_EATER_SUBSTITUTE    GEN_LATEST // In Gen5+, Dream Eater can successfully hit and drain from a Substitute.
+#define B_SNATCH                    GEN_LATEST // In Gen5+, Snatch no longer steals moves that were already stolen by another Pokémon's Snatch on the same turn.
+#define B_FOCUS_PUNCH_FAILURE       GEN_LATEST // To determine if Focus is lost, in Gen4-, check if the current move is Focus Punch.
+                                               // In Gens 5-6, check if the selected move is Focus Punch.
+                                               // In Gen7+, check if the current move and the selected move are Focus Punch.
+                                               // Also in Gen4-, the check for Focus Punch fail will occur after effects like pp consumption and flinching while it happens before in Gen5+
+#define B_COUNTER_MIRROR_COAT_ALLY  GEN_LATEST // In Gen5+, an ally's attack does not count for uses of Counter/Mirror Coat/Metal Burst. In Gen4-, if the last attack taken was from an ally, Counter/Mirror Coat/Metal Burst would fail.
+#define B_COUNTER_TRY_HIT_PARTNER   GEN_LATEST // In Gen5+, if the user of the last attack is not on the field, it will be redirected to the partner. In Gen4-, Counter/Mirror Coat/Metal Burst would fail.
+#define B_RAGE_BUILDS               GEN_LATEST // In Gen4+, Rage's effect only sets in when it successfully hits. In Gen3, Rage's effect sets in regardless of whether it hits, misses or fails.
+#define B_CHECK_USER_FAILURE        GEN_LATEST // In Gen5+, The user no longer checks it's own failure, e.g. Soundproof will not block it's own Perish Song
+#define B_ABSORB_MESSAGE            GEN_LATEST // In Gen5+, No absorb message is played if user is already at full hp.
 
 // Ability settings
 #define B_ABILITY_WEATHER           GEN_3 // In Gen6+, ability-induced weather lasts 5 turns. Before, it lasted until the battle ended or until it was changed by a move or a different weather-affecting ability.
@@ -182,6 +195,25 @@
 #define B_DEFIANT_STICKY_WEB        GEN_LATEST // In Gen9+, Defiant activates on Sticky Web regardless of who set it up. In Gen8, Defiant does not activate on Sticky Web set up by an ally after Court Change swaps its side.
 #define B_POWDER_OVERCOAT           GEN_LATEST // In Gen6+, Overcoat blocks powder and spore moves from affecting the user.
 #define B_INFILTRATOR_SUBSTITUTE    GEN_LATEST // In Gen6+, Infiltrator bypasses Substitute when using a move, excluding Transform and Sky Drop.
+
+// Various volatile timers
+#define B_CONFUSION_TURNS    5
+#define B_UPROAR_TURN_COUNT  5
+#define B_RAMPAGE_TURNS      3
+#define B_DISABLE_TIMER      4
+#define B_ENCORE_TIMER       4
+#define B_PERISH_SONG_TIMER  3
+#define B_TAUNT_TIMER        5
+#define B_SLOW_START_TIMER   5
+#define B_EMBARGO_TIMER      5
+#define B_MAGNET_RISE_TIMER  5
+#define B_TELEKINESIS_TIMER  3
+#define B_HEAL_BLOCK_TIMER   5
+#define B_LASER_FOCUS_TIMER  2
+#define B_THROAT_CHOP_TIMER  2
+#define B_WRAP_TURNS         7 // Max number of turns with Grip Claw
+#define B_SYRUP_BOMB_TIMER   3
+#define B_TORMENT_TIMER      3
 
 // Item settings
 #define B_HP_BERRIES                GEN_3 // In Gen4+, berries which restore HP activate immediately after HP drops to half. In Gen3, the effect occurs at the end of the turn.
@@ -236,9 +268,6 @@
 // Var Settings
 // To use the following features, change the 0 for a var present in include/constants/vars.h, preferably an unused one.
 // Eg: You may rename VAR_UNUSED_0x404E to a descriptive name and use it below.
-#define B_VAR_STARTING_STATUS       0     // If this var has a value, assigning a STATUS_FIELD_xx_TERRAIN to it before battle causes the battle to start with that terrain active.
-                                          // This var should never remain non-zero long enough for the player to save.
-#define B_VAR_STARTING_STATUS_TIMER 0     // If this var has a value greater or equal than 1 field terrains will last that number of turns, otherwise they will last until they're overwritten.
 #define B_VAR_WILD_AI_FLAGS         0     // If not 0, you can use this var to add to default wild AI flags. IMPORTANT: NOT usable with flags above (1 << 15)
                                           // This var should never remain non-zero long enough for the player to save.
                                           // For better wild AI handling, edit GetWildAiFlags() in src/battle_ai_main.c
@@ -249,6 +278,7 @@
 #define NO_BAG_RESTRICTION       0
 #define NO_BAG_AGAINST_TRAINER   1
 #define NO_BAG_IN_BATTLE         2
+#define NO_BAG_INVALID_VALUE     3
 
 #define B_VAR_NO_BAG_USE         0     // If 1, the ability to use the bag in battle is disabled in trainer battles. If 2, it is also disabled in wild battles.
 
@@ -388,5 +418,16 @@
 #define B_POOL_RULES_USE_ITEM_EXCLUSIONS    FALSE    // Exclude items listed in poolItemClauseExclusions
 #define B_POOL_RULE_MEGA_STONE_CLAUSE       FALSE    // Pick only 1 mon with mega stone
 #define B_POOL_RULE_Z_CRYSTAL_CLAUSE        FALSE    // Pick only 1 mon with Z-crystal
+
+
+// EonEmerald: 1.15 additions kept at Gen 3 behavior.
+#define B_HIT_THAW                  GEN_3 // In Gen6+, damaging moves that thaw the user will thaw the target.
+#define B_POWDER_STATUS_HEAVY_RAIN  GEN_3 // In Gen7+, Powder doesn't damage the user of a Fire-type move in heavy rain.
+#define B_X_ITEMS_CROSSUSE          FALSE // In Gen7, X items can be used on any friendly battler in double battles.
+#define B_SANDSTORM_SOLAR_BEAM      GEN_3 // In Gen3+, Sandstorm decreases the power of Solar Beam.
+#define B_HPBAR_COLOR_THRESHOLD     GEN_3 // In Gen5+, HP bar colors use actual HP values instead of bar length.
+#define B_INCAPACITATED_CATCH_BONUS GEN_3 // In Gen5+, sleep/freeze gives a 2.5x catch bonus instead of 2x.
+#define B_LOW_LEVEL_CATCH_BONUS     GEN_3 // In Gen8+, low-level catches receive a bonus.
+#define B_MISSING_BADGE_CATCH_MALUS GEN_3 // In Gen9, catches above the obedience level receive a penalty.
 
 #endif // GUARD_CONFIG_BATTLE_H

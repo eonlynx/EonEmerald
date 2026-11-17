@@ -1,4 +1,3 @@
-.set LOCALID_MEMORIAL_MAN, 1
 
 MEMORIAL_PILLAR_MapScripts::
 	.byte 0

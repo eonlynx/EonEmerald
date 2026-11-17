@@ -1,9 +1,3 @@
-.set LOCALID_WALLACE, 1
-.set LOCALID_RIVAL, 2
-.set LOCALID_BIRCH, 3
-.set LOCALID_RIVAL_2, 4
-.set LOCALID_OAK, 5
-.set LOCALID_BLUE, 6
 
 EverGrandeCity_ChampionsRoom_MapScripts::
 	map_script MAP_SCRIPT_ON_TRANSITION, EverGrandeCity_ChampionsRoom_OnTransition
@@ -63,7 +57,7 @@ EverGrandeCity_ChampionsRoom_EventScript_Defeated::
 	checkplayergender
 	call_if_eq VAR_RESULT, MALE, EverGrandeCity_ChampionsRoom_EventScript_PlayMayMusic
 	call_if_eq VAR_RESULT, FEMALE, EverGrandeCity_ChampionsRoom_EventScript_PlayBrendanMusic
-	addobject LOCALID_RIVAL
+	addobject LOCALID_CHAMPIONS_ROOM_RIVAL
 	call EverGrandeCity_ChampionsRoom_EventScript_RivalApproachPlayer
 	checkplayergender
 	goto_if_eq VAR_RESULT, MALE, EverGrandeCity_ChampionsRoom_EventScript_MayAdvice
@@ -82,9 +76,9 @@ EverGrandeCity_ChampionsRoom_EventScript_MayAdvice::
 	msgbox EverGrandeCity_ChampionsRoom_Text_MayAdvice, MSGBOX_DEFAULT
 	delay 40
 	playse SE_PIN
-	applymovement LOCALID_RIVAL, Common_Movement_ExclamationMark
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL, Common_Movement_ExclamationMark
 	waitmovement 0
-	applymovement LOCALID_RIVAL, Common_Movement_Delay48
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL, Common_Movement_Delay48
 	waitmovement 0
 	call EverGrandeCity_ChampionsRoom_EventScript_RivalLookBackAndForth
 	msgbox EverGrandeCity_ChampionsRoom_Text_MayItsAlreadyOver, MSGBOX_DEFAULT
@@ -95,9 +89,9 @@ EverGrandeCity_ChampionsRoom_EventScript_BrendanAdvice::
 	msgbox EverGrandeCity_ChampionsRoom_Text_BrendanAdvice, MSGBOX_DEFAULT
 	delay 40
 	playse SE_PIN
-	applymovement LOCALID_RIVAL, Common_Movement_ExclamationMark
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL, Common_Movement_ExclamationMark
 	waitmovement 0
-	applymovement LOCALID_RIVAL, Common_Movement_Delay48
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL, Common_Movement_Delay48
 	waitmovement 0
 	call EverGrandeCity_ChampionsRoom_EventScript_RivalLookBackAndForth
 	msgbox EverGrandeCity_ChampionsRoom_Text_BrendanYouveWon, MSGBOX_DEFAULT
@@ -106,26 +100,26 @@ EverGrandeCity_ChampionsRoom_EventScript_BrendanAdvice::
 
 EverGrandeCity_ChampionsRoom_EventScript_BirchArrivesExitForHoF::
 	closemessage
-	addobject LOCALID_BIRCH
-	applymovement LOCALID_BIRCH, EverGrandeCity_ChampionsRoom_Movement_BirchArrives
+	addobject LOCALID_CHAMPIONS_ROOM_BIRCH
+	applymovement LOCALID_CHAMPIONS_ROOM_BIRCH, EverGrandeCity_ChampionsRoom_Movement_BirchArrives
 	waitmovement 0
 	applymovement OBJ_EVENT_ID_PLAYER, Common_Movement_WalkInPlaceFasterRight
 	waitmovement 0
 	msgbox EverGrandeCity_ChampionsRoom_Text_BirchArriveRatePokedex, MSGBOX_DEFAULT
 	call ProfBirch_EventScript_RatePokedex
 	msgbox EverGrandeCity_ChampionsRoom_Text_BirchCongratulations, MSGBOX_DEFAULT
-	applymovement LOCALID_WALLACE, Common_Movement_WalkInPlaceFasterUp
+	applymovement LOCALID_CHAMPIONS_ROOM_WALLACE, Common_Movement_WalkInPlaceFasterUp
 	waitmovement 0
 	delay 20
-	applymovement LOCALID_WALLACE, Common_Movement_WalkInPlaceFasterDown
+	applymovement LOCALID_CHAMPIONS_ROOM_WALLACE, Common_Movement_WalkInPlaceFasterDown
 	waitmovement 0
 	msgbox EverGrandeCity_ChampionsRoom_Text_WallaceComeWithMe, MSGBOX_DEFAULT
 	closemessage
 	delay 30
-	applymovement LOCALID_WALLACE, EverGrandeCity_ChampionsRoom_Movement_WallaceExitStart
+	applymovement LOCALID_CHAMPIONS_ROOM_WALLACE, EverGrandeCity_ChampionsRoom_Movement_WallaceExitStart
 	applymovement OBJ_EVENT_ID_PLAYER, EverGrandeCity_ChampionsRoom_Movement_PlayerExitStart
-	applymovement LOCALID_BIRCH, Common_Movement_WalkInPlaceFasterUp
-	applymovement LOCALID_RIVAL, EverGrandeCity_ChampionsRoom_Movement_RivalFollows
+	applymovement LOCALID_CHAMPIONS_ROOM_BIRCH, Common_Movement_WalkInPlaceFasterUp
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL, EverGrandeCity_ChampionsRoom_Movement_RivalFollows
 	waitmovement 0
 	delay 20
 	applymovement OBJ_EVENT_ID_PLAYER, Common_Movement_WalkInPlaceFasterDown
@@ -135,7 +129,7 @@ EverGrandeCity_ChampionsRoom_EventScript_BirchArrivesExitForHoF::
 	call_if_eq VAR_RESULT, MALE, EverGrandeCity_ChampionsRoom_EventScript_MayCongratulations
 	call_if_eq VAR_RESULT, FEMALE, EverGrandeCity_ChampionsRoom_EventScript_BrendanCongratulations
 	closemessage
-	applymovement LOCALID_WALLACE, EverGrandeCity_ChampionsRoom_Movement_WallaceExit
+	applymovement LOCALID_CHAMPIONS_ROOM_WALLACE, EverGrandeCity_ChampionsRoom_Movement_WallaceExit
 	applymovement OBJ_EVENT_ID_PLAYER, EverGrandeCity_ChampionsRoom_Movement_PlayerExit
 	waitmovement 0
 	setflag FLAG_HIDE_PETALBURG_GYM_GREETER
@@ -153,14 +147,14 @@ EverGrandeCity_ChampionsRoom_EventScript_BrendanCongratulations::
 	return
 
 EverGrandeCity_ChampionsRoom_EventScript_RivalApproachPlayer::
-	applymovement LOCALID_RIVAL, EverGrandeCity_ChampionsRoom_Movement_RivalApproachPlayer
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL, EverGrandeCity_ChampionsRoom_Movement_RivalApproachPlayer
 	waitmovement 0
 	applymovement OBJ_EVENT_ID_PLAYER, Common_Movement_WalkInPlaceFasterLeft
 	waitmovement 0
 	return
 
 EverGrandeCity_ChampionsRoom_EventScript_RivalLookBackAndForth::
-	applymovement LOCALID_RIVAL, EverGrandeCity_ChampionsRoom_Movement_RivalLookBackAndForth
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL, EverGrandeCity_ChampionsRoom_Movement_RivalLookBackAndForth
 	waitmovement 0
 	return
 
@@ -382,7 +376,7 @@ IndigoPlateau_ChampionsRoom_EventScript_Defeated::
 	checkplayergender
 	call_if_eq VAR_RESULT, MALE, IndigoPlateau_ChampionsRoom_EventScript_PlayMayMusic
 	call_if_eq VAR_RESULT, FEMALE, IndigoPlateau_ChampionsRoom_EventScript_PlayBrendanMusic
-	addobject LOCALID_RIVAL_2
+	addobject LOCALID_CHAMPIONS_ROOM_RIVAL_2
 	checkplayergender
 	goto_if_eq VAR_RESULT, MALE, IndigoPlateau_ChampionsRoom_EventScript_BirchArrivesExitForHoF
 	goto_if_eq VAR_RESULT, FEMALE, IndigoPlateau_ChampionsRoom_EventScript_BirchArrivesExitForHoF
@@ -400,9 +394,9 @@ IndigoPlateau_ChampionsRoom_EventScript_MayAdvice::
 	msgbox IndigoPlateau_ChampionsRoom_Text_MayAdvice, MSGBOX_DEFAULT
 	delay 40
 	playse SE_PIN
-	applymovement LOCALID_RIVAL_2, Common_Movement_ExclamationMark
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL_2, Common_Movement_ExclamationMark
 	waitmovement 0
-	applymovement LOCALID_RIVAL_2, Common_Movement_Delay48
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL_2, Common_Movement_Delay48
 	waitmovement 0
 	call IndigoPlateau_ChampionsRoom_EventScript_RivalLookBackAndForth
 	msgbox IndigoPlateau_ChampionsRoom_Text_MayItsAlreadyOver, MSGBOX_DEFAULT
@@ -413,9 +407,9 @@ IndigoPlateau_ChampionsRoom_EventScript_BrendanAdvice::
 	msgbox IndigoPlateau_ChampionsRoom_Text_BrendanAdvice, MSGBOX_DEFAULT
 	delay 40
 	playse SE_PIN
-	applymovement LOCALID_RIVAL_2, Common_Movement_ExclamationMark
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL_2, Common_Movement_ExclamationMark
 	waitmovement 0
-	applymovement LOCALID_RIVAL_2, Common_Movement_Delay48
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL_2, Common_Movement_Delay48
 	waitmovement 0
 	call IndigoPlateau_ChampionsRoom_EventScript_RivalLookBackAndForth
 	msgbox IndigoPlateau_ChampionsRoom_Text_BrendanYouveWon, MSGBOX_DEFAULT
@@ -424,8 +418,8 @@ IndigoPlateau_ChampionsRoom_EventScript_BrendanAdvice::
 
 IndigoPlateau_ChampionsRoom_EventScript_BirchArrivesExitForHoF::
 	closemessage
-	addobject LOCALID_OAK
-	applymovement LOCALID_OAK, IndigoPlateau_ChampionsRoom_Movement_BirchArrives
+	addobject LOCALID_CHAMPIONS_ROOM_OAK
+	applymovement LOCALID_CHAMPIONS_ROOM_OAK, IndigoPlateau_ChampionsRoom_Movement_BirchArrives
 	waitmovement 0
 	applymovement OBJ_EVENT_ID_PLAYER, Common_Movement_WalkInPlaceFasterRight
 	waitmovement 0
@@ -434,22 +428,22 @@ IndigoPlateau_ChampionsRoom_EventScript_BirchArrivesExitForHoF::
 	msgbox Text_ReceivedChampionPrize, MSGBOX_DEFAULT
 	addmoney 50000
 	waitfanfare
-	applymovement LOCALID_BLUE, Common_Movement_WalkInPlaceFasterUp
+	applymovement LOCALID_CHAMPIONS_ROOM_BLUE, Common_Movement_WalkInPlaceFasterUp
 	delay 20
-	applymovement LOCALID_BLUE, Common_Movement_WalkInPlaceFasterDown
+	applymovement LOCALID_CHAMPIONS_ROOM_BLUE, Common_Movement_WalkInPlaceFasterDown
 	waitmovement 0
 	msgbox PokemonLeague_ChampionsRoom_Text_OakPlayerComeWithMe, MSGBOX_DEFAULT
 	closemessage
 	delay 30
-	applymovement LOCALID_BLUE, IndigoPlateau_ChampionsRoom_Movement_WallaceExitStart
+	applymovement LOCALID_CHAMPIONS_ROOM_BLUE, IndigoPlateau_ChampionsRoom_Movement_WallaceExitStart
 	applymovement OBJ_EVENT_ID_PLAYER, IndigoPlateau_ChampionsRoom_Movement_PlayerExitStart
-	applymovement LOCALID_OAK, Common_Movement_WalkInPlaceFasterUp
-	applymovement LOCALID_RIVAL_2, IndigoPlateau_ChampionsRoom_Movement_RivalFollows
+	applymovement LOCALID_CHAMPIONS_ROOM_OAK, Common_Movement_WalkInPlaceFasterUp
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL_2, IndigoPlateau_ChampionsRoom_Movement_RivalFollows
 	waitmovement 0
 	applymovement OBJ_EVENT_ID_PLAYER, Common_Movement_WalkInPlaceFasterDown
 	delay 20
 	waitmovement 0
-	applymovement LOCALID_BLUE, IndigoPlateau_ChampionsRoom_Movement_WallaceExit
+	applymovement LOCALID_CHAMPIONS_ROOM_BLUE, IndigoPlateau_ChampionsRoom_Movement_WallaceExit
 	applymovement OBJ_EVENT_ID_PLAYER, IndigoPlateau_ChampionsRoom_Movement_PlayerExit
 	waitmovement 0
 	setflag FLAG_HIDE_PETALBURG_GYM_GREETER
@@ -467,14 +461,14 @@ IndigoPlateau_ChampionsRoom_EventScript_BrendanCongratulations::
 	return
 
 IndigoPlateau_ChampionsRoom_EventScript_RivalApproachPlayer::
-	applymovement LOCALID_RIVAL, IndigoPlateau_ChampionsRoom_Movement_RivalApproachPlayer
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL, IndigoPlateau_ChampionsRoom_Movement_RivalApproachPlayer
 	waitmovement 0
 	applymovement OBJ_EVENT_ID_PLAYER, Common_Movement_WalkInPlaceFasterLeft
 	waitmovement 0
 	return
 
 IndigoPlateau_ChampionsRoom_EventScript_RivalLookBackAndForth::
-	applymovement LOCALID_RIVAL, IndigoPlateau_ChampionsRoom_Movement_RivalLookBackAndForth
+	applymovement LOCALID_CHAMPIONS_ROOM_RIVAL, IndigoPlateau_ChampionsRoom_Movement_RivalLookBackAndForth
 	waitmovement 0
 	return
 

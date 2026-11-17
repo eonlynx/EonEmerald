@@ -41,12 +41,12 @@ struct Main
 };
 
 #define GAME_CODE_LENGTH 4
-extern const u8 gGameVersion;
+extern const enum GameVersion gGameVersion;
+extern const enum Language gGameLanguage;
 extern const u8 gGameVersionFireRed;
 extern const u8 gGameVersionLeafGreen;
 extern const u8 gGameVersionRuby;
 extern const u8 gGameVersionSapphire;
-extern const u8 gGameLanguage;
 extern const u8 RomHeaderGameCode[GAME_CODE_LENGTH];
 extern const u8 RomHeaderSoftwareVersion;
 

@@ -20,17 +20,17 @@
 
 EWRAM_DATA static u8 sCurrentAbnormalWeather = 0;
 
-const u16 gCloudsWeatherPalette[] = INCBIN_U16("graphics/weather/cloud.gbapal");
-const u16 gSandstormWeatherPalette[] = INCBIN_U16("graphics/weather/sandstorm.gbapal");
-const u8 gWeatherFogDiagonalTiles[] = INCBIN_U8("graphics/weather/fog_diagonal.4bpp");
-const u8 gWeatherFogHorizontalTiles[] = INCBIN_U8("graphics/weather/fog_horizontal.4bpp");
-const u8 gWeatherCloudTiles[] = INCBIN_U8("graphics/weather/cloud.4bpp");
-const u8 gWeatherSnow1Tiles[] = INCBIN_U8("graphics/weather/snow0.4bpp");
-const u8 gWeatherSnow2Tiles[] = INCBIN_U8("graphics/weather/snow1.4bpp");
-const u8 gWeatherBubbleTiles[] = INCBIN_U8("graphics/weather/bubble.4bpp");
-const u8 gWeatherAshTiles[] = INCBIN_U8("graphics/weather/ash.4bpp");
-const u8 gWeatherRainTiles[] = INCBIN_U8("graphics/weather/rain.4bpp");
-const u8 gWeatherSandstormTiles[] = INCBIN_U8("graphics/weather/sandstorm.4bpp");
+const u16 gCloudsWeatherPalette[] = INCGFX_U16("graphics/weather/cloud.png", ".gbapal");
+const u16 gSandstormWeatherPalette[] = INCGFX_U16("graphics/weather/sandstorm.png", ".gbapal");
+const u8 gWeatherFogDiagonalTiles[] = INCGFX_U8("graphics/weather/fog_diagonal.png", ".4bpp");
+const u8 gWeatherFogHorizontalTiles[] = INCGFX_U8("graphics/weather/fog_horizontal.png", ".4bpp");
+const u8 gWeatherCloudTiles[] = INCGFX_U8("graphics/weather/cloud.png", ".4bpp");
+const u8 gWeatherSnow1Tiles[] = INCGFX_U8("graphics/weather/snow0.png", ".4bpp");
+const u8 gWeatherSnow2Tiles[] = INCGFX_U8("graphics/weather/snow1.png", ".4bpp");
+const u8 gWeatherBubbleTiles[] = INCGFX_U8("graphics/weather/bubble.png", ".4bpp");
+const u8 gWeatherAshTiles[] = INCGFX_U8("graphics/weather/ash.png", ".4bpp");
+const u8 gWeatherRainTiles[] = INCGFX_U8("graphics/weather/rain.png", ".4bpp");
+const u8 gWeatherSandstormTiles[] = INCGFX_U8("graphics/weather/sandstorm.png", ".4bpp");
 
 //------------------------------------------------------------------------------
 // WEATHER_SUNNY_CLOUDS
@@ -90,8 +90,6 @@ static const struct SpriteTemplate sCloudSpriteTemplate =
     .paletteTag = PALTAG_WEATHER_2,
     .oam = &sCloudSpriteOamData,
     .anims = sCloudSpriteAnimCmds,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
     .callback = UpdateCloudSprite,
 };
 
@@ -460,8 +458,6 @@ static const struct SpriteTemplate sRainSpriteTemplate =
     .paletteTag = PALTAG_WEATHER,
     .oam = &sRainSpriteOamData,
     .anims = sRainSpriteAnimCmds,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
     .callback = UpdateRainSprite,
 };
 
@@ -906,7 +902,6 @@ static const struct SpriteTemplate sSnowflakeSpriteTemplate =
     .oam = &sSnowflakeSpriteOamData,
     .anims = sSnowflakeAnimCmds,
     .images = sSnowflakeSpriteImages,
-    .affineAnims = gDummySpriteAffineAnimTable,
     .callback = UpdateSnowflakeSprite,
 };
 
@@ -1358,7 +1353,6 @@ static const struct SpriteTemplate sFogHorizontalSpriteTemplate =
     .paletteTag = PALTAG_WEATHER,
     .oam = &sOamData_FogH,
     .anims = sAnims_FogH,
-    .images = NULL,
     .affineAnims = sAffineAnims_FogH,
     .callback = FogHorizontalSpriteCallback,
 };
@@ -1671,8 +1665,6 @@ static const struct SpriteTemplate sAshSpriteTemplate =
     .paletteTag = PALTAG_WEATHER,
     .oam = &sAshSpriteOamData,
     .anims = sAshSpriteAnimCmds,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
     .callback = UpdateAshSprite,
 };
 
@@ -1889,8 +1881,6 @@ static const struct SpriteTemplate sFogDiagonalSpriteTemplate =
     .paletteTag = PALTAG_WEATHER,
     .oam = &sFogDiagonalSpriteOamData,
     .anims = sFogDiagonalSpriteAnimCmds,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
     .callback = UpdateFogDiagonalSprite,
 };
 
@@ -2141,8 +2131,6 @@ static const struct SpriteTemplate sSandstormSpriteTemplate =
     .paletteTag = PALTAG_WEATHER_2,
     .oam = &sSandstormSpriteOamData,
     .anims = sSandstormSpriteAnimCmds,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
     .callback = UpdateSandstormSprite,
 };
 
@@ -2399,8 +2387,6 @@ static const struct SpriteTemplate sBubbleSpriteTemplate =
     .paletteTag = PALTAG_WEATHER,
     .oam = &gOamData_AffineOff_ObjNormal_8x8,
     .anims = sBubbleSpriteAnimCmds,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
     .callback = UpdateBubbleSprite,
 };
 

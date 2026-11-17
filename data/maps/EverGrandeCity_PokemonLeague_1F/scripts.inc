@@ -1,7 +1,3 @@
-.set LOCALID_NURSE, 1
-.set LOCALID_GUARD_1, 3
-.set LOCALID_GUARD_2, 4
-.set LOCALID_LEAGUE_MOVE_RELEARNER, 5
 
 EverGrandeCity_PokemonLeague_1F_MapScripts::
 	map_script MAP_SCRIPT_ON_TRANSITION, EverGrandeCity_PokemonLeague_1F_OnTransition
@@ -15,12 +11,12 @@ EverGrandeCity_PokemonLeague_1F_OnTransition:
 	end
 
 EverGrandeCity_PokemonLeague_1F_EventScript_GuardsBlockDoor::
-	setobjectxyperm LOCALID_GUARD_1, 9, 2
-	setobjectxyperm LOCALID_GUARD_2, 10, 2
+	setobjectxyperm LOCALID_LEAGUE_GUARD_1, 9, 2
+	setobjectxyperm LOCALID_LEAGUE_GUARD_2, 10, 2
 	return
 
 EverGrandeCity_PokemonLeague_1F_EventScript_Nurse::
-	setvar VAR_0x800B, LOCALID_NURSE
+	setvar VAR_0x800B, LOCALID_LEAGUE_NURSE
 	call Common_EventScript_PkmnCenterNurse
 	waitmessage
 	waitbuttonpress
@@ -64,8 +60,8 @@ EverGrandeCity_PokemonLeague_1F_EventScript_DoorGuard::
 	delay 120
 	goto_if_unset FLAG_BADGE06_GET, EverGrandeCity_PokemonLeague_1F_EventScript_NotAllBadges
 	closemessage
-	applymovement LOCALID_GUARD_1, EverGrandeCity_PokemonLeague_1F_Movement_LeftGuardOutOfWay
-	applymovement LOCALID_GUARD_2, EverGrandeCity_PokemonLeague_1F_Movement_RightGuardOutOfWay
+	applymovement LOCALID_LEAGUE_GUARD_1, EverGrandeCity_PokemonLeague_1F_Movement_LeftGuardOutOfWay
+	applymovement LOCALID_LEAGUE_GUARD_2, EverGrandeCity_PokemonLeague_1F_Movement_RightGuardOutOfWay
 	waitmovement 0
 	delay 10
 	playfanfare MUS_OBTAIN_BADGE
@@ -73,8 +69,8 @@ EverGrandeCity_PokemonLeague_1F_EventScript_DoorGuard::
 	waitmessage
 	waitfanfare
 	closemessage
-	copyobjectxytoperm LOCALID_GUARD_1
-	copyobjectxytoperm LOCALID_GUARD_2
+	copyobjectxytoperm LOCALID_LEAGUE_GUARD_1
+	copyobjectxytoperm LOCALID_LEAGUE_GUARD_2
 	setflag FLAG_ENTERED_ELITE_FOUR
 	releaseall
 	end
