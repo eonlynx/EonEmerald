@@ -1,6 +1,6 @@
 # EonEmerald + pokeemerald-expansion merge audit
 
-Branch: `merge/1.16.4`
+Branch: `merge/1.17.2`
 Date: 2026-11-17
 
 This document records the current state of the incremental merge of
@@ -21,7 +21,7 @@ merged.
 | 1.14.4 | Merged, built and committed (`ccb1943df2`) |
 | 1.15.3 | Merged, built and committed (`4f9f378a96`) |
 | 1.16.4 | Merged, built and committed (`286344b0e5`) |
-| 1.17.2 | Pending |
+| 1.17.2 | Merged and built; commit pending |
 
 The project must always use the latest patch release of each minor line:
 1.13.4, 1.14.4, 1.15.3, 1.16.4 and 1.17.2.
@@ -181,13 +181,39 @@ The project must always use the latest patch release of each minor line:
 - Eon's save-block `registeredLongItem` field and expansion's `dailySeed` now coexist,
   and time events use the new `gParties` storage.
 
+## 3.3 1.17.2 integration notes
+
+- 18 conflicts were resolved.
+- Trainer party generation moved from `battle_main.c` to `battle_setup.c` and now uses
+  `GenerateMonFromTrainerMon`. Eon's dynamic trainer-level scaling was ported into the
+  new function, preserving the Frontier/eReader/Trainer Hill exclusions.
+- The party generator now handles personality, nature, gender, shininess, IVs/EVs,
+  abilities, held items, Dynamax and Terastal through `trainer_util.c`.
+- `TrainerApproachMusic` became an enum with the new FRLG music values;
+  `TRAINER_CLASS_LEADER_2` still aliases `TRAINER_CLASS_LEADER`.
+- Berry confusion hold effects were migrated to `HOLD_EFFECT_CONFUSE_FLAVOR` with
+  `secondaryId` flavors. Eon keeps its 1000 price and its healing/status behavior.
+- Item data keeps Eon prices and descriptions; only the new flavor-based berry fields
+  and other 1.17 architecture changes were adopted.
+- Eon's `healBlock` checks use the new `volatiles.healBlockTimer` field.
+- Rain Dish keeps the merged expansion heal plus Eon status cure, and Eon's custom
+  healing abilities use `BattleScript_AbilityHpHeal`.
+- The Eon per-species physical/special split is preserved in the new damage and
+  accuracy helpers, including the Paradox abilities and Hustle accuracy check.
+- The 1.17 stat-change refactor is adopted; Eon AI uses `IsStatLoweringMove` and the
+  new `CanAbilityPreventStatLoss` covers the Eon abilities.
+- The obsolete Eon `GetEggCyclesToSubtract` copy was removed; daycare uses its own
+  implementation.
+- Object graphics, item IDs (`ITEMS_COUNT 881`), map count and trainer pic count are
+  unchanged from 1.16.4.
+
 ## 4. Static counts
 
 ```text
 trainers.party: 864
 items: 881 (ITEMS_COUNT 881)
 maps: 981 (including the imported FRLG map set)
-abilities: 322 (ABILITIES_COUNT_EON 322)
+abilities: 323 (ABILITIES_COUNT_EON 323)
 object graphics: 389 (NUM_OBJ_EVENT_GFX 389)
 trainer pics: 171 (front and back, including TRAINER_PIC_NONE)
 conflict markers: 0
@@ -226,6 +252,15 @@ conflict markers: 0
   - IWRAM: 28,384 B (86.62%)
   - ROM: 26,857,296 B (80.04%)
 - Runtime tests for the 1.16 line are still pending.
+- 1.17.2 builds successfully with `I_EON_ITEM_EFFECTS TRUE`:
+  - EWRAM: 227,444 B (86.76%)
+  - IWRAM: 28,380 B (86.61%)
+  - ROM: 27,091,748 B (80.74%)
+- The 1.17.2 build with `I_EON_ITEM_EFFECTS FALSE` also links:
+  - EWRAM: 227,444 B (86.76%)
+  - IWRAM: 28,380 B (86.61%)
+  - ROM: 27,091,644 B (80.74%)
+- Runtime tests for the 1.17 line are still pending.
 
 ## 6. Known risks
 
@@ -238,12 +273,14 @@ conflict markers: 0
 - The imported FRLG map set builds, but its runtime behavior in an Emerald-mode save
   has not been tested yet.
 - Save compatibility must be re-tested after each minor merge because of expansion's
-  save-layout changes.
+  save-layout changes. 1.17 also refactored trainer party generation, so trainer
+  parties should be spot-checked in-game.
 - `hns/master` must remain unmerged.
 
 ## 7. Next steps
 
-1. Publish the 1.16.4 ROM artifact and commit the merge.
-2. Merge 1.17.2.
-3. Run runtime tests: normal/double battles, Mega/Terastal/Dynamax, Battle Frontier,
+1. Publish the 1.17.2 ROM artifact and commit the merge.
+2. Run runtime tests: normal/double battles, Mega/Terastal/Dynamax, Battle Frontier,
    Trainer Hill, Battle Tent, saving/loading, Exp. All and DNS transitions.
+3. Review the 1.17.2 trainer party generation refactor in-game, especially the Eon
+   dynamic trainer-level scaling.

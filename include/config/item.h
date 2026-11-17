@@ -1,4 +1,4 @@
-#ifndef GUARD_CONFIG_ITEM_H
+﻿#ifndef GUARD_CONFIG_ITEM_H
 #define GUARD_CONFIG_ITEM_H
 
 // Item config
@@ -11,39 +11,40 @@
 #define I_BERRY_EV_JUMP                 GEN_3  // In Gen4 only, EV-lowering Berries lower a stat's EV to 100 if it is above 100.
 #define I_GRISEOUS_ORB_FORM_CHANGE      GEN_LATEST  // In Gen9+, the Griseous Orb no longer changes Giratina's form when held.
 #define I_GEM_BOOST_POWER               GEN_LATEST  // In Gen6+, the Gem boost power was reduced from 50% to 30%.
-#define I_USE_EVO_HELD_ITEMS_FROM_BAG   TRUE       // If TRUE, items such as Razor Claw or Electirizer will be usable from the bag to evolve a Pokémon just like in LA.
+#define I_USE_EVO_HELD_ITEMS_FROM_BAG   TRUE       // If TRUE, items such as Razor Claw or Electirizer will be usable from the bag to evolve a PokÃ©mon just like in LA.
 #define I_TYPE_BOOST_POWER              GEN_4  // In Gen4+, all regular type boosting held items had their power increased from 10% to 20%. eg. Charcoal
 #define I_SELL_VALUE_FRACTION           GEN_3  // In Gen9+, items sell for 1/4 of their value instead of 1/2.
 #define I_PRICE                         GEN_3  // Some items have varied in value across generations.
 #define I_BERRY_PRICE                   GEN_3       // Since Berries have become unplantable (Gen8+), their price has gone up.
 #define I_POWER_ITEM_BOOST              GEN_3  // In Gen7+, Power Items grant 8 EVs instead of 4 EVs.
-#define I_PREMIER_BALL_BONUS            GEN_3  // In LGPE onwards (Gen8+ here), you are given a Premier Ball for every 10 Poké Balls of any type and in the same purchase. Previously, it only applied to regular Poké Balls and only 1 could be obtained per purchase.
+#define I_PREMIER_BALL_BONUS            GEN_3  // In LGPE onwards (Gen8+ here), you are given a Premier Ball for every 10 PokÃ© Balls of any type and in the same purchase. Previously, it only applied to regular PokÃ© Balls and only 1 could be obtained per purchase.
 #define I_ROTOM_CATALOG_THUNDER_SHOCK   GEN_LATEST  // In Gen9+, reverting Rotom to its base form will teach it Thunder Shock even if it knows another move.
-#define I_REPEL_INCLUDE_FAINTED         GEN_3  // In Gen1 and Gen6+, Repels always use the level of the first member of the party to check which wild Pokémon to prevent encounters with, even if that member is fainted. In Gen2-5, it only uses the level of the first non-fainted Pokémon.
+#define I_REPEL_INCLUDE_FAINTED         GEN_3  // In Gen1 and Gen6+, Repels always use the level of the first member of the party to check which wild PokÃ©mon to prevent encounters with, even if that member is fainted. In Gen2-5, it only uses the level of the first non-fainted PokÃ©mon.
 
 // TM config
-#define I_REUSABLE_TMS          FALSE       // In Gen5-8, TMs are reusable. Setting this to TRUE will make all vanilla TMs reusable, though they can also be cherry-picked by setting their importance to 1.
+#define I_REUSABLE_TMS          FALSE       // In Gens5-8, TMs are reusable. Setting this to TRUE will make all vanilla TMs reusable, though they can also be cherry-picked by setting their importance to 1.
 
 // Exp. Share config
 // To use this feature, replace the 0 with the flag ID you're assigning it to.
 // Eg: Replace with FLAG_UNUSED_0x264 so you can use that flag to toggle the feature.
-#define I_EXP_SHARE_FLAG        0x494       // FLAG_EXP_SHARE. Eon Exp. All toggle: if set, every Pokémon in the party gains experience, regardless of participation.
+#define I_EXP_SHARE_FLAG        0x494       // FLAG_EXP_SHARE. Eon Exp. All toggle: if set, every PokÃ©mon in the party gains experience, regardless of participation.
 #define I_EXP_SHARE_ITEM        GEN_3       // Eon keeps the held Exp. Share; Exp. All is a separate key item.
 #define I_EON_ITEM_EFFECTS      TRUE        // If TRUE, enables Eon's item identities and held-item quirks (Poke Doll hides the party from trainer sight, old slots use Eviolite/Focus Sash/Loaded Dice/Punching Glove/Power Herb/Covert Cloak).
 
 // Repel/Lure config
 // These two settings are both independent and complementary.
-#define VAR_LAST_REPEL_LURE_USED    0       // If this var has been assigned, last Repel/Lure used will be saved and the player will get prompted with the vanilla repel YES/NO option, unless I_REPEL_LURE_MENU is set to TRUE.
-#define I_REPEL_LURE_MENU           TRUE    // If TRUE, the player is able to choose which Repel/Lure to use once the previous one runs out. Cursor position is saved by VAR_LAST_REPEL_LURE_USED if not 0.
+#define VAR_LAST_REPEL_LURE_USED    0       // If this var has been assigned, the last Repel/Lure used will be saved and the player will be prompted with the vanilla repel YES/NO option, unless I_REPEL_LURE_MENU is set to TRUE.
+#define I_REPEL_LURE_MENU           TRUE    // If set to TRUE, the player is able to choose which Repel/Lure to use once the previous one runs out. Cursor position is saved by VAR_LAST_REPEL_LURE_USED if not 0.
 
 // Vs. Seeker
-#define I_VS_SEEKER_CHARGING        0                     // If this flag is assigned, the Vs Seeker functionality will be enabled. When the player has the Vs. Seeker, Match Call rematch functions will stop working. Documentation for the Vs. Seeker can be found in docs/tutorials/vs_seeker.md.
+#define I_VS_SEEKER_CHARGING        0                     // If this flag is assigned, the Vs. Seeker functionality will be enabled. When the player has the Vs. Seeker, Match Call rematch functions will stop working. Documentation for the Vs. Seeker can be found in docs/tutorials/vs_seeker.md.
 #define I_SHOW_NO_ID_TRAINER        DISABLED_ON_RELEASE   // If TRUE, object events with a trainer type but no visible trainer id will be shown with a question mark. You may want to add vsseeker_rematchid TRAINER_ID as the top of the script to let the VS seeker know what reaction it's supposed to show.
 
 // ORAS Dowsing Machine
-#define I_ORAS_DOWSING_FLAG         0           // Replace 0 with an unused flag to enable the Dowsing Machine mechanic from ORAS.
-#define I_ORAS_DOWSING_SOUNDS       TRUE        // If TRUE, the Dowsing Machine will make sounds based on how far away the hidden item is.
-#define I_ORAS_DOWSING_COLOR_PAL    15          // The color within the palette that will change based on proximity to the item.
+#define I_ORAS_DOWSING_FLAG         0       // Replace 0 with an unused flag to enable the Dowsing Machine mechanic from ORAS.
+#define I_ORAS_DOWSING_SOUNDS       TRUE    // If set to TRUE, the Dowsing Machine will make sounds based on how far away the hidden item is.
+#define I_ORAS_DOWSING_COLOR_PAL    15      // The color within the palette that will change based on proximity to the item.
+
 // Color values for the ORAS dowsing distances/anims
 #define I_ORAS_DOWSING_COLOR_NONE   RGB_GRAY
 #define I_ORAS_DOWSING_COLOR_SLOW   RGB2GBA(56, 120, 255)
@@ -55,3 +56,5 @@
 #define I_LAX_INCENSE_BOOST             GEN_3       // In Gen4+, Lax Incense increases evasion by 10% instead of 5%.
 
 #endif // GUARD_CONFIG_ITEM_H
+
+

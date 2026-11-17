@@ -38,7 +38,7 @@ static const u16 sFrontierExchangeCorner_Decor2[] =
     ITEM_LIST_END
 };
 
-static const u16 sFrontierExchangeCorner_Vitamins[] =
+static const enum Item sFrontierExchangeCorner_Vitamins[] =
 {
     ITEM_PROTEIN,
     ITEM_CALCIUM,
@@ -57,7 +57,7 @@ static const u16 sFrontierExchangeCorner_Vitamins[] =
     ITEM_LIST_END
 };
 
-static const u16 sFrontierExchangeCorner_HoldItems[] =
+static const enum Item sFrontierExchangeCorner_HoldItems[] =
 {
     ITEM_QUICK_CLAW,
     ITEM_BRIGHT_POWDER,

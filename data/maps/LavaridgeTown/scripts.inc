@@ -254,7 +254,7 @@ LavaridgeTown_EventScript_ReceivedEgg::
 	checkmoney 10000
 	goto_if_eq VAR_RESULT, FALSE, LavaridgeTown_EventScript_NotEnoughMoney
 	removemoney 10000 
-	updatemoneybox 0
+	updatemoneybox
 	getpartysize
 	goto_if_eq VAR_RESULT, PARTY_SIZE, LavaridgeTown_EventScript_NoRoomForEgg
 	msgbox LavaridgeTown_Text_HopeYoullWalkPlentyWithEgg, MSGBOX_DEFAULT
@@ -341,7 +341,7 @@ LavaridgeTown_EventScript_ReceivedJohtoEgg::
 	checkmoney 10000
 	goto_if_eq VAR_RESULT, FALSE, LavaridgeTown_EventScript_NotEnoughMoney
 	removemoney 10000 
-	updatemoneybox 0
+	updatemoneybox
 	getpartysize
 	goto_if_eq VAR_RESULT, PARTY_SIZE, LavaridgeTown_EventScript_NoRoomForEgg
 	msgbox LavaridgeTown_Text_HopeYoullWalkPlentyWithEgg, MSGBOX_DEFAULT
@@ -409,7 +409,7 @@ LavaridgeTown_EventScript_ReceivedHoennEgg::
 	checkmoney 10000
 	goto_if_eq VAR_RESULT, FALSE, LavaridgeTown_EventScript_NotEnoughMoney
 	removemoney 10000 
-	updatemoneybox 0
+	updatemoneybox
 	getpartysize
 	goto_if_eq VAR_RESULT, PARTY_SIZE, LavaridgeTown_EventScript_NoRoomForEgg
 	msgbox LavaridgeTown_Text_HopeYoullWalkPlentyWithEgg, MSGBOX_DEFAULT

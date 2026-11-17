@@ -267,7 +267,6 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
     {
         ResetSpinTimer();
         TrySpecialOverworldEvo(); // Special vars set in CanTriggerSpinEvolution.
-        return TRUE;
     }
 
     return FALSE;
@@ -767,6 +766,7 @@ static bool8 TryStartStepCountScript(u16 metatileBehavior)
     }
 
     IncrementRematchStepCounter();
+    IncrementDaycareSteps();
     UpdateFriendshipStepCounter();
     UpdateFarawayIslandStepCounter();
     UpdateFollowerStepCounter();

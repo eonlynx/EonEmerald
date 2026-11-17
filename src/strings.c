@@ -50,7 +50,6 @@ const u8 gText_EmptyHeight[] = _("{CLEAR_TO 0x0C}    '    ”"); // Unused
 const u8 gText_EmptyWeight[] = _("        .   lbs."); // Unused
 const u8 gText_EmptyPokedexInfo1[] = _(""); // Unused
 const u8 gText_CryOf[] = _("CRY OF");
-const u8 gText_EmptyPokedexInfo2[] = _(""); // Unused
 const u8 gText_SizeComparedTo[] = _("SIZE COMPARED TO ");
 const u8 gText_PokedexRegistration[] = _("Pokédex registration completed.");
 const u8 gText_HTHeight[] = _("HT");
