@@ -19,7 +19,7 @@ merged.
 | 1.13.0 | Merged |
 | 1.13.4 | Merged, built and committed (`fcfb6880eb`, learnsets `e2a3c4a93d`) |
 | 1.14.4 | Merged, built and committed (`ccb1943df2`) |
-| 1.15.3 | Merged and built; commit pending |
+| 1.15.3 | Merged, built and committed (`4f9f378a96`) |
 | 1.16.4 | Pending |
 | 1.17.2 | Pending |
 
