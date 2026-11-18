@@ -963,7 +963,23 @@ struct TrainerHillSave
                u16 maybeECardScanDuringChallenge:1;
                u16 field_3D6E_0f:1;
                u16 mode:2; // HILL_MODE_*
-               //u16 padding:8;
+               u16 lvlMode:1; // FRONTIER_LVL_50 or FRONTIER_LVL_OPEN
+               u16 hasDefeatedSilver:1;
+               u16 hasDefeatedGold:1;
+               u16 wonBrainChallenge:1;
+               //u16 padding:4;
+    u16 gaugeCredits;
+    u16 nextBrainThreshold;
+    u8 runBP;
+    u8 prevFirstTrainers[NUM_TRAINER_HILL_MODES][NUM_TRAINER_HILL_FLOORS];
+    u8 currentFloorTrainers[NUM_TRAINER_HILL_FLOORS][HILL_TRAINERS_PER_FLOOR];
+    u8 monSlots[NUM_TRAINER_HILL_FLOORS][HILL_TRAINERS_PER_FLOOR][MULTI_PARTY_SIZE];
+    u32 recordTimes[NUM_TRAINER_HILL_MODES][FRONTIER_LVL_MODE_COUNT];
+    u32 prevTimes[NUM_TRAINER_HILL_MODES][FRONTIER_LVL_MODE_COUNT];
+    u16 recordStreaks[NUM_TRAINER_HILL_MODES][FRONTIER_LVL_MODE_COUNT];
+    u16 prevStreaks[NUM_TRAINER_HILL_MODES][FRONTIER_LVL_MODE_COUNT];
+    u16 winStreaks[NUM_TRAINER_HILL_MODES][FRONTIER_LVL_MODE_COUNT];
+    u16 timesCleared[NUM_TRAINER_HILL_MODES][FRONTIER_LVL_MODE_COUNT];
 };
 
 struct TrainerTower

@@ -106,3 +106,64 @@
 	copyvar VAR_0x8005, \mode
 	special CallTrainerHillFunction
 	.endm
+
+	@ Returns the highest level of non-egg Pokemon in player's party in VAR_RESULT
+	.macro trainerhill_getpartymaxlevel
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_GET_PARTY_MAX_LEVEL
+	special CallTrainerHillFunction
+	.endm
+
+	@ Sets the level mode to FRONTIER_LVL_50 or FRONTIER_LVL_OPEN
+	.macro trainerhill_setlvlmode lvlMode:req
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_SET_LVL_MODE
+	setvar VAR_0x8005, \lvlMode
+	special CallTrainerHillFunction
+	.endm
+
+	@ Evaluates run timer, updates gauge credits, and checks if Wally appears (0 = none, 1 = silver, 2 = gold)
+	.macro trainerhill_checkbrain
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_CHECK_BRAIN
+	special CallTrainerHillFunction
+	.endm
+
+	@ Awards +10 BP for defeating Wally, updates completion flag, and resets gauge to 0 if Gold
+	.macro trainerhill_givebrainprize
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_GIVE_BRAIN_PRIZE
+	special CallTrainerHillFunction
+	.endm
+
+	@ Checks if player has spoken to the owner on the roof (returns in VAR_RESULT)
+	.macro trainerhill_getspoketoowner
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_GET_SPOKE_TO_OWNER
+	special CallTrainerHillFunction
+	.endm
+
+	@ Sets dynamic graphics vars VAR_OBJ_GFX_ID_0..7 for the 8 roof spectators
+	.macro trainerhill_setspectatorgfx
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_SET_SPECTATOR_GFX
+	special CallTrainerHillFunction
+	.endm
+
+	@ Buffers the current challenge mode string to STR_VAR_1
+	.macro trainerhill_buffermodename
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_BUFFER_MODE_NAME
+	special CallTrainerHillFunction
+	.endm
+
+	@ Saves the challenge state to flash
+	.macro trainerhill_savechallenge
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_SAVE_CHALLENGE
+	special CallTrainerHillFunction
+	.endm
+
+	@ Retires player from the challenge and resets streak
+	.macro trainerhill_retire
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_RETIRE
+	special CallTrainerHillFunction
+	.endm
+
+	@ Gets the active challenge mode (HILL_MODE_NORMAL..EXPERT) into VAR_RESULT
+	.macro trainerhill_getmode
+	setvar VAR_0x8004, TRAINER_HILL_FUNC_GET_MODE
+	special CallTrainerHillFunction
+	.endm

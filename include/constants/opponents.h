@@ -868,13 +868,14 @@
 #define TRAINER_BLAINE                      861
 #define TRAINER_GIOVANNI                    862
 #define TRAINER_LORELEI                     863
+#define TRAINER_WALLY_HILL_SILVER           864
+#define TRAINER_WALLY_HILL_GOLD             865
 
-// NOTE: Because each Trainer uses a flag to determine when they are defeated, there is only space for 9 additional trainers before trainer flag space overflows
-//       More space can be made by shifting flags around in constants/flags.h or changing how trainer flags are handled
-//       MAX_TRAINERS_COUNT can be increased but will take up additional saveblock space
+// NOTE: Eon leaders use 855-863 and Battle Hill Wally uses 864-865.
+//       Increasing this range shifts SYSTEM_FLAGS in constants/flags.h, so a new save is required.
 
-#define TRAINERS_COUNT_EMERALD     864
-#define MAX_TRAINERS_COUNT_EMERALD 864
+#define TRAINERS_COUNT_EMERALD     866
+#define MAX_TRAINERS_COUNT_EMERALD 866
 
 #if IS_FRLG
 #define TRAINERS_COUNT                      TRAINERS_COUNT_FRLG

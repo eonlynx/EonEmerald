@@ -10,6 +10,7 @@
 #include "battle_partner.h"
 #include "battle_tower.h"
 #include "battle_transition.h"
+#include "frontier_util.h"
 #include "event_data.h"
 #include "event_object_movement.h"
 #include "event_scripts.h"
@@ -118,6 +119,8 @@ static const u8 sBattleTransitionTable_Trainer[][2] =
     [TRANSITION_TYPE_FLASH]  = {B_TRANSITION_BLUR,            B_TRANSITION_GRID_SQUARES},
     [TRANSITION_TYPE_WATER]  = {B_TRANSITION_SWIRL,           B_TRANSITION_RIPPLE},
 };
+
+#define RANDOM_TRANSITION(table) (table[Random() % ARRAY_COUNT(table)])
 
 // Battle Frontier (excluding Pyramid and Dome, which have their own tables below)
 static const u8 sBattleTransitionTable_BattleFrontier[] =
@@ -492,6 +495,21 @@ static void DoTrainerBattle(void)
     CreateNPCTrainerParty(&gParties[B_TRAINER_OPPONENT_A][0], TRAINER_BATTLE_PARAM.opponentA);
     if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS && !BATTLE_TWO_VS_ONE_OPPONENT)
         CreateNPCTrainerParty(&gParties[B_TRAINER_OPPONENT_B][0], TRAINER_BATTLE_PARAM.opponentB);
+    if (TRAINER_BATTLE_PARAM.opponentA == TRAINER_WALLY_HILL_SILVER || TRAINER_BATTLE_PARAM.opponentA == TRAINER_WALLY_HILL_GOLD)
+    {
+        u8 level;
+        u32 i;
+        if (gSaveBlock1Ptr->trainerHill.lvlMode == FRONTIER_LVL_50)
+            level = FRONTIER_MAX_LEVEL_50;
+        else
+            level = max(FRONTIER_MIN_LEVEL_OPEN, GetHighestLevelInPlayerParty());
+
+        for (i = 0; i < PARTY_SIZE; i++)
+        {
+            if (GetMonData(&gParties[B_TRAINER_OPPONENT_A][i], MON_DATA_SPECIES) != SPECIES_NONE)
+                SetTrainerHillMonLevel(&gParties[B_TRAINER_OPPONENT_A][i], level);
+        }
+    }
     CreateBattleStartTask(GetTrainerBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
     IncrementGameStat(GAME_STAT_TRAINER_BATTLES);
@@ -916,6 +934,9 @@ enum BattleTransition GetTrainerBattleTransition(void)
     if (DoesTrainerHaveMugshot(trainerId))
         return B_TRANSITION_MUGSHOT;
 
+    if (trainerId == TRAINER_WALLY_HILL_SILVER || trainerId == TRAINER_WALLY_HILL_GOLD)
+        return RANDOM_TRANSITION(sBattleTransitionTable_BattleFrontier);
+
     if (trainerClass == TRAINER_CLASS_TEAM_MAGMA
         || trainerClass == TRAINER_CLASS_MAGMA_LEADER
         || trainerClass == TRAINER_CLASS_MAGMA_ADMIN)
@@ -946,7 +967,6 @@ enum BattleTransition GetTrainerBattleTransition(void)
         return sBattleTransitionTable_Trainer[transitionType][1];
 }
 
-#define RANDOM_TRANSITION(table) (table[Random() % ARRAY_COUNT(table)])
 enum BattleTransition GetSpecialBattleTransition(enum BattleTransitionGroup id)
 {
     u16 var;
@@ -958,6 +978,7 @@ enum BattleTransition GetSpecialBattleTransition(enum BattleTransitionGroup id)
         switch (id)
         {
         case B_TRANSITION_GROUP_TRAINER_HILL:
+            return RANDOM_TRANSITION(sBattleTransitionTable_BattleFrontier);
         case B_TRANSITION_GROUP_SECRET_BASE:
         case B_TRANSITION_GROUP_E_READER:
             return B_TRANSITION_POKEBALLS_TRAIL;
@@ -977,6 +998,7 @@ enum BattleTransition GetSpecialBattleTransition(enum BattleTransitionGroup id)
         switch (id)
         {
         case B_TRANSITION_GROUP_TRAINER_HILL:
+            return RANDOM_TRANSITION(sBattleTransitionTable_BattleFrontier);
         case B_TRANSITION_GROUP_SECRET_BASE:
         case B_TRANSITION_GROUP_E_READER:
             return B_TRANSITION_BIG_POKEBALL;
@@ -1488,7 +1510,7 @@ void BattleSetup_StartTrainerBattle(void)
 
         MarkApproachingPyramidTrainersAsBattled();
     }
-    else if (InTrainerHillChallenge())
+    else if (InTrainerHillChallenge() && TRAINER_BATTLE_PARAM.opponentA != TRAINER_WALLY_HILL_SILVER && TRAINER_BATTLE_PARAM.opponentA != TRAINER_WALLY_HILL_GOLD)
     {
         gBattleTypeFlags |= BATTLE_TYPE_TRAINER_HILL;
 
@@ -1510,7 +1532,7 @@ void BattleSetup_StartTrainerBattle(void)
     gWhichTrainerToFaceAfterBattle = 0;
     gMain.savedCallback = CB2_EndTrainerBattle;
 
-    if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE || InTrainerHillChallenge())
+    if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE || (InTrainerHillChallenge() && TRAINER_BATTLE_PARAM.opponentA != TRAINER_WALLY_HILL_SILVER && TRAINER_BATTLE_PARAM.opponentA != TRAINER_WALLY_HILL_GOLD))
         DoBattlePyramidTrainerHillBattle();
     else
         DoTrainerBattle();
@@ -1613,7 +1635,11 @@ static void CB2_EndTrainerBattle(void)
     }
     else if (IsPlayerDefeated(gBattleOutcome))
     {
-        if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE || InTrainerHillChallenge() || FlagGet(B_FLAG_NO_WHITEOUT))
+        if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE 
+         || InTrainerHillChallenge() 
+         || TRAINER_BATTLE_PARAM.opponentA == TRAINER_WALLY_HILL_SILVER 
+         || TRAINER_BATTLE_PARAM.opponentA == TRAINER_WALLY_HILL_GOLD 
+         || FlagGet(B_FLAG_NO_WHITEOUT))
             SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
         else
             SetMainCallback2(CB2_WhiteOut);

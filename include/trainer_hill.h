@@ -32,6 +32,15 @@ struct TrainerHillFloor
     struct TrainerHillFloorMap map;
 };
 
+struct TrainerHillCandidate
+{
+    u8 trainerNum;
+    bool8 hasMap;
+    struct TrainerHillTrainer trainer;
+    const struct TrainerHillTrainer *altTrainer;
+    struct TrainerHillFloorMap map;
+};
+
 struct TrainerHillChallenge
 {
     u8 numTrainers;
@@ -59,6 +68,7 @@ void GenerateTrainerHillFloorLayout(u16 *mapArg);
 bool32 InTrainerHill(void);
 u8 GetCurrentTrainerHillMapId(void);
 const struct WarpEvent* SetWarpDestinationTrainerHill4F(void);
+const struct WarpEvent* SetWarpDestinationTrainerHill1F(void);
 const struct WarpEvent* SetWarpDestinationTrainerHillFinalFloor(u8 warpEventId);
 u16 LocalIdToHillTrainerId(u8 localId);
 bool8 GetHillTrainerFlag(u8 objectEventId);
@@ -70,5 +80,6 @@ u8 GetTrainerEncounterMusicIdInTrainerHill(u16 trainerId);
 u8 GetNumFloorsInTrainerHillChallenge(void);
 void TryLoadTrainerHillEReaderPalette(void);
 bool32 OnTrainerHillEReaderChallengeFloor(void);
+void SetTrainerHillMonLevel(struct Pokemon *mon, u8 level);
 
 #endif // GUARD_TRAINER_HILL_H

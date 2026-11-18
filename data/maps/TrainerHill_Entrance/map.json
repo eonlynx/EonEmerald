@@ -4,7 +4,7 @@
   "layout": "LAYOUT_TRAINER_HILL_ENTRANCE",
   "music": "MUS_B_TOWER_RS",
   "region": "REGION_HOENN",
-  "region_map_section": "MAPSEC_TRAINER_HILL",
+  "region_map_section": "MAPSEC_BATTLE_FRONTIER",
   "requires_flash": false,
   "weather": "WEATHER_NONE",
   "map_type": "MAP_TYPE_INDOOR",
@@ -16,44 +16,59 @@
   "connections": 0,
   "object_events": [
     {
-      "local_id": "LOCALID_TRAINER_HILL_ATTENDANT",
-      "graphics_id": "OBJ_EVENT_GFX_TEALA",
+      "local_id": "LOCALID_ATTENDANT_NORMAL",
+      "graphics_id": "OBJ_EVENT_GFX_RUNNING_TRIATHLETE_M",
+      "x": 3,
+      "y": 10,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 1,
+      "movement_range_y": 1,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "TrainerHill_Entrance_EventScript_AttendantNormal",
+      "flag": "0"
+    },
+    {
+      "local_id": "LOCALID_ATTENDANT_VARIETY",
+      "graphics_id": "OBJ_EVENT_GFX_RUNNING_TRIATHLETE_M",
+      "x": 7,
+      "y": 10,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 1,
+      "movement_range_y": 1,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "TrainerHill_Entrance_EventScript_AttendantVariety",
+      "flag": "0"
+    },
+    {
+      "local_id": "LOCALID_ATTENDANT_UNIQUE",
+      "graphics_id": "OBJ_EVENT_GFX_RUNNING_TRIATHLETE_M",
       "x": 11,
-      "y": 6,
-      "elevation": 3,
-      "movement_type": "MOVEMENT_TYPE_FACE_LEFT",
-      "movement_range_x": 1,
-      "movement_range_y": 1,
-      "trainer_type": "TRAINER_TYPE_NONE",
-      "trainer_sight_or_berry_tree_id": "0",
-      "script": "TrainerHill_Entrance_EventScript_Attendant",
-      "flag": "0"
-    },
-    {
-      "local_id": "LOCALID_TRAINER_HILL_NURSE",
-      "graphics_id": "OBJ_EVENT_GFX_NURSE",
-      "x": 4,
-      "y": 9,
+      "y": 10,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
       "movement_range_x": 1,
       "movement_range_y": 1,
       "trainer_type": "TRAINER_TYPE_NONE",
       "trainer_sight_or_berry_tree_id": "0",
-      "script": "TrainerHill_Entrance_EventScript_Nurse",
+      "script": "TrainerHill_Entrance_EventScript_AttendantUnique",
       "flag": "0"
     },
     {
-      "graphics_id": "OBJ_EVENT_GFX_MART_EMPLOYEE",
-      "x": 14,
-      "y": 9,
+      "local_id": "LOCALID_ATTENDANT_EXPERT",
+      "graphics_id": "OBJ_EVENT_GFX_RUNNING_TRIATHLETE_M",
+      "x": 15,
+      "y": 10,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
       "movement_range_x": 1,
       "movement_range_y": 1,
       "trainer_type": "TRAINER_TYPE_NONE",
       "trainer_sight_or_berry_tree_id": "0",
-      "script": "TrainerHill_Entrance_EventScript_Clerk",
+      "script": "TrainerHill_Entrance_EventScript_AttendantExpert",
       "flag": "0"
     },
     {
@@ -101,8 +116,29 @@
       "dest_warp_id": "4"
     },
     {
-      "x": 9,
-      "y": 1,
+      "x": 3,
+      "y": 6,
+      "elevation": 3,
+      "dest_map": "MAP_TRAINER_HILL_1F",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 7,
+      "y": 6,
+      "elevation": 3,
+      "dest_map": "MAP_TRAINER_HILL_1F",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 11,
+      "y": 6,
+      "elevation": 3,
+      "dest_map": "MAP_TRAINER_HILL_1F",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 15,
+      "y": 6,
       "elevation": 3,
       "dest_map": "MAP_TRAINER_HILL_1F",
       "dest_warp_id": "0"
@@ -111,22 +147,81 @@
   "coord_events": [
     {
       "type": "trigger",
-      "x": 9,
-      "y": 6,
+      "x": 3,
+      "y": 9,
       "elevation": 3,
       "var": "VAR_TRAINER_HILL_IS_ACTIVE",
-      "var_value": "0",
-      "script": "TrainerHill_Entrance_EventScript_EntryTrigger"
+      "var_value": "1",
+      "script": "TrainerHill_Entrance_EventScript_RetireTrigger"
+    },
+    {
+      "type": "trigger",
+      "x": 7,
+      "y": 9,
+      "elevation": 3,
+      "var": "VAR_TRAINER_HILL_IS_ACTIVE",
+      "var_value": "1",
+      "script": "TrainerHill_Entrance_EventScript_RetireTrigger"
+    },
+    {
+      "type": "trigger",
+      "x": 11,
+      "y": 9,
+      "elevation": 3,
+      "var": "VAR_TRAINER_HILL_IS_ACTIVE",
+      "var_value": "1",
+      "script": "TrainerHill_Entrance_EventScript_RetireTrigger"
+    },
+    {
+      "type": "trigger",
+      "x": 15,
+      "y": 9,
+      "elevation": 3,
+      "var": "VAR_TRAINER_HILL_IS_ACTIVE",
+      "var_value": "1",
+      "script": "TrainerHill_Entrance_EventScript_RetireTrigger"
     }
   ],
   "bg_events": [
     {
       "type": "sign",
-      "x": 8,
+      "x": 22,
+      "y": 11,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "TrainerHill_Entrance_EventScript_RulesBoard"
+    },
+    {
+      "type": "sign",
+      "x": 5,
       "y": 10,
       "elevation": 0,
       "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
-      "script": "TrainerHill_Entrance_EventScript_Records"
+      "script": "TrainerHill_Entrance_EventScript_ShowNormalResults"
+    },
+    {
+      "type": "sign",
+      "x": 9,
+      "y": 10,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "TrainerHill_Entrance_EventScript_ShowVarietyResults"
+    },
+    {
+      "type": "sign",
+      "x": 13,
+      "y": 10,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "TrainerHill_Entrance_EventScript_ShowUniqueResults"
+    },
+    {
+      "type": "sign",
+      "x": 17,
+      "y": 10,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "TrainerHill_Entrance_EventScript_ShowExpertResults"
     }
   ]
 }
