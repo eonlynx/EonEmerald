@@ -1493,7 +1493,7 @@ const u16 gTilesetPalettes_IslandHarbor[][16] =
     INCGFX_U16("data/tilesets/secondary/island_harbor/palettes/15.pal", ".gbapal"),
 };
 
-const u32 gTilesetTiles_TrainerHill[] = INCGFX_U32("data/tilesets/secondary/trainer_hill/tiles.png", ".4bpp.fastSmol", "-num_tiles 374 -Wnum_tiles");
+const u32 gTilesetTiles_TrainerHill[] = INCGFX_U32("data/tilesets/secondary/trainer_hill/tiles.png", ".4bpp.fastSmol", "-num_tiles 393 -Wnum_tiles");
 
 const u16 gTilesetPalettes_TrainerHill[][16] =
 {
