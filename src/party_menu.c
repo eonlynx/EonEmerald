@@ -3174,18 +3174,18 @@ static void CursorCb_Summary(u8 taskId)
 
 static void ChangePokemonNicknamePartyScreen_CB(void)
 {
-    SetMonData(&gPlayerParty[gSpecialVar_0x8004], MON_DATA_NICKNAME, gStringVar2);
+    SetMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004], MON_DATA_NICKNAME, gStringVar2);
     CB2_ReturnToPartyMenuFromNicknameScreen();
 }
 
 static void ChangePokemonNicknamePartyScreen(void)
 {
-    GetMonData(&gPlayerParty[gSpecialVar_0x8004], MON_DATA_NICKNAME, gStringVar3);
-    GetMonData(&gPlayerParty[gSpecialVar_0x8004], MON_DATA_NICKNAME, gStringVar2);
+    GetMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004], MON_DATA_NICKNAME, gStringVar3);
+    GetMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004], MON_DATA_NICKNAME, gStringVar2);
     DoNamingScreen(NAMING_SCREEN_NICKNAME, gStringVar2,
-                   GetMonData(&gPlayerParty[gSpecialVar_0x8004], MON_DATA_SPECIES, NULL),
-                   GetMonGender(&gPlayerParty[gSpecialVar_0x8004]),
-                   GetMonData(&gPlayerParty[gSpecialVar_0x8004], MON_DATA_PERSONALITY, NULL),
+                   GetMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004], MON_DATA_SPECIES, NULL),
+                   GetMonGender(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004]),
+                   GetMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004], MON_DATA_PERSONALITY, NULL),
                    ChangePokemonNicknamePartyScreen_CB);
 }
 
@@ -3756,7 +3756,7 @@ static void CursorCb_TakeItem(u8 taskId)
 
 static void CursorCb_MoveItem(u8 taskId)
 {
-    struct Pokemon *mon = &gPlayerParty[gPartyMenu.slotId];
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gPartyMenu.slotId];
     u16 item = GetMonData(mon, MON_DATA_HELD_ITEM);
 
     PlaySE(SE_SELECT);
@@ -3796,14 +3796,14 @@ static void CursorCb_MoveItemCallback(u8 taskId)
         HandleChooseMonCancel(taskId, &gPartyMenu.slotId2);
         break;
     case 1: // Selected a Pokemon
-        if (GetMonData(&gPlayerParty[gPartyMenu.slotId2], MON_DATA_IS_EGG)
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId2], MON_DATA_IS_EGG)
          || gPartyMenu.slotId == gPartyMenu.slotId2)
         {
             PlaySE(SE_FAILURE);
             return;
         }
 
-        if (ItemIsMail(GetMonData(&gPlayerParty[gPartyMenu.slotId2], MON_DATA_HELD_ITEM)))
+        if (ItemIsMail(GetMonData(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId2], MON_DATA_HELD_ITEM)))
         {
             PlaySE(SE_FAILURE);
             return;
@@ -3812,27 +3812,27 @@ static void CursorCb_MoveItemCallback(u8 taskId)
         PlaySE(SE_SELECT);
         gPartyMenu.action = PARTY_ACTION_CHOOSE_MON;
 
-        item1 = GetMonData(&gPlayerParty[gPartyMenu.slotId], MON_DATA_HELD_ITEM);
-        item2 = GetMonData(&gPlayerParty[gPartyMenu.slotId2], MON_DATA_HELD_ITEM);
-        SetMonData(&gPlayerParty[gPartyMenu.slotId], MON_DATA_HELD_ITEM, &item2);
-        SetMonData(&gPlayerParty[gPartyMenu.slotId2], MON_DATA_HELD_ITEM, &item1);
+        item1 = GetMonData(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId], MON_DATA_HELD_ITEM);
+        item2 = GetMonData(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId2], MON_DATA_HELD_ITEM);
+        SetMonData(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId], MON_DATA_HELD_ITEM, &item2);
+        SetMonData(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId2], MON_DATA_HELD_ITEM, &item1);
 
-        UpdatePartyMonHeldItemSprite(&gPlayerParty[gPartyMenu.slotId], &sPartyMenuBoxes[gPartyMenu.slotId]);
-        UpdatePartyMonHeldItemSprite(&gPlayerParty[gPartyMenu.slotId2], &sPartyMenuBoxes[gPartyMenu.slotId2]);
+        UpdatePartyMonHeldItemSprite(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId], &sPartyMenuBoxes[gPartyMenu.slotId]);
+        UpdatePartyMonHeldItemSprite(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId2], &sPartyMenuBoxes[gPartyMenu.slotId2]);
 
         if (item2 == ITEM_NONE)
         {
-            GetMonNickname(&gPlayerParty[gPartyMenu.slotId2], gStringVar1);
+            GetMonNickname(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId2], gStringVar1);
             CopyItemName(item1, gStringVar2);
             StringExpandPlaceholders(gStringVar4, gText_PkmnWasGivenItem);
         }
         else
         {
-            GetMonNickname(&gPlayerParty[gPartyMenu.slotId], gStringVar1);
+            GetMonNickname(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId], gStringVar1);
             CopyItemName(item1, gStringVar2);
             StringExpandPlaceholders(buffer, gText_XsYAnd);
             StringAppend(buffer, gText_XsYWereSwapped);
-            GetMonNickname(&gPlayerParty[gPartyMenu.slotId2], gStringVar1);
+            GetMonNickname(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId2], gStringVar1);
             CopyItemName(item2, gStringVar2);
             StringExpandPlaceholders(gStringVar4, buffer);
         }

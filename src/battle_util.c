@@ -7631,7 +7631,6 @@ static uq4_12_t GetWeatherDamageModifier(struct DamageContext *ctx)
 
 static inline uq4_12_t GetBurnOrFrostBiteModifier(struct DamageContext *ctx)
 {
-    u32 battlerAtk = ctx->battlerAtk;
     enum BattleMoveEffects moveEffect = GetMoveEffect(ctx->move);
     bool32 isPhysical = IsMovePhysicalForBattler(ctx->move, ctx->battlerAtk);
 

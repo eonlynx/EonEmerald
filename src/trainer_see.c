@@ -43,7 +43,7 @@ static bool8 ignoreIfPokeDoll(void)
     int i;
     for (i = 0; i < PARTY_SIZE; i++)
     {
-        if (GetMonData(&gPlayerParty[i], MON_DATA_HELD_ITEM) == ITEM_POKE_DOLL)
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_HELD_ITEM) == ITEM_POKE_DOLL)
             return TRUE;
     }
     return FALSE;

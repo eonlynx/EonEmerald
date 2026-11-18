@@ -4470,15 +4470,15 @@ void UseBlankMessageToCancelPokemonPic(void)
 
 void SwitchMonAbility(void)
 {
-    u16 species = GetMonData(&gPlayerParty[gSpecialVar_0x8004], MON_DATA_SPECIES, NULL);
-    u8 currentAbilityNum = GetMonData(&gPlayerParty[gSpecialVar_0x8004], MON_DATA_ABILITY_NUM, NULL);
+    u16 species = GetMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004], MON_DATA_SPECIES, NULL);
+    u8 currentAbilityNum = GetMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004], MON_DATA_ABILITY_NUM, NULL);
 
     // Only switch if the species has a distinct second ability.
     if (gSpeciesInfo[species].abilities[1] != ABILITY_NONE
      && gSpeciesInfo[species].abilities[0] != gSpeciesInfo[species].abilities[1])
     {
         u8 newAbilityNum = !currentAbilityNum;
-        SetMonData(&gPlayerParty[gSpecialVar_0x8004], MON_DATA_ABILITY_NUM, &newAbilityNum);
+        SetMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004], MON_DATA_ABILITY_NUM, &newAbilityNum);
         gSpecialVar_Result = TRUE;
     }
     else

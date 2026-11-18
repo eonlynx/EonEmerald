@@ -2076,7 +2076,6 @@ static void AddRegisterSubMenu(void)
 
 static void Task_LoadRegisterOptions(u8 taskId)
 {
-    s16 *data = gTasks[taskId].data;
     if (gSaveBlock1Ptr->registeredItem == gSpecialVar_ItemId)
     {
         gTasks[taskId].func = ItemMenu_Register;

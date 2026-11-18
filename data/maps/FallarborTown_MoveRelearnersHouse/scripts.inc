@@ -6,7 +6,6 @@ FallarborTown_MoveRelearnersHouse_EventScript_AskTeachMove::
 	faceplayer
 	msgbox gText_SwitchAbility MSGBOX_DEFAULT
 	special ChoosePartyMon
-	waitstate
 	goto_if_eq VAR_0x8004, PARTY_NOTHING_CHOSEN, EventScript_AbilitySwitch_Cancel
 	special SwitchMonAbility
 	msgbox gText_AbilitySwitched MSGBOX_NPC
@@ -28,7 +27,6 @@ FallarborTown_MoveRelearnersHouse_EventScript_MoveRelearner::
 	goto_if_eq VAR_RESULT, NO, FallarborTown_MoveRelearnersHouse_EventScript_ComeBackWithHeartScale
 	
 	special ChoosePartyMon
-	waitstate
 	goto_if_eq VAR_0x8004, PARTY_NOTHING_CHOSEN, EventScript_AbilitySwitch_Cancel
 	
 	@ The special must be written to return TRUE or FALSE to VAR_RESULT
