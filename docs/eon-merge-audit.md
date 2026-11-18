@@ -257,6 +257,25 @@ The project must always use the latest patch release of each minor line:
   builds. Only small shared FRLG-labelled helpers remain (for example
   `data/scripts/set_gym_trainers.inc`).
 
+### Spritesheet conversion rules
+
+- Expansion 1.17.2 ships a 25-line `spritesheet_rules.mk`. Eon's `pre-main` file has
+  per-sprite rules (719 lines) for object events and field effects.
+- The merge kept expansion's file, so Eon NPC and field-effect PNG strips were
+  converted row-major. 16x32 frames read the front/left/right tiles together and the
+  top half repeated.
+- Restored `pre-main`'s rules and regenerated all object event and field effect
+  `.4bpp` assets. Verified that frame 0 of Mom and the field-effect arrow matches a
+  cropped single-frame conversion.
+
+### all_learnables.json
+
+- Added and tracked upstream in expansion commit `0bdc20b102` (#8680); expansion
+  1.17.2 tracks it. It is a generator input for `teachable_learnsets.h` and is not
+  compiled into the ROM.
+- Eon now keeps it generated and ignored: removed from the Git index and added to
+  `.gitignore`. The Makefile regenerates it if missing.
+
 ### Build result
 
 - EWRAM: 227,284 B (86.70%)
