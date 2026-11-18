@@ -316,7 +316,7 @@ and the DNS merge):
 
 - EWRAM: 226,260 B (86.31%)
 - IWRAM: 28,372 B (86.58%)
-- ROM used: 15,464,312 B (46.09%)
+- ROM used: 15,464,288 B (46.09%)
 - Final `pokeemerald.gba`: 16,777,216 B
 - Previous 1.17.2 build: 27,091,748 B used, 33,554,432 B file.
 

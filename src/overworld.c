@@ -1991,7 +1991,6 @@ void DnsApplyWindowLighting(u16 *paletteBuffer)
     if (gMain.inBattle
      || (gMain.callback2 != CB2_Overworld && gMain.callback2 != CB2_OverworldBasic)
      || !MapHasNaturalLight(gMapHeader.mapType)
-     || gPaletteFade.active
      || !IsDnsLightingActive())
         return;
 
@@ -1999,9 +1998,7 @@ void DnsApplyWindowLighting(u16 *paletteBuffer)
     {
         u16 colourSlot = sDnsLightingColours[i].paletteNum * 16 + sDnsLightingColours[i].colourNum;
 
-        // Match Eon's original behaviour: only light palette slots that are black.
-        if (gPlttBufferUnfaded[colourSlot] == 0x0000)
-            paletteBuffer[colourSlot] = sDnsLightingColours[i].lightColour;
+        paletteBuffer[colourSlot] = sDnsLightingColours[i].lightColour;
     }
 }
 
