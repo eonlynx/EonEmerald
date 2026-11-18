@@ -9,7 +9,7 @@
 #include "task.h"
 #include "constants/field_weather.h"
 #include "constants/rgb.h"
-#include "dns.h"
+#include "overworld.h"
 
 enum
 {
@@ -73,10 +73,10 @@ void TransferPlttBuffer(void)
     {
         void *src = gPlttBufferFaded;
         void *dest = (void *)PLTT;
-        
-        // REMOVE the DmaCopy16(3, src, dest, PLTT_SIZE); line here.
-        
-        DnsTransferPlttBuffer(src, dest);  // This already handles the DMA transfer
+
+        // EonEmerald DNS: light up night windows immediately before the DMA.
+        DnsApplyWindowLighting(gPlttBufferFaded);
+        DmaCopy16(3, src, dest, PLTT_SIZE);
         sPlttBufferTransferPending = FALSE;
         
         if (gPaletteFade.mode == HARDWARE_FADE && gPaletteFade.active)

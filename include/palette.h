@@ -81,8 +81,6 @@ struct PaletteFadeControl
     u32 padding:14;
 };
 
-extern const struct BlendSettings gTimeOfDayBlend[];
-
 extern struct PaletteFadeControl gPaletteFade;
 extern u32 gPlttBufferTransferPending;
 extern u16 ALIGNED(4) gPlttBufferUnfaded[PLTT_BUFFER_SIZE];

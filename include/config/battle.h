@@ -226,7 +226,7 @@
 #define B_CONFUSE_BERRIES_HEAL      GEN_7 // Before Gen7, Figy and similar berries restore 1/8th of HP and trigger at half HP. In Gen7 they restore half HP, triggering at 25% HP. In Gen8 they heal 1/3rd of HP.
 #define B_X_ITEMS_BUFF              GEN_3 // In Gen7+, the X Items raise a stat by 2 stages instead of 1.
 #define B_MENTAL_HERB               GEN_3 // In Gen5+, the Mental Herb cures Taunt, Encore, Torment, Heal Block, and Disable in addition to Infatuation from before.
-#define B_TRAINERS_KNOCK_OFF_ITEMS  FALSE       // If TRUE, trainers can steal/swap your items (non-berries are restored after battle). In vanilla games trainers cannot steal items.
+#define B_TRAINERS_KNOCK_OFF_ITEMS  TRUE        // If TRUE, trainers can steal/swap your items (non-berries are restored after battle). In vanilla games trainers cannot steal items.
 #define B_RETURN_STOLEN_NPC_ITEMS   GEN_3 // In Gen5+, Thief and Covet no longer steal items from NPCs.
 #define B_STEAL_WILD_ITEMS          GEN_3 // In Gen9, Thief and Covet steal a wild pokemon's item and send it to the bag. Before Gen9, the stolen item would be held by the Thief/Covet user.
 #define B_RESTORE_HELD_BATTLE_ITEMS GEN_3 // In Gen9, all non-berry items are restored after battle.
@@ -306,7 +306,7 @@
 #define B_PREFERRED_ICE_WEATHER         B_ICE_WEATHER_BOTH // Toggles Hail move effects to Snow and vice versa.
 
 // Terrain settings
-#define B_TERRAIN_BG_CHANGE         FALSE       // If set to TRUE, terrain moves permanently change the default battle background until the effect fades.
+#define B_TERRAIN_BG_CHANGE         TRUE        // If set to TRUE, terrain moves permanently change the default battle background until the effect fades.
 #define B_THUNDERSTORM_TERRAIN      FALSE       // If TRUE, overworld Thunderstorm generates Rain and Electric Terrain as in Gen 8.
 #define B_TERRAIN_TYPE_BOOST        GEN_3 // In Gen8, damage is boosted by 30% instead of 50%.
 #define B_SECRET_POWER_EFFECT       GEN_3 // Secret Power's effects change depending on terrain and generation. See MOVE_EFFECT_SECRET_POWER's case in `SetMoveEffect`.
@@ -426,7 +426,7 @@
 // EonEmerald: 1.15 additions kept at Gen 3 behavior.
 #define B_HIT_THAW                  GEN_3 // In Gen6+, damaging moves that thaw the user will thaw the target.
 #define B_POWDER_STATUS_HEAVY_RAIN  GEN_3 // In Gen7+, Powder doesn't damage the user of a Fire-type move in heavy rain.
-#define B_X_ITEMS_CROSSUSE          FALSE // In Gen7, X items can be used on any friendly battler in double battles.
+#define B_X_ITEMS_CROSSUSE          TRUE // In Gen7, X items can be used on any friendly battler in double battles.
 #define B_SANDSTORM_SOLAR_BEAM      GEN_3 // In Gen3+, Sandstorm decreases the power of Solar Beam.
 #define B_HPBAR_COLOR_THRESHOLD     GEN_3 // In Gen5+, HP bar colors use actual HP values instead of bar length.
 #define B_INCAPACITATED_CATCH_BONUS GEN_3 // In Gen5+, sleep/freeze gives a 2.5x catch bonus instead of 2x.

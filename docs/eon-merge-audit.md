@@ -228,10 +228,17 @@ The project must always use the latest patch release of each minor line:
 
 ### Day/night
 
-- Expansion's `OW_ENABLE_DNS` and Eon's `src/dns.c` were both tinting the overworld,
-  which double-darkened night maps. `OW_ENABLE_DNS` is now `FALSE` and Eon's DNS remains
-  the only active system.
-- `OW_BATTLE_ONLY_FORMS` is `FALSE`, matching `OW_FOLLOWERS_ENABLED FALSE`.
+- Expansion DNS is now the only DNS system (`OW_ENABLE_DNS TRUE`). `src/dns.c`
+  was removed; its six visual phases, filter tables and window lighting were
+  ported into expansion's DNS.
+- The Eon filters are converted exactly to expansion tint blends
+  (`blendColor = 8 * (31 - filter)` per channel), so the original colours are
+  preserved. Visual phases: midnight 00:00-06:59, dawn 07:00-07:59, day
+  08:00-18:59, sunset 19:00-19:59, nightfall 20:00-20:59 and night 21:00-23:59.
+- Window lighting from Eon is applied right before the palette DMA transfer,
+  from 21:00 to 06:59, so weather and fades do not overwrite the light colours.
+- `OW_BATTLE_ONLY_FORMS` is `TRUE`, matching the follower configuration
+  (`OW_FOLLOWERS_ENABLED TRUE`).
 
 ### Species and content trimming
 
@@ -276,24 +283,55 @@ The project must always use the latest patch release of each minor line:
 - Eon now keeps it generated and ignored: removed from the Git index and added to
   `.gitignore`. The Makefile regenerates it if missing.
 
+### Feature/config pass
+
+- `POKEDEX_PLUS_HGSS` is enabled in both `include/config/general.h` and
+  `include/config/pokedex_plus_hgss.h`.
+- Following Pokémon: `OW_FOLLOWERS_ENABLED TRUE`, `OW_FOLLOWERS_SCRIPT_MOVEMENT FALSE`
+  and `OW_BATTLE_ONLY_FORMS TRUE`. Follower graphics remain compressed
+  (`OW_GFX_COMPRESS TRUE`).
+- Generic HnS-style QoL flags enabled: `SLOW_MOVEMENT_ON_STAIRS`,
+  `OW_HIDE_REPEAT_MAP_POPUP`, `P_CAN_FORGET_HIDDEN_MOVE`,
+  `P_SUMMARY_SCREEN_IV_EV_VALUES`, `P_POKERUS_INFECT_EGG`,
+  `I_FISHING_FOLLOWER_BOOST`, `B_X_ITEMS_CROSSUSE`,
+  `B_TRAINERS_KNOCK_OFF_ITEMS` and `B_TERRAIN_BG_CHANGE`.
+- HnS-specific content/balance/save flags are intentionally not enabled:
+  time-of-day encounters, GBA-style species graphics, expansion
+  intro, freeing dex/Mystery Gift/Enigma buffers, combined bag pockets, and the
+  HnS randomizers/mints/item drops/Nuzlocke systems.
+- Pre-main's 411 entries are 386 base Gen 3 species plus the 25 Unown forms
+  (B-Z and !/?); the National Dex stays at 386. Form data and tables are present:
+  `sUnownFormSpeciesIdTable`, `sDeoxysFormSpeciesIdTable` and the Deoxys
+  Meteorite form-change table.
+- README is UTF-8 without BOM with `Pokémon`; GitHub renders the accent correctly.
+- Expansion DNS is the only active DNS. Eon's `src/dns.c` was removed and its
+  filters, phases and window lighting now run through expansion's DNS system.
+  `swapPalettes` is zero on all tilesets and no map has time-of-day object
+  conditions, so expansion's alternate-palette/light-sprite features stay inert.
+
 ### Build result
 
-- EWRAM: 227,284 B (86.70%)
-- IWRAM: 28,380 B (86.61%)
-- ROM used: 15,414,156 B (45.94%)
+Clean build with the final configuration (HGSS Dex, followers, HnS QoL flags
+and the DNS merge):
+
+- EWRAM: 226,260 B (86.31%)
+- IWRAM: 28,372 B (86.58%)
+- ROM used: 15,464,312 B (46.09%)
 - Final `pokeemerald.gba`: 16,777,216 B
 - Previous 1.17.2 build: 27,091,748 B used, 33,554,432 B file.
 
 ### Pending regressions
 
-- Eon's regional Hoenn dex had 411 entries in `pre-main`; the merged expansion list has
-  202. Restoring it is a data merge task, not a config change.
+- Pre-main's 411 entries are 386 base species plus 25 Unown forms; the National
+  Dex stays at 386 and the forms are handled by the HGSS Dex form screen.
 - The start menu refuses to open the Pokédex when
   `GetNationalPokedexCount(FLAG_GET_SEEN)` is 0. This guard also exists in `pre-main`.
   Changing the species count also invalidates old saves.
 - `UpdateOverworldWildEncounter()` still runs every frame and linearly scans
   `gWildMonHeaders` even with `WE_OW_ENCOUNTERS FALSE`. Removing that cost requires
   touching expansion code.
+- DNS visual validation is pending: confirm the six Eon phases and the window
+  glow between 21:00 and 06:59 in an outdoor map.
 
 ## 4. Static counts
 

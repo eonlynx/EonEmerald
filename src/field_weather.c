@@ -509,6 +509,19 @@ static void ApplyColorMap(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex)
             curPalIndex++;
         }
     }
+    else if (colorMapIndex == 0)
+    {
+        // No weather color map: still apply the DNS time-of-day blend.
+        if (MapHasNaturalLight(gMapHeader.mapType))
+        {
+            u32 palettes = PALETTES_ALL;
+
+            numPalettes += startPalIndex;
+            palettes = (palettes >> startPalIndex) << startPalIndex;
+            palettes = (palettes << (32 - numPalettes)) >> (32 - numPalettes);
+            UpdatePalettesWithTime(palettes);
+        }
+    }
     else if (colorMapIndex < 0)
     {
         // A negative gammIndex value means that the blending will come from the special Drought weather's palette tables.

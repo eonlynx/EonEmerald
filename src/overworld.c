@@ -1741,96 +1741,209 @@ void CB1_Overworld(void)
         DoCB1_Overworld(gMain.newKeys, gMain.heldKeys);
 }
 
-#define TINT_NIGHT Q_8_8(0.456) | Q_8_8(0.456) << 8 | Q_8_8(0.615) << 16
-
-const struct BlendSettings gTimeOfDayBlend[] =
+// EonEmerald DNS: six visual phases with Eon's original filter tables.
+// Filters are 15-bit RGB values subtracted proportionally from each channel.
+static const u16 sDnsMidnightFilters[] =
 {
-    [TIME_MORNING] = {.coeff = 4,  .blendColor = 0xA8B0E0,   .isTint = TRUE},
-    [TIME_DAY]     = {.coeff = 0,  .blendColor = 0,          .isTint = FALSE},
-    [TIME_EVENING] = {.coeff = 4,  .blendColor = 0xA8B0E0,   .isTint = TRUE},
-    [TIME_NIGHT]   = {.coeff = 10, .blendColor = TINT_NIGHT, .isTint = TRUE},
+    RGB2(14, 14, 6),
+    RGB2(14, 14, 7),
+    RGB2(14, 14, 8),
+    RGB2(15, 15, 8),
+    RGB2(15, 15, 9),
+    RGB2(15, 15, 9),
+    RGB2(16, 16, 9),
+    RGB2(16, 16, 10),
 };
 
-#define DEFAULT_WEIGHT 256
-#define TIME_BLEND_WEIGHT(begin, end) (DEFAULT_WEIGHT - SAFE_DIV((DEFAULT_WEIGHT * ((hours - begin) * MINUTES_PER_HOUR + minutes)), ((end - begin) * MINUTES_PER_HOUR)))
+static const u16 sDnsDawnFilters[] =
+{
+    RGB2(15, 15, 10),
+    RGB2(15, 15, 10),
+    RGB2(14, 14, 10),
+    RGB2(13, 13, 10),
+    RGB2(12, 12, 10),
+    RGB2(11, 11, 10),
+    RGB2(10, 10, 10),
+    RGB2(9, 9, 10),
+    RGB2(8, 8, 10),
+    RGB2(8, 8, 11),
+    RGB2(7, 7, 11),
+    RGB2(6, 6, 11),
+    RGB2(5, 5, 11),
+    RGB2(4, 4, 11),
+    RGB2(3, 3, 11),
+    RGB2(2, 2, 11),
+    RGB2(1, 1, 11),
+    RGB2(0, 0, 11),
+    RGB2(0, 0, 10),
+    RGB2(0, 0, 9),
+    RGB2(0, 0, 8),
+    RGB2(0, 0, 7),
+    RGB2(0, 0, 6),
+    RGB2(0, 0, 5),
+    RGB2(0, 0, 4),
+    RGB2(0, 0, 3),
+    RGB2(0, 0, 2),
+    RGB2(0, 0, 1),
+    RGB2(0, 0, 0),
+    RGB2(0, 0, 0),
+};
+
+static const u16 sDnsSunsetFilters[] =
+{
+    RGB2(0, 0, 1),
+    RGB2(0, 1, 1),
+    RGB2(0, 1, 2),
+    RGB2(0, 1, 3),
+    RGB2(0, 2, 3),
+    RGB2(0, 2, 4),
+    RGB2(0, 2, 5),
+    RGB2(0, 3, 5),
+    RGB2(0, 3, 6),
+    RGB2(0, 3, 7),
+    RGB2(0, 4, 7),
+    RGB2(0, 4, 8),
+    RGB2(0, 4, 9),
+    RGB2(0, 5, 9),
+    RGB2(0, 5, 10),
+    RGB2(0, 5, 11),
+    RGB2(0, 6, 11),
+    RGB2(0, 6, 12),
+    RGB2(0, 6, 13),
+    RGB2(0, 7, 13),
+    RGB2(0, 7, 14),
+    RGB2(0, 7, 14),
+    RGB2(0, 8, 14),
+    RGB2(0, 9, 14),
+    RGB2(0, 10, 14),
+    RGB2(0, 11, 14),
+    RGB2(0, 12, 14),
+    RGB2(0, 13, 14),
+    RGB2(0, 14, 14),
+    RGB2(0, 14, 14),
+};
+
+static const u16 sDnsNightfallFilters[] =
+{
+    RGB2(0, 14, 14),
+    RGB2(0, 14, 14),
+    RGB2(0, 14, 13),
+    RGB2(0, 14, 12),
+    RGB2(0, 14, 11),
+    RGB2(0, 14, 10),
+    RGB2(1, 14, 10),
+    RGB2(1, 14, 9),
+    RGB2(0, 14, 8),
+    RGB2(1, 14, 7),
+    RGB2(1, 14, 6),
+    RGB2(2, 14, 6),
+    RGB2(2, 14, 5),
+    RGB2(2, 14, 4),
+    RGB2(2, 14, 3),
+    RGB2(2, 14, 2),
+    RGB2(2, 14, 2),
+    RGB2(3, 14, 3),
+    RGB2(4, 14, 4),
+    RGB2(5, 14, 5),
+    RGB2(6, 14, 6),
+    RGB2(7, 14, 6),
+    RGB2(8, 14, 6),
+    RGB2(9, 14, 6),
+    RGB2(10, 14, 6),
+    RGB2(11, 14, 6),
+    RGB2(12, 14, 6),
+    RGB2(13, 14, 6),
+    RGB2(14, 14, 6),
+    RGB2(14, 14, 6),
+};
+
+#define DNS_DAY_FILTER      RGB2(0, 0, 0)
+#define DNS_NIGHT_FILTER    RGB2(14, 14, 6)
 
 #define MORNING_HOUR_MIDDLE (MORNING_HOUR_BEGIN + ((MORNING_HOUR_END - MORNING_HOUR_BEGIN) / 2))
+
+static u16 GetDnsFilter(u8 hours, u8 minutes)
+{
+    switch (GetDnsTimeLapse(hours))
+    {
+    case DNS_TIME_MIDNIGHT:
+        return hours < 1 ? sDnsMidnightFilters[minutes >> 3] : sDnsMidnightFilters[7];
+    case DNS_TIME_DAWN:
+        return sDnsDawnFilters[minutes >> 1];
+    case DNS_TIME_DAY:
+        return DNS_DAY_FILTER;
+    case DNS_TIME_SUNSET:
+        return sDnsSunsetFilters[minutes >> 1];
+    case DNS_TIME_NIGHTFALL:
+        return sDnsNightfallFilters[minutes >> 1];
+    case DNS_TIME_NIGHT:
+    default:
+        return DNS_NIGHT_FILTER;
+    }
+}
+
+u8 GetDnsTimeLapse(u8 hour)
+{
+    if (hour < MIDNIGHT_END_HOUR)
+        return DNS_TIME_MIDNIGHT;
+    if (hour < DAWN_END_HOUR)
+        return DNS_TIME_DAWN;
+    if (hour < DAY_END_HOUR)
+        return DNS_TIME_DAY;
+    if (hour < SUNSET_END_HOUR)
+        return DNS_TIME_SUNSET;
+    if (hour < NIGHTFALL_END_HOUR)
+        return DNS_TIME_NIGHTFALL;
+    return DNS_TIME_NIGHT;
+}
+
+// Converts Eon's subtractive filter to expansion's tint blend.
+// out = c * (31 - filter) >> 5 is equivalent to c * (8 * (31 - filter)) >> 8.
+static struct BlendSettings DnsFilterToBlend(u16 filter)
+{
+    struct BlendSettings blend = {0};
+
+    blend.blendColor = (8 * (31 - (filter & 0x1F)))
+                     | (8 * (31 - ((filter >> 5) & 0x1F)) << 8)
+                     | (8 * (31 - ((filter >> 10) & 0x1F)) << 16);
+    blend.isTint = TRUE;
+    return blend;
+}
+
 
 void UpdateTimeOfDay(bool32 updateBlend)
 {
     s32 hours, minutes;
+    struct BlendSettings blend;
+
     RtcCalcLocalTime();
     hours = sHoursOverride ? sHoursOverride : gLocalTime.hours;
     minutes = sHoursOverride ? 0 : gLocalTime.minutes;
 
     if (IsBetweenHours(hours, MORNING_HOUR_BEGIN, MORNING_HOUR_MIDDLE)) // night->morning
-    {
-        if (updateBlend)
-        {
-            gTimeBlend.startBlend = gTimeOfDayBlend[TIME_NIGHT];
-            gTimeBlend.endBlend = gTimeOfDayBlend[TIME_MORNING];
-            gTimeBlend.weight = TIME_BLEND_WEIGHT(MORNING_HOUR_BEGIN, MORNING_HOUR_MIDDLE);
-            gTimeBlend.altWeight = (DEFAULT_WEIGHT - gTimeBlend.weight) / 2;
-        }
         gTimeOfDay = TIME_MORNING;
-    }
     else if (IsBetweenHours(hours, MORNING_HOUR_MIDDLE, MORNING_HOUR_END)) // morning->day
-    {
-        if (updateBlend)
-        {
-            gTimeBlend.startBlend = gTimeOfDayBlend[TIME_MORNING];
-            gTimeBlend.endBlend = gTimeOfDayBlend[TIME_DAY];
-            gTimeBlend.weight = TIME_BLEND_WEIGHT(MORNING_HOUR_MIDDLE, MORNING_HOUR_END);
-            gTimeBlend.altWeight = (DEFAULT_WEIGHT - gTimeBlend.weight) / 2 + (DEFAULT_WEIGHT / 2);
-        }
         gTimeOfDay = TIME_MORNING;
-    }
     else if (IsBetweenHours(hours, EVENING_HOUR_BEGIN, EVENING_HOUR_END)) // evening
-    {
-        if (updateBlend)
-        {
-            gTimeBlend.startBlend = gTimeOfDayBlend[TIME_DAY];
-            gTimeBlend.endBlend = gTimeOfDayBlend[TIME_EVENING];
-            gTimeBlend.weight = TIME_BLEND_WEIGHT(EVENING_HOUR_BEGIN, EVENING_HOUR_END);
-            gTimeBlend.altWeight = gTimeBlend.weight / 2 + (DEFAULT_WEIGHT / 2);
-        }
         gTimeOfDay = TIME_EVENING;
-    }
     else if (IsBetweenHours(hours, NIGHT_HOUR_BEGIN, NIGHT_HOUR_BEGIN + 1)) // evening->night
-    {
-        if (updateBlend)
-        {
-            gTimeBlend.startBlend = gTimeOfDayBlend[TIME_EVENING];
-            gTimeBlend.endBlend = gTimeOfDayBlend[TIME_NIGHT];
-            gTimeBlend.weight = TIME_BLEND_WEIGHT(NIGHT_HOUR_BEGIN, NIGHT_HOUR_BEGIN + 1);
-            gTimeBlend.altWeight = gTimeBlend.weight / 2;
-        }
         gTimeOfDay = TIME_NIGHT;
-    }
     else if (IsBetweenHours(hours, NIGHT_HOUR_BEGIN, NIGHT_HOUR_END)) // night
-    {
-        if (updateBlend)
-        {
-            gTimeBlend.weight = DEFAULT_WEIGHT;
-            gTimeBlend.altWeight = 0;
-            gTimeBlend.startBlend = gTimeBlend.endBlend = gTimeOfDayBlend[TIME_NIGHT];
-        }
         gTimeOfDay = TIME_NIGHT;
-    }
     else // day
-    {
-        if (updateBlend)
-        {
-            gTimeBlend.weight = gTimeBlend.altWeight = DEFAULT_WEIGHT;
-            gTimeBlend.startBlend = gTimeBlend.endBlend = gTimeOfDayBlend[TIME_DAY];
-        }
         gTimeOfDay = TIME_DAY;
+
+    if (updateBlend)
+    {
+        blend = DnsFilterToBlend(GetDnsFilter(hours, minutes));
+        gTimeBlend.startBlend = blend;
+        gTimeBlend.endBlend = blend;
+        gTimeBlend.weight = 0;
+        gTimeBlend.altWeight = 0;
     }
 }
 
 #undef MORNING_HOUR_MIDDLE
-#undef TIME_BLEND_WEIGHT
-#undef DEFAULT_WEIGHT
 
 // Whether a map type is naturally lit/outside
 bool32 MapHasNaturalLight(enum MapType mapType)
@@ -1840,6 +1953,56 @@ bool32 MapHasNaturalLight(enum MapType mapType)
           || mapType == MAP_TYPE_CITY
           || mapType == MAP_TYPE_ROUTE
           || mapType == MAP_TYPE_OCEAN_ROUTE));
+}
+
+struct DnsLightingColour
+{
+    u8 paletteNum;
+    u8 colourNum;
+    u16 lightColour;
+};
+
+static const struct DnsLightingColour sDnsLightingColours[] =
+{
+    {0, 2, RGB2(30, 30, 22)},
+    {1, 10, RGB2(30, 30, 14)},
+    {1, 9, RGB2(30, 30, 22)},
+    {12, 2, RGB2(30, 30, 22)},
+    {12, 3, RGB2(30, 30, 15)},
+    {12, 4, RGB2(30, 30, 10)},
+    {12, 9, RGB2(25, 6, 0)},
+    {12, 10, RGB2(20, 6, 0)},
+    {12, 11, RGB2(30, 3, 3)},
+    {12, 12, RGB2(30, 18, 0)},
+};
+
+static bool32 IsDnsLightingActive(void)
+{
+    return gLocalTime.hours >= LIGHTNING_START_HOUR
+        || gLocalTime.hours < LIGHTNING_END_HOUR;
+}
+
+// Lights up windows during the night. This is applied right before the DMA
+// transfer so weather and palette fades cannot overwrite the light colours.
+void DnsApplyWindowLighting(u16 *paletteBuffer)
+{
+    u32 i;
+
+    if (gMain.inBattle
+     || (gMain.callback2 != CB2_Overworld && gMain.callback2 != CB2_OverworldBasic)
+     || !MapHasNaturalLight(gMapHeader.mapType)
+     || gPaletteFade.active
+     || !IsDnsLightingActive())
+        return;
+
+    for (i = 0; i < ARRAY_COUNT(sDnsLightingColours); i++)
+    {
+        u16 colourSlot = sDnsLightingColours[i].paletteNum * 16 + sDnsLightingColours[i].colourNum;
+
+        // Match Eon's original behaviour: only light palette slots that are black.
+        if (gPlttBufferUnfaded[colourSlot] == 0x0000)
+            paletteBuffer[colourSlot] = sDnsLightingColours[i].lightColour;
+    }
 }
 
 bool32 CurrentMapHasShadows(void)
@@ -1906,7 +2069,6 @@ u8 UpdateSpritePaletteWithTime(u8 paletteNum)
 
 static void OverworldBasic(void)
 {
-    DnsApplyFilters();
     ScriptContext_RunScript();
     RunTasks();
     AnimateSprites();

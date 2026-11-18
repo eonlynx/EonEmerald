@@ -164,6 +164,7 @@ bool32 MapHasNaturalLight(enum MapType mapType);
 bool32 CurrentMapHasShadows(void);
 void UpdateAltBgPalettes(u16 palettes);
 void UpdatePalettesWithTime(u32);
+void DnsApplyWindowLighting(u16 *paletteBuffer);
 void CB2_Overworld(void);
 void SetMainCallback1(void (*cb)(void));
 void CB2_NewGame(void);

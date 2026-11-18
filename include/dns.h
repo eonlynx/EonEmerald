@@ -1,10 +1,7 @@
 #ifndef GUARD_DNS_UTILS_H
 #define GUARD_DNS_UTILS_H
 
-#define DNS_PAL_EXCEPTION   FALSE
-#define DNS_PAL_ACTIVE      TRUE
-
-/* Visual time phases used by the DNS palette filters. */
+/* Visual time phases shared by the overworld DNS and battle backgrounds. */
 enum DnsTimeLapse
 {
     DNS_TIME_MIDNIGHT,
@@ -23,23 +20,10 @@ enum DnsTimeLapse
 #define NIGHTFALL_END_HOUR  21      //20 - 21
 #define NIGHT_END_HOUR      0       //21 - 00
 
-/* Start and end hour of the lightning system.
- * This system is generally used for building's windows. */
+/* Start and end hour of the window lighting system. */
 #define LIGHTNING_START_HOUR    NIGHTFALL_END_HOUR
 #define LIGHTNING_END_HOUR      MIDNIGHT_END_HOUR
 
-struct LightingColour {
-    u8 paletteNum;
-    u8 colourNum;
-    u16 lightColour;
-};
-
-struct DnsPalExceptions {
-    bool8 pal[32];
-};
-
-void DnsTransferPlttBuffer(void *src, void *dest);
-void DnsApplyFilters();
 u8 GetDnsTimeLapse(u8 hour);
 
 #endif /* GUARD_DNS_UTILS_H */
