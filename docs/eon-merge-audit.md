@@ -320,6 +320,18 @@ and the DNS merge):
 - Final `pokeemerald.gba`: 16,777,216 B
 - Previous 1.17.2 build: 27,091,748 B used, 33,554,432 B file.
 
+### ccache
+
+- Compilation uses `ccache` by default through
+  `tools/ccache/cc1-wrapper.sh`. The wrapper preserves the existing
+  preprocessed-C pipeline but gives `ccache` real input/output files, which
+  makes the calls cacheable.
+- The first build populates the cache; subsequent builds reuse objects for
+  unchanged preprocessed files. Use `make CCACHE=0` to disable the wrapper and
+  compile with the original `cc1` path.
+- `ccache` 4.14.3 or newer is recommended. The wrapper falls back to direct
+  compilation if `ccache` is not available.
+
 ### Pending regressions
 
 - Pre-main's 411 entries are 386 base species plus 25 Unown forms; the National

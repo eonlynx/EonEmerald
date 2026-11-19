@@ -165,7 +165,14 @@ ifeq ($(RELEASE),1)
 endif
 ARMCC := $(PREFIX)gcc
 PATH_ARMCC := PATH="$(PATH)" $(ARMCC)
-CC1 := $(shell $(PATH_ARMCC) --print-prog-name=cc1) -quiet
+# Use ccache for C compilation. Set CCACHE=0 to return to the raw cc1 pipeline.
+CCACHE ?= 1
+CC1_REAL := $(shell $(PATH_ARMCC) --print-prog-name=cc1)
+ifeq ($(CCACHE),1)
+CC1 := bash tools/ccache/cc1-wrapper.sh $(ARMCC)
+else
+CC1 := $(CC1_REAL) -quiet
+endif
 
 override CFLAGS += -mthumb -mthumb-interwork -O$(O_LEVEL) -mabi=apcs-gnu -mtune=arm7tdmi -march=armv4t -Wno-pointer-to-int-cast -std=gnu17 -Werror -Wall -Wno-strict-aliasing -Wno-attribute-alias -Woverride-init -Wnonnull -Wenum-conversion
 
