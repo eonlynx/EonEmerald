@@ -467,10 +467,17 @@
       "dest_warp_id": "0"
     },
     {
-      "x": 33,
-      "y": 8,
+      "x": 28,
+      "y": 7,
       "elevation": 0,
       "dest_map": "MAP_ARTISAN_CAVE_1F",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 12,
+      "y": 59,
+      "elevation": 0,
+      "dest_map": "MAP_ARTISAN_CAVE_B1F",
       "dest_warp_id": "0"
     }
   ],
