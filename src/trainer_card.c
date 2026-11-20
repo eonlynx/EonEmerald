@@ -9,6 +9,7 @@
 #include "bg.h"
 #include "sound.h"
 #include "frontier_pass.h"
+#include "frontier_util.h"
 #include "overworld.h"
 #include "menu.h"
 #include "text.h"
@@ -654,7 +655,7 @@ static bool8 HasAllFrontierSymbols(void)
     u8 i;
     for (i = 0; i < NUM_FRONTIER_FACILITIES; i++)
     {
-        if (!FlagGet(FLAG_SYS_TOWER_SILVER + 2 * i) || !FlagGet(FLAG_SYS_TOWER_GOLD + 2 * i))
+        if (!FlagGet(gFrontierBrainInfo[i].silverSymbolFlag) || !FlagGet(gFrontierBrainInfo[i].goldSymbolFlag))
             return FALSE;
     }
     return TRUE;

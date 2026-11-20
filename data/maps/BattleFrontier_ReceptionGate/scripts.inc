@@ -147,9 +147,10 @@ BattleFrontier_ReceptionGate_EventScript_ChooseFacilityToLearnAbout::
 	case 4, BattleFrontier_ReceptionGate_EventScript_BattleFactory
 	case 5, BattleFrontier_ReceptionGate_EventScript_BattlePike
 	case 6, BattleFrontier_ReceptionGate_EventScript_BattlePyramid
-	case 7, BattleFrontier_ReceptionGate_EventScript_RankingHall
-	case 8, BattleFrontier_ReceptionGate_EventScript_ExchangeCorner
-	case 9, BattleFrontier_ReceptionGate_EventScript_ExitFacilityGuide
+	case 7, BattleFrontier_ReceptionGate_EventScript_BattleHill
+	case 8, BattleFrontier_ReceptionGate_EventScript_RankingHall
+	case 9, BattleFrontier_ReceptionGate_EventScript_ExchangeCorner
+	case 10, BattleFrontier_ReceptionGate_EventScript_ExitFacilityGuide
 	case MULTI_B_PRESSED, BattleFrontier_ReceptionGate_EventScript_ExitFacilityGuide
 	end
 
@@ -185,6 +186,11 @@ BattleFrontier_ReceptionGate_EventScript_BattlePike::
 
 BattleFrontier_ReceptionGate_EventScript_BattlePyramid::
 	msgbox BattleFrontier_ReceptionGate_Text_BattlePyramidInfo, MSGBOX_DEFAULT
+	goto BattleFrontier_ReceptionGate_EventScript_ChooseFacilityToLearnAbout
+	end
+
+BattleFrontier_ReceptionGate_EventScript_BattleHill::
+	msgbox BattleFrontier_ReceptionGate_Text_BattleHillInfo, MSGBOX_DEFAULT
 	goto BattleFrontier_ReceptionGate_EventScript_ChooseFacilityToLearnAbout
 	end
 
@@ -396,6 +402,14 @@ BattleFrontier_ReceptionGate_Text_BattlePyramidInfo:
 	.string "An event called the Battle Quest\n"
 	.string "is conducted there.$"
 
+BattleFrontier_ReceptionGate_Text_BattleHillInfo:
+	.string "The BATTLE HILL is the tower where\n"
+	.string "TRAINERS race to the top.\p"
+	.string "An event called the TAG MATCH\n"
+	.string "is held there.\p"
+	.string "You must battle your way through\n"
+	.string "every floor as fast as you can.$"
+
 BattleFrontier_ReceptionGate_Text_RankingHallInfo:
 	.string "The RANKING HALL is located near\n"
 	.string "the BATTLE TOWER.\p"
@@ -472,7 +486,7 @@ BattleFrontier_ReceptionGate_Text_LearnAboutWhich1:
 	.string "Which would you like to learn about?$"
 
 BattleFrontier_ReceptionGate_Text_SymbolsInfo:
-	.string "There are seven facilities at\n"
+	.string "There are eight facilities at\n"
 	.string "the BATTLE FRONTIER.\p"
 	.string "TRAINERS who gain recognition for\n"
 	.string "their abilities may be rewarded with\l"

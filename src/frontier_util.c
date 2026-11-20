@@ -259,6 +259,19 @@ const struct FrontierBrain gFrontierBrainInfo[NUM_FRONTIER_FACILITIES] =
         .goldSymbolFlag = FLAG_SYS_PYRAMID_GOLD,
         .silverSymbolFlag = FLAG_SYS_PYRAMID_SILVER,
     },
+    [FRONTIER_FACILITY_HILL] =
+    {
+        // Wally's dialogue and 6-Pokémon double battle live in the
+        // TrainerHill_Roof scripts. This entry only exposes the eighth
+        // Frontier Brain's metadata to the shared counters and UI.
+        .trainerId = TRAINER_WALLY_HILL_SILVER,
+        .objEventGfx = OBJ_EVENT_GFX_WALLY,
+        .isFemale = FALSE,
+        .battledBit = {1 << 14, 1 << 15},
+        .streakAppearances = {35, 70, 35, 1},
+        .goldSymbolFlag = FLAG_SYS_HILL_GOLD,
+        .silverSymbolFlag = FLAG_SYS_HILL_SILVER,
+    },
 };
 
 static const struct FrontierBrainMon sFrontierBrainsMons[][2][FRONTIER_PARTY_SIZE] =
@@ -700,6 +713,11 @@ static const u8 sBattlePointAwards[NUM_FRONTIER_FACILITIES][FRONTIER_MODE_COUNT]
     [FRONTIER_FACILITY_PYRAMID] =
     {
         [FRONTIER_MODE_SINGLES]     = {  5,  5,  6,  6,  7,  7,  8,  8,  9,  9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15 },
+    },
+    [FRONTIER_FACILITY_HILL] =
+    {
+        // Battle Hill awards Battle Points through its own time-based system.
+        [FRONTIER_MODE_SINGLES]     = { 0 },
     },
 };
 
@@ -2048,6 +2066,7 @@ u32 GetCurrentFacilityWinStreak(void)
         return gSaveBlock2Ptr->frontier.pikeWinStreaks[lvlMode];
     case FRONTIER_FACILITY_PYRAMID:
         return gSaveBlock2Ptr->frontier.pyramidWinStreaks[lvlMode];
+    case FRONTIER_FACILITY_HILL:
     default:
         return 0;
     }
@@ -2071,8 +2090,11 @@ static void IsTrainerFrontierBrain(void)
 
 u8 GetPlayerSymbolCountForFacility(u8 facility)
 {
-    return FlagGet(FLAG_SYS_TOWER_SILVER + facility * 2)
-         + FlagGet(FLAG_SYS_TOWER_GOLD + facility * 2);
+    if (facility >= NUM_FRONTIER_FACILITIES)
+        return 0;
+
+    return FlagGet(gFrontierBrainInfo[facility].silverSymbolFlag)
+         + FlagGet(gFrontierBrainInfo[facility].goldSymbolFlag);
 }
 
 static void GiveBattlePoints(void)
@@ -2082,6 +2104,9 @@ static void GiveBattlePoints(void)
     s32 facility = VarGet(VAR_FRONTIER_FACILITY);
     s32 battleMode = VarGet(VAR_FRONTIER_BATTLE_MODE);
     s32 points;
+
+    if (facility >= NUM_FRONTIER_FACILITIES)
+        return;
 
     switch (facility)
     {
@@ -2105,6 +2130,8 @@ static void GiveBattlePoints(void)
         break;
     case FRONTIER_FACILITY_PYRAMID:
         challengeNum = gSaveBlock2Ptr->frontier.pyramidWinStreaks[lvlMode] / FRONTIER_STAGES_PER_CHALLENGE;
+        break;
+    case FRONTIER_FACILITY_HILL:
         break;
     }
 
@@ -2143,10 +2170,14 @@ static void GetFacilitySymbolCount(void)
 static void GiveFacilitySymbol(void)
 {
     s32 facility = VarGet(VAR_FRONTIER_FACILITY);
+
+    if (facility >= NUM_FRONTIER_FACILITIES)
+        return;
+
     if (GetPlayerSymbolCountForFacility(facility) == 0)
-        FlagSet(FLAG_SYS_TOWER_SILVER + facility * 2);
+        FlagSet(gFrontierBrainInfo[facility].silverSymbolFlag);
     else
-        FlagSet(FLAG_SYS_TOWER_GOLD + facility * 2);
+        FlagSet(gFrontierBrainInfo[facility].goldSymbolFlag);
 }
 
 static void CheckBattleTypeFlag(void)
@@ -2738,6 +2769,11 @@ void CreateFrontierBrainPokemon(void)
     s32 facility = VarGet(VAR_FRONTIER_FACILITY);
     s32 symbol = GetFronterBrainSymbol();
 
+    // Battle Hill's Frontier Brain uses its own 6-Pokémon double battle
+    // scripts, not the shared 3-Pokémon brain party table.
+    if (facility >= FRONTIER_FACILITY_HILL)
+        return;
+
     if (facility == FRONTIER_FACILITY_DOME)
         selectedMonBits = GetDomeTrainerSelectedMons(TrainerIdToDomeTournamentId(TRAINER_FRONTIER_BRAIN));
     else
@@ -2782,6 +2818,9 @@ enum Species GetFrontierBrainMonSpecies(u8 monId)
     s32 facility = VarGet(VAR_FRONTIER_FACILITY);
     s32 symbol = GetFronterBrainSymbol();
 
+    if (facility >= FRONTIER_FACILITY_HILL)
+        return SPECIES_NONE;
+
     return sFrontierBrainsMons[facility][symbol][monId].species;
 }
 
@@ -2796,6 +2835,9 @@ u16 GetFrontierBrainMonMove(u8 monId, u8 moveSlotId)
     s32 facility = VarGet(VAR_FRONTIER_FACILITY);
     s32 symbol = GetFronterBrainSymbol();
 
+    if (facility >= FRONTIER_FACILITY_HILL)
+        return 0;
+
     return sFrontierBrainsMons[facility][symbol][monId].moves[moveSlotId];
 }
 
@@ -2803,6 +2845,9 @@ u8 GetFrontierBrainMonNature(u8 monId)
 {
     s32 facility = VarGet(VAR_FRONTIER_FACILITY);
     s32 symbol = GetFronterBrainSymbol();
+
+    if (facility >= FRONTIER_FACILITY_HILL)
+        return 0;
 
     return sFrontierBrainsMons[facility][symbol][monId].nature;
 }
@@ -2812,13 +2857,21 @@ u8 GetFrontierBrainMonEvs(u8 monId, u8 evStatId)
     s32 facility = VarGet(VAR_FRONTIER_FACILITY);
     s32 symbol = GetFronterBrainSymbol();
 
+    if (facility >= FRONTIER_FACILITY_HILL)
+        return 0;
+
     return sFrontierBrainsMons[facility][symbol][monId].evs[evStatId];
 }
 
 s32 GetFronterBrainSymbol(void)
 {
     s32 facility = VarGet(VAR_FRONTIER_FACILITY);
-    s32 symbol = GetPlayerSymbolCountForFacility(facility);
+    s32 symbol;
+
+    if (facility >= NUM_FRONTIER_FACILITIES)
+        return 0;
+
+    symbol = GetPlayerSymbolCountForFacility(facility);
 
     if (symbol == 2)
     {
@@ -2831,6 +2884,10 @@ s32 GetFronterBrainSymbol(void)
                  && (winStreak + gFrontierBrainInfo[facility].streakAppearances[3] - gFrontierBrainInfo[facility].streakAppearances[1]) % gFrontierBrainInfo[facility].streakAppearances[2] == 0)
             symbol = 1;
     }
+
+    if (facility == FRONTIER_FACILITY_HILL && symbol > 1)
+        symbol = 1;
+
     return symbol;
 }
 
@@ -2850,6 +2907,9 @@ static void CopyFrontierBrainText(bool8 playerWonText)
         facility = VarGet(VAR_FRONTIER_FACILITY);
         symbol = GetFronterBrainSymbol();
     }
+
+    if (facility == FRONTIER_FACILITY_HILL)
+        return;
 
     switch (playerWonText)
     {

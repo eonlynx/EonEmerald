@@ -60,6 +60,7 @@
 #include "constants/battle_frontier.h"
 #include "constants/battle_pyramid.h"
 #include "constants/battle_tower.h"
+#include "constants/trainer_hill.h"
 #include "constants/decorations.h"
 #include "constants/event_objects.h"
 #include "constants/event_object_movement.h"
@@ -2214,9 +2215,15 @@ void ShowFrontierManiacMessage(void)
             BattleFrontier_Lounge2_Text_PyramidKingSilverMons,
             BattleFrontier_Lounge2_Text_PyramidKingGoldMons
         },
+        [FRONTIER_MANIAC_HILL] =
+        {
+            BattleFrontier_Lounge2_Text_HillProdigyIsThere,
+            BattleFrontier_Lounge2_Text_HillProdigySilverMons,
+            BattleFrontier_Lounge2_Text_HillProdigyGoldMons
+        },
     };
 
-    static const u8 sFrontierManiacStreakThresholds[][FRONTIER_MANIAC_MESSAGE_COUNT - 1] =
+    static const u16 sFrontierManiacStreakThresholds[][FRONTIER_MANIAC_MESSAGE_COUNT - 1] =
     {
         [FRONTIER_MANIAC_TOWER_SINGLES] = { 21, 56 },
         [FRONTIER_MANIAC_TOWER_DOUBLES] = { 21, 35 },
@@ -2227,7 +2234,8 @@ void ShowFrontierManiacMessage(void)
         [FRONTIER_MANIAC_PALACE]        = { 7, 21 },
         [FRONTIER_MANIAC_ARENA]         = { 14, 28 },
         [FRONTIER_MANIAC_PIKE]          = { 13, 112 }, //BUG: 112 (0x70) is probably a mistake; the Pike Queen is battled twice well before that
-        [FRONTIER_MANIAC_PYRAMID]       = { 7, 56 }
+        [FRONTIER_MANIAC_PYRAMID]       = { 7, 56 },
+        [FRONTIER_MANIAC_HILL]          = { HILL_GAUGE_SILVER_THRESHOLD, HILL_GAUGE_GOLD_THRESHOLD }
     };
 
     u8 i;
@@ -2287,6 +2295,9 @@ void ShowFrontierManiacMessage(void)
             winStreak = gSaveBlock2Ptr->frontier.pyramidWinStreaks[FRONTIER_LVL_50];
         else
             winStreak = gSaveBlock2Ptr->frontier.pyramidWinStreaks[FRONTIER_LVL_OPEN];
+        break;
+    case FRONTIER_MANIAC_HILL:
+        winStreak = gSaveBlock1Ptr->trainerHill.gaugeCredits;
         break;
     default:
         return;
@@ -2436,7 +2447,7 @@ void ShowScrollableMultichoice(void)
         break;
     case SCROLL_MULTI_BF_RECEPTIONIST:
         task->tMaxItemsOnScreen = MAX_SCROLL_MULTI_ON_SCREEN;
-        task->tNumItems = 10;
+        task->tNumItems = 11;
         task->tLeft = 17;
         task->tTop = 1;
         task->tWidth = 11;
@@ -2606,6 +2617,7 @@ static const u8 *const sScrollableMultichoiceOptions[][MAX_SCROLL_MULTI_LENGTH] 
         gText_BattleFactory,
         gText_BattlePike,
         gText_BattlePyramid,
+        gText_BattleHill2,
         gText_RankingHall,
         gText_ExchangeService,
         gText_Exit

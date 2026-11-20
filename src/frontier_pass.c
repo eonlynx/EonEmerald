@@ -28,6 +28,10 @@
 #include "constants/battle_frontier.h"
 #include "constants/rgb.h"
 #include "constants/region_map_sections.h"
+
+// The Frontier Pass still shows the original seven facilities until its map
+// art and symbol sheet are updated for Battle Hill.
+#define NUM_PASS_FACILITIES 7
 #include "constants/songs.h"
 
 // gFrontierPassBg_Pal has 8*16 colors, but they attempt to load 13*16 colors.
@@ -116,13 +120,13 @@ struct FrontierPassData
     bool8 hasBattleRecord:1;
     u8 areaToShow:3;
     u8 trainerStars:4;
-    u8 facilitySymbols[NUM_FRONTIER_FACILITIES]; // 0: no symbol, 1: silver, 2: gold
+    u8 facilitySymbols[NUM_PASS_FACILITIES]; // 0: no symbol, 1: silver, 2: gold
 };
 
 struct FrontierPassGfx
 {
     struct Sprite *cursorSprite;
-    struct Sprite *symbolSprites[NUM_FRONTIER_FACILITIES];
+    struct Sprite *symbolSprites[NUM_PASS_FACILITIES];
     // These 3 tilemaps are used to overwrite the respective area when highlighted
     u8 *mapAndCardZoomTilemap;
     u8 *mapAndCardTilemap;
@@ -542,7 +546,7 @@ struct
     s16 x;
     s16 y;
     u8 animNum;
-} static const sMapLandmarks[NUM_FRONTIER_FACILITIES] =
+} static const sMapLandmarks[NUM_PASS_FACILITIES] =
 {
     [FRONTIER_FACILITY_TOWER]   = {gText_BattleTower3,   gText_BattleTowerDesc,    89,  40, MAP_INDICATOR_SQUARE},
     [FRONTIER_FACILITY_DOME]    = {gText_BattleDome2,    gText_BattleDomeDesc,     33,  42, MAP_INDICATOR_SQUARE},
@@ -627,7 +631,7 @@ static u32 AllocateFrontierPassData(MainCallback callback)
     sPassData->hasBattleRecord = CanCopyRecordedBattleSaveData();
     sPassData->areaToShow = CURSOR_AREA_NOTHING;
     sPassData->trainerStars = CountPlayerTrainerStars();
-    for (i = 0; i < NUM_FRONTIER_FACILITIES; i++)
+    for (i = 0; i < NUM_PASS_FACILITIES; i++)
     {
         if (FlagGet(FLAG_SYS_TOWER_SILVER + i * 2))
             sPassData->facilitySymbols[i]++;
@@ -1307,7 +1311,7 @@ static void LoadCursorAndSymbolSprites(void)
     sPassGfx->cursorSprite = &gSprites[spriteId];
     sPassGfx->cursorSprite->oam.priority = 0;
 
-    for (i = 0; i < NUM_FRONTIER_FACILITIES; i++)
+    for (i = 0; i < NUM_PASS_FACILITIES; i++)
     {
         if (sPassData->facilitySymbols[i] != 0)
         {
@@ -1328,7 +1332,7 @@ static void FreeCursorAndSymbolSprites(void)
 
     DestroySprite(sPassGfx->cursorSprite);
     sPassGfx->cursorSprite = NULL;
-    for (i = 0; i < NUM_FRONTIER_FACILITIES; i++)
+    for (i = 0; i < NUM_PASS_FACILITIES; i++)
     {
         if (sPassGfx->symbolSprites[i] != NULL)
         {
@@ -1516,7 +1520,7 @@ static void Task_HandleFrontierMap(u8 taskId)
         }
         else if (JOY_NEW(DPAD_DOWN))
         {
-            if (sMapData->cursorPos >= NUM_FRONTIER_FACILITIES - 1)
+            if (sMapData->cursorPos >= NUM_PASS_FACILITIES - 1)
                 HandleFrontierMapCursorMove(0);
             else
                 tState = 2;
@@ -1713,7 +1717,7 @@ static void PrintOnFrontierMap(void)
         FillWindowPixelBuffer(i, PIXEL_FILL(0));
     }
 
-    for (i = 0; i < NUM_FRONTIER_FACILITIES; i++)
+    for (i = 0; i < NUM_PASS_FACILITIES; i++)
     {
         if (i == sMapData->cursorPos)
             AddTextPrinterParameterized3(MAP_WINDOW_NAME, FONT_NARROW, 4, (i * 16) + 1, sTextColors[2], 0, sMapLandmarks[i].name);
@@ -1736,12 +1740,12 @@ static void HandleFrontierMapCursorMove(u8 direction)
     if (direction)
     {
         oldCursorPos = sMapData->cursorPos;
-        sMapData->cursorPos = (oldCursorPos + 6) % NUM_FRONTIER_FACILITIES;
+        sMapData->cursorPos = (oldCursorPos + 6) % NUM_PASS_FACILITIES;
     }
     else
     {
         oldCursorPos = sMapData->cursorPos;
-        sMapData->cursorPos = (oldCursorPos + 1) % NUM_FRONTIER_FACILITIES;
+        sMapData->cursorPos = (oldCursorPos + 1) % NUM_PASS_FACILITIES;
     }
 
     AddTextPrinterParameterized3(MAP_WINDOW_NAME, FONT_NARROW, 4, (oldCursorPos * 16) + 1, sTextColors[1], 0, sMapLandmarks[oldCursorPos].name);

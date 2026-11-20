@@ -190,7 +190,7 @@ Each run randomly selects **8 trainers distributed across 4 floors** (2 trainers
   - `TrainerHill_Entrance_EventScript_ShowUniqueResults` at `(13, 10)`
   - `TrainerHill_Entrance_EventScript_ShowExpertResults` at `(17, 10)`
   - Integrated into `data/maps/TrainerHill_Entrance/map.json` facing North (`BG_EVENT_PLAYER_FACING_NORTH`).
-- **Battle Frontier Pop-up Window Parity:** Uses the canonical Battle Frontier results window framework (`sFrontierResultsWindowTemplate`, `FRONTIER_FACILITY_HILL` / `10`, invoked via `frontier_results` and dismissed with `special RemoveRecordsWindow`).
+- **Battle Frontier Pop-up Window Parity:** Uses the canonical Battle Frontier results window framework (`sFrontierResultsWindowTemplate`, `FRONTIER_FACILITY_HILL` / `7`, invoked via `frontier_results` and dismissed with `special RemoveRecordsWindow`).
 - **3-Column Layout Matching Battle Factory Parity:**
   - Header: `{PLAYER}'s [Mode] Tag Match Results` centered at top (`y = 0`).
   - **Column 1 (`x = 8`):** Section and row labels (`LV. 50`, `PREV.` / `CURRENT`, `RECORD`, `OPEN LV.`). Dynamically displays `CURRENT` (`gText_Current`) when the player has an active winning streak (`winStreaks[mode][lvlMode] > 0`) and `PREV.` (`gText_Prev`) when unplayed or after a streak ends via defeat, retirement, or disqualification, matching the rest of the Battle Frontier facilities.

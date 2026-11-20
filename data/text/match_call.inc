@@ -2640,6 +2640,30 @@ MatchCall_Text_Wally7::
 	.string "{PLAYER}…\n"
 	.string "Thank you…$"
 
+MatchCall_Text_Wally8::
+	.string "WALLY: Oh, {PLAYER}!\p"
+	.string "I've become the HILL PRODIGY\n"
+	.string "at the BATTLE FRONTIER!\p"
+	.string "I'll be waiting at the top of\n"
+	.string "BATTLE HILL. Please challenge me!$"
+
+MatchCall_Text_Wally9::
+	.string "WALLY: {PLAYER}!\p"
+	.string "Your Agility Symbol looks great\n"
+	.string "on your FRONTIER PASS!\p"
+	.string "I was honored to face you as\n"
+	.string "the HILL PRODIGY!\p"
+	.string "I'll keep training so our next\n"
+	.string "battle is even better!$"
+
+MatchCall_Text_Wally10::
+	.string "WALLY: {PLAYER}!\p"
+	.string "Your Agility Symbol took on\n"
+	.string "a golden shine!\p"
+	.string "Thank you for showing me how\n"
+	.string "high we can aim!\p"
+	.string "I'll keep climbing, just like you!$"
+
 MatchCall_Text_Scott1::
 	.string "SCOTT: Howdy, {PLAYER}{KUN}!\p"
 	.string "You know how POKéMON can be found\n"

@@ -32,6 +32,7 @@ BattleFrontier_Lounge2_EventScript_GiveAdvice::
 	call_if_eq VAR_FRONTIER_MANIAC_FACILITY, FRONTIER_MANIAC_ARENA, BattleFrontier_Lounge2_EventScript_BufferBattleArena
 	call_if_eq VAR_FRONTIER_MANIAC_FACILITY, FRONTIER_MANIAC_PIKE, BattleFrontier_Lounge2_EventScript_BufferBattlePike
 	call_if_eq VAR_FRONTIER_MANIAC_FACILITY, FRONTIER_MANIAC_PYRAMID, BattleFrontier_Lounge2_EventScript_BufferBattlePyramid
+	call_if_eq VAR_FRONTIER_MANIAC_FACILITY, FRONTIER_MANIAC_HILL, BattleFrontier_Lounge2_EventScript_BufferBattleHill
 @ <= FRONTIER_MANIAC_TOWER_LINK is any Battle Tower mode
 	call_if_le VAR_FRONTIER_MANIAC_FACILITY, FRONTIER_MANIAC_TOWER_LINK, BattleFrontier_Lounge2_EventScript_BattleTowerNews
 @ >= FRONTIER_MANIAC_DOME is any facility other than Battle Tower
@@ -88,6 +89,10 @@ BattleFrontier_Lounge2_EventScript_BufferBattlePike::
 
 BattleFrontier_Lounge2_EventScript_BufferBattlePyramid::
 	bufferstdstring STR_VAR_1, STDSTRING_BATTLE_PYRAMID
+	return
+
+BattleFrontier_Lounge2_EventScript_BufferBattleHill::
+	bufferstdstring STR_VAR_1, STDSTRING_BATTLE_HILL
 	return
 
 BattleFrontier_Lounge2_EventScript_Maniac1::
@@ -315,6 +320,34 @@ BattleFrontier_Lounge2_Text_PyramidKingGoldMons::
 	.string "An ICE & FLYING FREEZE POKéMON, an\n"
 	.string "ELECTRIC & FLYING ELECTRIC POKéMON,\l"
 	.string "and a FIRE- & FLYING-type FLAME\l"
+	.string "POKéMON.$"
+
+BattleFrontier_Lounge2_Text_HillProdigyIsThere::
+	.string "Bet you didn't know this!\p"
+	.string "One of those top TRAINERS that SCOTT\n"
+	.string "calls the FRONTIER BRAINS is there.\p"
+	.string "It's this young TRAINER called\n"
+	.string "the HILL PRODIGY that runs the place.$"
+
+BattleFrontier_Lounge2_Text_HillProdigySilverMons::
+	.string "Have you battled the HILL PRODIGY?\p"
+	.string "He takes on challengers in DOUBLE\n"
+	.string "BATTLES with a full team of six.\p"
+	.string "He apparently uses POKéMON such as\n"
+	.string "a DRAGON & FLYING HUMMING POKéMON,\n"
+	.string "a NORMAL-type COLOR SWAP POKéMON,\l"
+	.string "and an ELECTRIC & STEEL MAGNET\l"
+	.string "POKéMON.$"
+
+BattleFrontier_Lounge2_Text_HillProdigyGoldMons::
+	.string "Have you battled the HILL PRODIGY\n"
+	.string "when he's serious?\p"
+	.string "He still uses a full team of six in\n"
+	.string "DOUBLE BATTLES.\p"
+	.string "He apparently uses POKéMON such as\n"
+	.string "a DRAGON & FLYING EON POKéMON,\n"
+	.string "a GROUND & DRAGON MYSTIC POKéMON,\l"
+	.string "and a GRASS & DARK SCARECROW\l"
 	.string "POKéMON.$"
 
 BattleFrontier_Lounge2_Text_DoubleBattleAdvice1::

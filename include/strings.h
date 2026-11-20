@@ -461,6 +461,9 @@ extern const u8 BattleFrontier_Lounge2_Text_PikeQueenGoldMons[];
 extern const u8 BattleFrontier_Lounge2_Text_PyramidKingIsThere[];
 extern const u8 BattleFrontier_Lounge2_Text_PyramidKingSilverMons[];
 extern const u8 BattleFrontier_Lounge2_Text_PyramidKingGoldMons[];
+extern const u8 BattleFrontier_Lounge2_Text_HillProdigyIsThere[];
+extern const u8 BattleFrontier_Lounge2_Text_HillProdigySilverMons[];
+extern const u8 BattleFrontier_Lounge2_Text_HillProdigyGoldMons[];
 
 // Battle Frontier Nature Girl
 extern const u8 BattleFrontier_Lounge5_Text_NatureGirlAttackHighAttackLow[];
@@ -1643,6 +1646,9 @@ extern const u8 MatchCall_Text_Wally4[];
 extern const u8 MatchCall_Text_Wally5[];
 extern const u8 MatchCall_Text_Wally6[];
 extern const u8 MatchCall_Text_Wally7[];
+extern const u8 MatchCall_Text_Wally8[];
+extern const u8 MatchCall_Text_Wally9[];
+extern const u8 MatchCall_Text_Wally10[];
 extern const u8 MatchCall_Text_Scott1[];
 extern const u8 MatchCall_Text_Scott2[];
 extern const u8 MatchCall_Text_Scott3[];
@@ -1744,6 +1750,7 @@ extern const u8 gText_BattleArena2[];
 extern const u8 gText_BattleFactory2[];
 extern const u8 gText_BattlePike2[];
 extern const u8 gText_BattlePyramid2[];
+extern const u8 gText_BattleHill2[];
 extern const u8 gText_BattleTowerDesc[];
 extern const u8 gText_BattleDomeDesc[];
 extern const u8 gText_BattlePalaceDesc[];

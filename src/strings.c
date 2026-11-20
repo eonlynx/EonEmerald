@@ -1093,6 +1093,7 @@ const u8 gText_BattleArena2[] = _("Battle Arena");
 const u8 gText_BattleFactory2[] = _("Battle Factory");
 const u8 gText_BattlePike2[] = _("Battle Pike");
 const u8 gText_BattlePyramid2[] = _("Battle Pyramid");
+const u8 gText_BattleHill2[] = _("Battle Hill");
 const u8 gText_BattleTowerDesc[] = _("KO opponents and aim for the top!\nYour ability will be tested.");
 const u8 gText_BattleDomeDesc[] = _("Keep winning at the tournament!\nYour tactics will be tested.");
 const u8 gText_BattlePalaceDesc[] = _("Watch your Pokémon battle!\nYour spirit will be tested.");

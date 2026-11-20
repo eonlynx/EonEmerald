@@ -146,6 +146,7 @@ TrainerHill_Roof_EventScript_SpectatorsReactVictory::
 	return
 
 TrainerHill_Roof_EventScript_PrepareArenaAndWally::
+	setflag FLAG_MET_HILL_PRODIGY
 	call TrainerHill_Roof_EventScript_SpectatorsEnter
 	msgbox TrainerHill_Roof_Text_OwnerRestoreParty, MSGBOX_DEFAULT
 	playfanfare MUS_HEAL

@@ -1415,9 +1415,6 @@ static void TrainerHillSetLvlMode(void)
 #endif //FREE_TRAINER_HILL
 }
 
-#define HILL_GAUGE_SILVER_THRESHOLD 200 // 2.0 credits
-#define HILL_GAUGE_GOLD_THRESHOLD   650 // 6.5 credits
-#define HILL_GAUGE_GOLD_INCREMENT   450 // +4.5 credits per subsequent Gold
 
 static void TrainerHillCheckFrontierBrain(void)
 {

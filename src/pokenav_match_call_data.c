@@ -327,6 +327,8 @@ static const struct MatchCallRival sBrendanMatchCallHeader =
     }
 };
 
+static const u8 sWallyHillProdigyDesc[] = _("HILL PRODIGY");
+
 static const struct MatchCallWally sWallyMatchCallHeader =
 {
     .type = MC_TYPE_WALLY,
@@ -342,6 +344,9 @@ static const struct MatchCallWally sWallyMatchCallHeader =
         { MatchCall_Text_Wally5, FLAG_GROUDON_AWAKENED_MAGMA_HIDEOUT, NO_FLAG_TO_SET },
         { MatchCall_Text_Wally6, FLAG_KYOGRE_ESCAPED_SEAFLOOR_CAVERN, NO_FLAG_TO_SET },
         { MatchCall_Text_Wally7, FLAG_DEFEATED_WALLY_VICTORY_ROAD,    NO_FLAG_TO_SET },
+        { MatchCall_Text_Wally8, FLAG_MET_HILL_PRODIGY,                NO_FLAG_TO_SET },
+        { MatchCall_Text_Wally9, FLAG_SYS_HILL_SILVER,                 NO_FLAG_TO_SET },
+        { MatchCall_Text_Wally10, FLAG_SYS_HILL_GOLD,                  NO_FLAG_TO_SET },
         MATCH_CALL_TEXT_END
     },
     .locationData = (const struct MatchCallLocationOverride[]) {
@@ -1068,7 +1073,10 @@ static void MatchCall_GetNameAndDesc_Trainer(match_call_t matchCall, const u8 **
 static void MatchCall_GetNameAndDesc_Wally(match_call_t matchCall, const u8 **desc, const u8 **name)
 {
     MatchCall_GetNameAndDescByRematchIdx(matchCall.wally->rematchTableIdx, desc, name);
-    *desc = matchCall.wally->desc;
+    if (FlagGet(FLAG_MET_HILL_PRODIGY))
+        *desc = sWallyHillProdigyDesc;
+    else
+        *desc = matchCall.wally->desc;
 }
 
 static void MatchCall_GetNameAndDesc_Rival(match_call_t matchCall, const u8 **desc, const u8 **name)

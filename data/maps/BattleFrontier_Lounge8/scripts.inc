@@ -22,6 +22,8 @@ BattleFrontier_Lounge8_Text_WhatATrainerNeeds:
 	.string "Spirit…\l"
 	.string "Bravery…\l"
 	.string "And ability…\p"
+	.string "Agility too?\n"
+	.string "Naturally!\p"
 	.string "Well, I'm all set in every way!\n"
 	.string "I'll be unstoppable at every building!\p"
 	.string "Huh? POKéMON?\n"
@@ -32,7 +34,9 @@ BattleFrontier_Lounge8_Text_KnowAboutFrontierBrains:
 	.string "BRAINS?\p"
 	.string "That's what SCOTT calls the seven\n"
 	.string "special TRAINERS that run the seven\l"
-	.string "facilities in the BATTLE FRONTIER.$"
+	.string "facilities in the BATTLE FRONTIER.\p"
+	.string "Wait, eight? Is my memory\n"
+	.string "failing me or something?$"
 
 BattleFrontier_Lounge8_Text_ToldMeIHaveTalentForBattling:
 	.string "At the BATTLE TOWER, an older girl\n"

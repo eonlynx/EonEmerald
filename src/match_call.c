@@ -42,6 +42,10 @@
 #define MATCH_CALL_FACTORY  FRONTIER_FACILITY_PIKE
 #define MATCH_CALL_PIKE     FRONTIER_FACILITY_FACTORY
 
+// Wally's special match call already represents Battle Hill's Frontier Brain.
+// Keep the generic facility list to the original seven facilities.
+#define NUM_MATCH_CALL_FRONTIER_FACILITIES 7
+
 // Each match call message has variables that can be populated randomly or
 // dependent on the trainer. The below are IDs for how to populate the vars
 // in a given message.
@@ -1637,7 +1641,7 @@ static const struct MatchCallText *GetGeneralMatchCallText(int matchCallId, u8 *
     if (!(rand & 1))
     {
         // Count the number of facilities with a win streak
-        for (count = 0, i = 0; i < NUM_FRONTIER_FACILITIES; i++)
+        for (count = 0, i = 0; i < NUM_MATCH_CALL_FRONTIER_FACILITIES; i++)
         {
             if (GetFrontierStreakInfo(i, &topic) > 1)
                 count++;
@@ -1648,7 +1652,7 @@ static const struct MatchCallText *GetGeneralMatchCallText(int matchCallId, u8 *
             // At least one facility with a win streak
             // Randomly choose one to have a call about
             count = Random() % count;
-            for (i = 0; i < NUM_FRONTIER_FACILITIES; i++)
+            for (i = 0; i < NUM_MATCH_CALL_FRONTIER_FACILITIES; i++)
             {
                 sBattleFrontierStreakInfo.streak = GetFrontierStreakInfo(i, &topic);
                 if (sBattleFrontierStreakInfo.streak < 2)
@@ -1800,7 +1804,7 @@ static void PopulateSpeciesFromTrainerParty(int matchCallId, u8 *destStr)
     StringCopy(destStr, speciesName);
 }
 
-static const u8 *const sBattleFrontierFacilityNames[NUM_FRONTIER_FACILITIES] =
+static const u8 *const sBattleFrontierFacilityNames[NUM_MATCH_CALL_FRONTIER_FACILITIES] =
 {
     [FRONTIER_FACILITY_TOWER]   = gText_BattleTower2,
     [FRONTIER_FACILITY_DOME]    = gText_BattleDome,

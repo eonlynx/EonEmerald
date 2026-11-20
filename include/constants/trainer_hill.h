@@ -21,6 +21,10 @@
 
 #define HILL_MAX_TIME 215999 // 60 * 60 * 60 - 1
 
+#define HILL_GAUGE_SILVER_THRESHOLD 200 // 2.0 credits
+#define HILL_GAUGE_GOLD_THRESHOLD   650 // 6.5 credits
+#define HILL_GAUGE_GOLD_INCREMENT   450 // +4.5 credits per subsequent Gold
+
 #define TRAINER_HILL_FUNC_START                 0
 #define TRAINER_HILL_FUNC_GET_OWNER_STATE       1
 #define TRAINER_HILL_FUNC_GIVE_PRIZE            2

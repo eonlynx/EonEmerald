@@ -265,7 +265,7 @@ BattleFrontier_OutsideWest_EventScript_Woman1::
 	end
 
 BattleFrontier_OutsideWest_EventScript_FatMan1::
-	msgbox BattleFrontier_OutsideWest_Text_SquareFilledWithToughPeople, MSGBOX_NPC
+	msgbox BattleFrontier_OutsideWest_Text_BattleHillStamina, MSGBOX_NPC
 	end
 
 BattleFrontier_OutsideWest_EventScript_FatMan2::
