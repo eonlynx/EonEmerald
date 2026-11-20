@@ -68,6 +68,7 @@
 #include "task.h"
 #include "tileset_anims.h"
 #include "time_events.h"
+#include "tilesets.h"
 #include "trainer_hill.h"
 #include "trainer_pokemon_sprites.h"
 #include "tv.h"
@@ -1960,20 +1961,24 @@ struct DnsLightingColour
     u8 paletteNum;
     u8 colourNum;
     u16 lightColour;
+    const struct Tileset *tileset; // NULL applies to every outdoor map
 };
 
 static const struct DnsLightingColour sDnsLightingColours[] =
 {
-    {0, 2, RGB2(30, 30, 22)},
-    {1, 10, RGB2(30, 30, 14)},
-    {1, 9, RGB2(30, 30, 22)},
-    {12, 2, RGB2(30, 30, 22)},
-    {12, 3, RGB2(30, 30, 15)},
-    {12, 4, RGB2(30, 30, 10)},
-    {12, 9, RGB2(25, 6, 0)},
-    {12, 10, RGB2(20, 6, 0)},
-    {12, 11, RGB2(30, 3, 3)},
-    {12, 12, RGB2(30, 18, 0)},
+    {0, 2, RGB2(30, 30, 22), NULL},
+    {1, 10, RGB2(30, 30, 14), NULL},
+    {1, 9, RGB2(30, 30, 22), NULL},
+    {12, 2, RGB2(30, 30, 22), NULL},
+    {12, 3, RGB2(30, 30, 15), NULL},
+    {12, 4, RGB2(30, 30, 10), NULL},
+    {12, 9, RGB2(25, 6, 0), NULL},
+    {12, 10, RGB2(20, 6, 0), NULL},
+    {12, 11, RGB2(30, 3, 3), NULL},
+    {12, 12, RGB2(30, 18, 0), NULL},
+    // Battle Frontier Outside West windows. Color 14 is also used by the
+    // fountain, so it must not be added here.
+    {7, 13, RGB2(30, 30, 22), &gTileset_BattleFrontierOutsideWestSouth},
 };
 
 static bool32 IsDnsLightingActive(void)
@@ -1991,13 +1996,19 @@ void DnsApplyWindowLighting(u16 *paletteBuffer)
     if (gMain.inBattle
      || (gMain.callback2 != CB2_Overworld && gMain.callback2 != CB2_OverworldBasic)
      || !MapHasNaturalLight(gMapHeader.mapType)
+     || gPaletteFade.active
      || !IsDnsLightingActive())
         return;
 
     for (i = 0; i < ARRAY_COUNT(sDnsLightingColours); i++)
     {
-        u16 colourSlot = sDnsLightingColours[i].paletteNum * 16 + sDnsLightingColours[i].colourNum;
+        u16 colourSlot;
 
+        if (sDnsLightingColours[i].tileset != NULL
+         && sDnsLightingColours[i].tileset != gMapHeader.mapLayout->secondaryTileset)
+            continue;
+
+        colourSlot = sDnsLightingColours[i].paletteNum * 16 + sDnsLightingColours[i].colourNum;
         paletteBuffer[colourSlot] = sDnsLightingColours[i].lightColour;
     }
 }

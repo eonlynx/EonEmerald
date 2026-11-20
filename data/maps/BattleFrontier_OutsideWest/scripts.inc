@@ -85,6 +85,10 @@ BattleFrontier_OutsideWest_EventScript_BattlePikeSign::
 	msgbox BattleFrontier_OutsideWest_Text_BattlePikeSign, MSGBOX_SIGN
 	end
 
+BattleFrontier_OutsideWest_EventScript_BattleHillSign::
+	msgbox BattleFrontier_OutsideWest_Text_BattleHillSign, MSGBOX_SIGN
+	end
+
 @ Unused. Of note, Battle Tower is in the East section in the final release
 BattleFrontier_OutsideWest_EventScript_UnusedNPC1::
 	msgbox BattleFrontier_OutsideWest_Text_ThisIsBattleTower, MSGBOX_NPC
@@ -309,6 +313,11 @@ BattleFrontier_OutsideWest_Text_BattleFactorySign:
 BattleFrontier_OutsideWest_Text_BattlePikeSign:
 	.string "This is the BATTLE PIKE!\n"
 	.string "Choose one of three paths!$"
+
+BattleFrontier_OutsideWest_Text_BattleHillSign:
+	.string "This is the BATTLE HILL!\n"
+	.string "Scale the heights, you hot-blooded\l"
+	.string "TRAINERS!$"
 
 BattleFrontier_OutsideWest_Text_ThisIsBattleTower:
 	.string "This is the BATTLE TOWER.\p"
