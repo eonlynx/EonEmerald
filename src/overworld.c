@@ -1977,7 +1977,8 @@ static const struct DnsLightingColour sDnsLightingColours[] =
     {12, 11, RGB2(30, 3, 3), NULL},
     {12, 12, RGB2(30, 18, 0), NULL},
     // Battle Frontier Outside West windows. Color 14 is also used by the
-    // fountain, so it must not be added here.
+    // fountain, so the window shadow was moved to the unused index 12.
+    {7, 12, RGB2(30, 30, 22), &gTileset_BattleFrontierOutsideWestSouth},
     {7, 13, RGB2(30, 30, 22), &gTileset_BattleFrontierOutsideWestSouth},
 };
 
