@@ -32,6 +32,12 @@ The engine copies these bands:
 * east connection: 8 columns of the western map;
 * north/south connection: 7 rows of the neighbouring map.
 
+The southern West/East seam shares one extra metatile on each side (8 columns
+west, 9 columns east). Without it the outermost column of the new building
+(West South `x=48`) is not present in the East South tileset and the tile
+renders incorrectly during the area transition. The northern seam keeps the
+engine widths.
+
 ## Rebuilding the split tilesets
 
 From the decomp project root:
@@ -76,6 +82,9 @@ one of these four maps. Use `--no-exact-border` only for debugging.
 * Do not hand-edit the generated split tilesets when changing shared border
   art. Change the source/import and rerun the workflow so the IDs, tile
   positions and palettes stay aligned.
+* The Battle Frontier window lighting is stored in palette bank 7, colours
+  12/13, and is registered in `src/overworld.c`. Preserve palette `07.pal` and
+  those lighting entries when rebuilding tilesets.
 
 ## Save compatibility
 
