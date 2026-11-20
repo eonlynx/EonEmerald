@@ -1996,6 +1996,7 @@ bool32 DnsWindowLightingActive(void)
     return !gMain.inBattle
         && (gMain.callback2 == CB2_Overworld || gMain.callback2 == CB2_OverworldBasic)
         && MapHasNaturalLight(gMapHeader.mapType)
+        && gWeatherPtr->palProcessingState == WEATHER_PAL_STATE_IDLE
         && !gPaletteFade.active
         && IsDnsLightingActive();
 }
