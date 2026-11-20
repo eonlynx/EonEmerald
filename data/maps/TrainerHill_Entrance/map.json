@@ -105,15 +105,15 @@
       "x": 9,
       "y": 16,
       "elevation": 3,
-      "dest_map": "MAP_ROUTE111",
-      "dest_warp_id": "4"
+      "dest_map": "MAP_BATTLE_FRONTIER_OUTSIDE_WEST",
+      "dest_warp_id": "10"
     },
     {
       "x": 10,
       "y": 16,
       "elevation": 3,
-      "dest_map": "MAP_ROUTE111",
-      "dest_warp_id": "4"
+      "dest_map": "MAP_BATTLE_FRONTIER_OUTSIDE_WEST",
+      "dest_warp_id": "10"
     },
     {
       "x": 3,
