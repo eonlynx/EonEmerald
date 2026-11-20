@@ -461,10 +461,12 @@ BattleFrontier_OutsideWest_Text_FinallyArrivedAtFrontier:
 	.string "I'm sure to grab attention with\n"
 	.string "my looks and ability!$"
 
-BattleFrontier_OutsideWest_Text_SquareFilledWithToughPeople:
+BattleFrontier_OutsideWest_Text_BattleHillStamina:
 	.string "Munch, munch…\p"
-	.string "It looks like this square's filled with\n"
-	.string "tough people.\p"
+	.string "They say BATTLE HILL takes a lot of\n"
+	.string "stamina.\p"
+	.string "Good thing I've been training my\n"
+	.string "stomach for years.\p"
 	.string "Munch, munch…$"
 
 BattleFrontier_OutsideWest_Text_MetOlderGirlAtPike:
