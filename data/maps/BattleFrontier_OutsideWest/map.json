@@ -233,6 +233,13 @@
       "elevation": 0,
       "dest_map": "MAP_BATTLE_FRONTIER_RECEPTION_GATE",
       "dest_warp_id": "1"
+    },
+    {
+      "x": 47,
+      "y": 23,
+      "elevation": 0,
+      "dest_map": "MAP_TRAINER_HILL_ENTRANCE",
+      "dest_warp_id": "0"
     }
   ],
   "coord_events": [],
