@@ -1991,17 +1991,23 @@ static bool32 IsDnsLightingActive(void)
         || gLocalTime.hours < LIGHTNING_END_HOUR;
 }
 
-// Lights up windows during the night. This is applied right before the DMA
-// transfer so weather and palette fades cannot overwrite the light colours.
+bool32 DnsWindowLightingActive(void)
+{
+    return !gMain.inBattle
+        && (gMain.callback2 == CB2_Overworld || gMain.callback2 == CB2_OverworldBasic)
+        && MapHasNaturalLight(gMapHeader.mapType)
+        && !gPaletteFade.active
+        && IsDnsLightingActive();
+}
+
+// Lights up windows during the night. The caller passes a temporary DMA
+// buffer; keeping the lights out of gPlttBufferFaded prevents them from
+// leaking back in during screen fades and map transitions.
 void DnsApplyWindowLighting(u16 *paletteBuffer)
 {
     u32 i;
 
-    if (gMain.inBattle
-     || (gMain.callback2 != CB2_Overworld && gMain.callback2 != CB2_OverworldBasic)
-     || !MapHasNaturalLight(gMapHeader.mapType)
-     || gPaletteFade.active
-     || !IsDnsLightingActive())
+    if (!DnsWindowLightingActive())
         return;
 
     for (i = 0; i < ARRAY_COUNT(sDnsLightingColours); i++)

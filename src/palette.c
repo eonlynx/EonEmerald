@@ -32,6 +32,7 @@ static void Task_BlendPalettesGradually(u8 taskId);
 // unaligned word reads are issued in BlendPalette otherwise
 ALIGNED(4) EWRAM_DATA u16 gPlttBufferUnfaded[PLTT_BUFFER_SIZE] = {0};
 ALIGNED(4) EWRAM_DATA u16 gPlttBufferFaded[PLTT_BUFFER_SIZE] = {0};
+ALIGNED(4) EWRAM_DATA static u16 sDnsLightingBuffer[PLTT_BUFFER_SIZE] = {0};
 EWRAM_DATA struct PaletteFadeControl gPaletteFade = {0};
 static EWRAM_DATA u32 sPlttBufferTransferPending = 0;
 
@@ -74,8 +75,13 @@ void TransferPlttBuffer(void)
         void *src = gPlttBufferFaded;
         void *dest = (void *)PLTT;
 
-        // EonEmerald DNS: light up night windows immediately before the DMA.
-        DnsApplyWindowLighting(gPlttBufferFaded);
+        if (DnsWindowLightingActive())
+        {
+            CpuFastCopy(gPlttBufferFaded, sDnsLightingBuffer, PLTT_SIZE);
+            DnsApplyWindowLighting(sDnsLightingBuffer);
+            src = sDnsLightingBuffer;
+        }
+
         DmaCopy16(3, src, dest, PLTT_SIZE);
         sPlttBufferTransferPending = FALSE;
         
