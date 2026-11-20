@@ -1980,6 +1980,9 @@ static const struct DnsLightingColour sDnsLightingColours[] =
     // fountain, so the window shadow was moved to the unused index 12.
     {7, 12, RGB2(30, 30, 22), &gTileset_BattleFrontierOutsideWestSouth},
     {7, 13, RGB2(30, 30, 22), &gTileset_BattleFrontierOutsideWestSouth},
+    // The west/east south border shares these window tiles.
+    {7, 12, RGB2(30, 30, 22), &gTileset_BattleFrontierOutsideEastSouth},
+    {7, 13, RGB2(30, 30, 22), &gTileset_BattleFrontierOutsideEastSouth},
 };
 
 static bool32 IsDnsLightingActive(void)
