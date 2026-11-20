@@ -352,6 +352,50 @@ const u16 gTilesetPalettes_BattleFrontierOutsideWest[][16] =
     INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west/palettes/15.pal", ".gbapal"),
 };
 
+const u32 gTilesetTiles_BattleFrontierOutsideWestSouth[] = INCGFX_U32("data/tilesets/secondary/battle_frontier_outside_west_south/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_BattleFrontierOutsideWestSouth[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_south/palettes/15.pal", ".gbapal"),
+};
+
+const u32 gTilesetTiles_BattleFrontierOutsideWestNorth[] = INCGFX_U32("data/tilesets/secondary/battle_frontier_outside_west_north/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_BattleFrontierOutsideWestNorth[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_west_north/palettes/15.pal", ".gbapal"),
+};
+
 const u32 gTilesetTiles_BattleFrontierOutsideEast[] = INCGFX_U32("data/tilesets/secondary/battle_frontier_outside_east/tiles.png", ".4bpp.fastSmol", "-num_tiles 508 -Wnum_tiles");
 
 const u16 gTilesetPalettes_BattleFrontierOutsideEast[][16] =
@@ -372,6 +416,50 @@ const u16 gTilesetPalettes_BattleFrontierOutsideEast[][16] =
     INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east/palettes/13.pal", ".gbapal"),
     INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east/palettes/14.pal", ".gbapal"),
     INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east/palettes/15.pal", ".gbapal"),
+};
+
+const u32 gTilesetTiles_BattleFrontierOutsideEastSouth[] = INCGFX_U32("data/tilesets/secondary/battle_frontier_outside_east_south/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_BattleFrontierOutsideEastSouth[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_south/palettes/15.pal", ".gbapal"),
+};
+
+const u32 gTilesetTiles_BattleFrontierOutsideEastNorth[] = INCGFX_U32("data/tilesets/secondary/battle_frontier_outside_east_north/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_BattleFrontierOutsideEastNorth[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/battle_frontier_outside_east_north/palettes/15.pal", ".gbapal"),
 };
 
 const u32 gTilesetTiles_InsideBuilding[] = INCGFX_U32("data/tilesets/primary/building/tiles.png", ".4bpp.smol", "-num_tiles 502 -Wnum_tiles");

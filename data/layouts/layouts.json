@@ -2909,11 +2909,22 @@
       "id": "LAYOUT_BATTLE_FRONTIER_OUTSIDE_WEST",
       "name": "BattleFrontier_OutsideWest_Layout",
       "width": 56,
-      "height": 72,
+      "height": 36,
       "primary_tileset": "gTileset_General",
-      "secondary_tileset": "gTileset_BattleFrontierOutsideWest",
+      "secondary_tileset": "gTileset_BattleFrontierOutsideWestSouth",
       "border_filepath": "data/layouts/BattleFrontier_OutsideWest/border.bin",
       "blockdata_filepath": "data/layouts/BattleFrontier_OutsideWest/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_BATTLE_FRONTIER_OUTSIDE_WEST_NORTH",
+      "name": "BattleFrontier_OutsideWest_North_Layout",
+      "width": 56,
+      "height": 36,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_BattleFrontierOutsideWestNorth",
+      "border_filepath": "data/layouts/BattleFrontier_OutsideWest_North/border.bin",
+      "blockdata_filepath": "data/layouts/BattleFrontier_OutsideWest_North/map.bin",
       "layout_version": "emerald"
     },
     {
@@ -3789,11 +3800,22 @@
       "id": "LAYOUT_BATTLE_FRONTIER_OUTSIDE_EAST",
       "name": "BattleFrontier_OutsideEast_Layout",
       "width": 72,
-      "height": 72,
+      "height": 36,
       "primary_tileset": "gTileset_General",
-      "secondary_tileset": "gTileset_BattleFrontierOutsideEast",
+      "secondary_tileset": "gTileset_BattleFrontierOutsideEastSouth",
       "border_filepath": "data/layouts/BattleFrontier_OutsideEast/border.bin",
       "blockdata_filepath": "data/layouts/BattleFrontier_OutsideEast/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_BATTLE_FRONTIER_OUTSIDE_EAST_NORTH",
+      "name": "BattleFrontier_OutsideEast_North_Layout",
+      "width": 72,
+      "height": 36,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_BattleFrontierOutsideEastNorth",
+      "border_filepath": "data/layouts/BattleFrontier_OutsideEast_North/border.bin",
+      "blockdata_filepath": "data/layouts/BattleFrontier_OutsideEast_North/map.bin",
       "layout_version": "emerald"
     },
     {

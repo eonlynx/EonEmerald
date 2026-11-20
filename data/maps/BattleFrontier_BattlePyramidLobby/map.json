@@ -75,13 +75,11 @@
       "x": 7,
       "y": 17,
       "elevation": 4,
-      "dest_map": "MAP_BATTLE_FRONTIER_OUTSIDE_EAST",
-      "dest_warp_id": "3"
+      "dest_map": "MAP_BATTLE_FRONTIER_OUTSIDE_EAST_NORTH",
+      "dest_warp_id": "2"
     }
   ],
-  "coord_events": [
-
-  ],
+  "coord_events": [],
   "bg_events": [
     {
       "type": "sign",

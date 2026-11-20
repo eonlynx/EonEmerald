@@ -144,14 +144,14 @@
       "x": 12,
       "y": 9,
       "elevation": 3,
-      "dest_map": "MAP_BATTLE_FRONTIER_OUTSIDE_EAST",
+      "dest_map": "MAP_BATTLE_FRONTIER_OUTSIDE_EAST_NORTH",
       "dest_warp_id": "0"
     },
     {
       "x": 13,
       "y": 9,
       "elevation": 3,
-      "dest_map": "MAP_BATTLE_FRONTIER_OUTSIDE_EAST",
+      "dest_map": "MAP_BATTLE_FRONTIER_OUTSIDE_EAST_NORTH",
       "dest_warp_id": "0"
     },
     {
@@ -162,9 +162,7 @@
       "dest_warp_id": "0"
     }
   ],
-  "coord_events": [
-
-  ],
+  "coord_events": [],
   "bg_events": [
     {
       "type": "sign",

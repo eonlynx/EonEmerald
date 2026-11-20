@@ -761,6 +761,111 @@ static const struct DoorGraphics sDoorAnimGraphicsTable[] =
         .tiles = sDoorAnimTiles_BattleFrontierSliding,
         .palettes = sDoorAnimPalettes_BattleFrontier
     },
+    // Split Battle Frontier outside tilesets
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideWestSouth_Door,
+        .tileset = &gTileset_BattleFrontierOutsideWestSouth,
+        .sound = DOOR_SOUND_NORMAL,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleFrontier,
+        .palettes = sDoorAnimPalettes_BattleFrontier
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideWestSouth_Door_Sliding,
+        .tileset = &gTileset_BattleFrontierOutsideWestSouth,
+        .sound = DOOR_SOUND_SLIDING,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleFrontierSliding,
+        .palettes = sDoorAnimPalettes_BattleFrontier
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideWestSouth_Door_BattleFactory,
+        .tileset = &gTileset_BattleFrontierOutsideWestSouth,
+        .sound = DOOR_SOUND_SLIDING,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleFactory,
+        .palettes = sDoorAnimPalettes_BattleFactory
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideEastSouth_Door,
+        .tileset = &gTileset_BattleFrontierOutsideEastSouth,
+        .sound = DOOR_SOUND_NORMAL,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleFrontier,
+        .palettes = sDoorAnimPalettes_BattleFrontier
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideEastSouth_Door_Sliding,
+        .tileset = &gTileset_BattleFrontierOutsideEastSouth,
+        .sound = DOOR_SOUND_SLIDING,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleFrontierSliding,
+        .palettes = sDoorAnimPalettes_BattleFrontier
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideWestNorth_Door,
+        .tileset = &gTileset_BattleFrontierOutsideWestNorth,
+        .sound = DOOR_SOUND_NORMAL,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleFrontier,
+        .palettes = sDoorAnimPalettes_BattleFrontier
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideWestNorth_Door_Sliding,
+        .tileset = &gTileset_BattleFrontierOutsideWestNorth,
+        .sound = DOOR_SOUND_SLIDING,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleFrontierSliding,
+        .palettes = sDoorAnimPalettes_BattleFrontier
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideWestNorth_Door_BattleFactory,
+        .tileset = &gTileset_BattleFrontierOutsideWestNorth,
+        .sound = DOOR_SOUND_SLIDING,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleFactory,
+        .palettes = sDoorAnimPalettes_BattleFactory
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideWestNorth_Door_BattleDome,
+        .tileset = &gTileset_BattleFrontierOutsideWestNorth,
+        .sound = DOOR_SOUND_SLIDING,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleDome,
+        .palettes = sDoorAnimPalettes_BattleDome
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideEastNorth_Door,
+        .tileset = &gTileset_BattleFrontierOutsideEastNorth,
+        .sound = DOOR_SOUND_NORMAL,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleFrontier,
+        .palettes = sDoorAnimPalettes_BattleFrontier
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideEastNorth_Door_Sliding,
+        .tileset = &gTileset_BattleFrontierOutsideEastNorth,
+        .sound = DOOR_SOUND_SLIDING,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleFrontierSliding,
+        .palettes = sDoorAnimPalettes_BattleFrontier
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideEastNorth_Door_BattleArena,
+        .tileset = &gTileset_BattleFrontierOutsideEastNorth,
+        .sound = DOOR_SOUND_NORMAL,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleArena,
+        .palettes = sDoorAnimPalettes_BattleArena
+    },
+    {
+        .metatileNum = METATILE_BattleFrontierOutsideEastNorth_Door_BattleTower,
+        .tileset = &gTileset_BattleFrontierOutsideEastNorth,
+        .sound = DOOR_SOUND_SLIDING,
+        .size = DOOR_SIZE_1x2,
+        .tiles = sDoorAnimTiles_BattleTower,
+        .palettes = sDoorAnimPalettes_BattleTower
+    },
     {
         .metatileNum = METATILE_BattleDome_Door_PreBattleRoom,
         .tileset = &gTileset_BattleDome,

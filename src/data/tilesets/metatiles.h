@@ -51,8 +51,20 @@ const u16 gMetatileAttributes_Sootopolis[] = INCBIN_U16("data/tilesets/secondary
 const u16 gMetatiles_BattleFrontierOutsideWest[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_west/metatiles.bin");
 const u16 gMetatileAttributes_BattleFrontierOutsideWest[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_west/metatile_attributes.bin");
 
+const u16 gMetatiles_BattleFrontierOutsideWestSouth[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_west_south/metatiles.bin");
+const u16 gMetatileAttributes_BattleFrontierOutsideWestSouth[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_west_south/metatile_attributes.bin");
+
+const u16 gMetatiles_BattleFrontierOutsideWestNorth[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_west_north/metatiles.bin");
+const u16 gMetatileAttributes_BattleFrontierOutsideWestNorth[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_west_north/metatile_attributes.bin");
+
 const u16 gMetatiles_BattleFrontierOutsideEast[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_east/metatiles.bin");
 const u16 gMetatileAttributes_BattleFrontierOutsideEast[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_east/metatile_attributes.bin");
+
+const u16 gMetatiles_BattleFrontierOutsideEastSouth[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_east_south/metatiles.bin");
+const u16 gMetatileAttributes_BattleFrontierOutsideEastSouth[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_east_south/metatile_attributes.bin");
+
+const u16 gMetatiles_BattleFrontierOutsideEastNorth[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_east_north/metatiles.bin");
+const u16 gMetatileAttributes_BattleFrontierOutsideEastNorth[] = INCBIN_U16("data/tilesets/secondary/battle_frontier_outside_east_north/metatile_attributes.bin");
 
 const u16 gMetatiles_InsideBuilding[] = INCBIN_U16("data/tilesets/primary/building/metatiles.bin");
 const u16 gMetatileAttributes_InsideBuilding[] = INCBIN_U16("data/tilesets/primary/building/metatile_attributes.bin");

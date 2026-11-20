@@ -195,6 +195,28 @@ const struct Tileset gTileset_BattleFrontierOutsideWest =
     .callback = InitTilesetAnim_BattleFrontierOutsideWest,
 };
 
+const struct Tileset gTileset_BattleFrontierOutsideWestSouth =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_BattleFrontierOutsideWestSouth,
+    .palettes = gTilesetPalettes_BattleFrontierOutsideWestSouth,
+    .metatiles = gMetatiles_BattleFrontierOutsideWestSouth,
+    .metatileAttributes = gMetatileAttributes_BattleFrontierOutsideWestSouth,
+        .callback = InitTilesetAnim_BattleFrontierOutsideWestSouth,
+};
+
+const struct Tileset gTileset_BattleFrontierOutsideWestNorth =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_BattleFrontierOutsideWestNorth,
+    .palettes = gTilesetPalettes_BattleFrontierOutsideWestNorth,
+    .metatiles = gMetatiles_BattleFrontierOutsideWestNorth,
+    .metatileAttributes = gMetatileAttributes_BattleFrontierOutsideWestNorth,
+    .callback = InitTilesetAnim_BattleFrontierOutsideWestNorth,
+};
+
 const struct Tileset gTileset_BattleFrontierOutsideEast =
 {
     .isCompressed = TRUE,
@@ -203,6 +225,28 @@ const struct Tileset gTileset_BattleFrontierOutsideEast =
     .palettes = gTilesetPalettes_BattleFrontierOutsideEast,
     .metatiles = gMetatiles_BattleFrontierOutsideEast,
     .metatileAttributes = gMetatileAttributes_BattleFrontierOutsideEast,
+    .callback = InitTilesetAnim_BattleFrontierOutsideEast,
+};
+
+const struct Tileset gTileset_BattleFrontierOutsideEastSouth =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_BattleFrontierOutsideEastSouth,
+    .palettes = gTilesetPalettes_BattleFrontierOutsideEastSouth,
+    .metatiles = gMetatiles_BattleFrontierOutsideEastSouth,
+    .metatileAttributes = gMetatileAttributes_BattleFrontierOutsideEastSouth,
+    .callback = InitTilesetAnim_BattleFrontierOutsideEast,
+};
+
+const struct Tileset gTileset_BattleFrontierOutsideEastNorth =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_BattleFrontierOutsideEastNorth,
+    .palettes = gTilesetPalettes_BattleFrontierOutsideEastNorth,
+    .metatiles = gMetatiles_BattleFrontierOutsideEastNorth,
+    .metatileAttributes = gMetatileAttributes_BattleFrontierOutsideEastNorth,
     .callback = InitTilesetAnim_BattleFrontierOutsideEast,
 };
 

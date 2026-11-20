@@ -37,6 +37,21 @@
 #define METATILE_BattleFrontierOutsideWest_Door_BattleFactory  0x263
 #define METATILE_BattleFrontierOutsideWest_Door_Sliding        0x396
 
+// Split Battle Frontier outside tilesets
+#define METATILE_BattleFrontierOutsideWestSouth_Door                 0x3FC
+#define METATILE_BattleFrontierOutsideWestSouth_Door_Sliding         0x396
+#define METATILE_BattleFrontierOutsideWestSouth_Door_BattleFactory   0x263
+#define METATILE_BattleFrontierOutsideWestNorth_Door                 0x3FC
+#define METATILE_BattleFrontierOutsideWestNorth_Door_Sliding         0x396
+#define METATILE_BattleFrontierOutsideWestNorth_Door_BattleFactory   0x263
+#define METATILE_BattleFrontierOutsideWestNorth_Door_BattleDome      0x28A
+#define METATILE_BattleFrontierOutsideEastSouth_Door                 0x3FC
+#define METATILE_BattleFrontierOutsideEastSouth_Door_Sliding         0x396
+#define METATILE_BattleFrontierOutsideEastNorth_Door                 0x3FC
+#define METATILE_BattleFrontierOutsideEastNorth_Door_Sliding         0x396
+#define METATILE_BattleFrontierOutsideEastNorth_Door_BattleArena     0x291
+#define METATILE_BattleFrontierOutsideEastNorth_Door_BattleTower     0x329
+
 // gTileset_BattlePalace
 #define METATILE_BattlePalace_Door  0x219
 

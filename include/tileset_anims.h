@@ -21,6 +21,7 @@ void InitTilesetAnim_EverGrande(void);
 void InitTilesetAnim_Pacifidlog(void);
 void InitTilesetAnim_Sootopolis(void);
 void InitTilesetAnim_BattleFrontierOutsideWest(void);
+void InitTilesetAnim_BattleFrontierOutsideWestNorth(void);
 void InitTilesetAnim_BattleFrontierOutsideEast(void);
 void InitTilesetAnim_Building(void);
 void InitTilesetAnim_Cave(void);
@@ -40,4 +41,5 @@ void InitTilesetAnim_CeladonGym(void);
 void InitTilesetAnim_SilphCo(void);
 void InitTilesetAnim_MtEmber(void);
 
+void InitTilesetAnim_BattleFrontierOutsideWestSouth(void);
 #endif // GUARD_TILESET_ANIMS_H
