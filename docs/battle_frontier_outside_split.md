@@ -76,3 +76,34 @@ one of these four maps. Use `--no-exact-border` only for debugging.
 * Do not hand-edit the generated split tilesets when changing shared border
   art. Change the source/import and rerun the workflow so the IDs, tile
   positions and palettes stay aligned.
+
+## Save compatibility
+
+Existing save files store the map group and map number, so the order of
+existing maps must not change. The four outside maps use these positions in
+`gMapGroup_SpecialArea`:
+
+```text
+4   BattleFrontier_OutsideWest       (South)
+14  BattleFrontier_OutsideEast       (South)
+92  BattleFrontier_OutsideWest_North
+93  BattleFrontier_OutsideEast_North
+```
+
+West South and East South keep the original map numbers. The two North maps
+were appended at the end of the group instead of being inserted next to their
+South halves, so every pre-existing map keeps its original number and old save
+files continue to load in the correct map.
+
+`include/constants/map_groups.h` is generated from `data/maps/map_groups.json`;
+do not edit it by hand. Run `make generated` after changing the JSON.
+
+## Fountain animation
+
+The West South fountain has two consecutive metatiles (top at `y=8`, bottom at
+`y=9`). The animation callbacks always write the top frames to secondary tile
+slots `0..3` and the bottom frames to `4..7`, so `preserve-rebuild` assigns the
+fountain patterns in vertical order. Do not sort or iterate those metatiles as
+an unordered set: swapping the halves still renders correctly in a static
+preview but makes the animated fountain flow upside down.
+
