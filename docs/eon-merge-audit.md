@@ -266,14 +266,19 @@ The project must always use the latest patch release of each minor line:
 
 ### Spritesheet conversion rules
 
-- Expansion 1.17.2 ships a 25-line `spritesheet_rules.mk`. Eon's `pre-main` file has
-  per-sprite rules (719 lines) for object events and field effects.
-- The merge kept expansion's file, so Eon NPC and field-effect PNG strips were
-  converted row-major. 16x32 frames read the front/left/right tiles together and the
-  top half repeated.
-- Restored `pre-main`'s rules and regenerated all object event and field effect
-  `.4bpp` assets. Verified that frame 0 of Mom and the field-effect arrow matches a
-  cropped single-frame conversion.
+- Expansion declares almost every object event and field effect graphic with
+  `INCGFX_U32`/`INCGFX_U16` in `object_event_graphics.h`, so the frame size
+  (`-mwidth`/`-mheight`) lives next to the graphic and the build only keeps a
+  17-line `spritesheet_rules.mk` for the four protagonist walking/running strips.
+- The merge kept Eon's `INCBIN` declarations and restored Eon's large
+  `spritesheet_rules.mk`. Several of those rules still pointed at
+  `pics/pokemon/...` after the assets moved to `pics/pokemon_old/...`, so those
+  sprites fell back to the generic row-major conversion (for example the
+  Zigzagoon that chases Professor Birch).
+- Restored the expansion-native `INCGFX` declarations for all object event and
+  field effect graphics and reduced `spritesheet_rules.mk` to upstream's
+  17 lines. Only the four `INCBIN` protagonist snippets still need explicit
+  rules, exactly as in expansion.
 
 ### all_learnables.json
 
