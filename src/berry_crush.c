@@ -1993,7 +1993,7 @@ static const struct WindowTemplate sWindowTemplate_BerryCrushRecords =
     .tilemapLeft = 5,
     .tilemapTop = 1,
     .width = 20,
-    .height = 11,
+    .height = 9,
     .paletteNum = 15,
     .baseBlock = 1,
 };
@@ -2017,6 +2017,32 @@ static void FormatPressingSpeed(u32 hundredths)
     ConvertIntToDecimalStringN(gStringVar1, hundredths / 100, STR_CONV_MODE_RIGHT_ALIGN, 3);
     ConvertIntToDecimalStringN(gStringVar2, hundredths % 100, STR_CONV_MODE_LEADING_ZEROS, 2);
     StringExpandPlaceholders(gStringVar4, gText_XDotYTimesPerSec);
+}
+
+static s32 GetBerryCrushRecordsWidth(void)
+{
+    s32 width = GetStringWidth(FONT_NORMAL, gText_BerryCrushRecords, 0);
+    s32 widthCurr;
+
+    // Reserve room for the widest possible value in each row, like the other
+    // two records screens do with their fixed margins.
+    FormatPressingSpeed(25599); // "255.99 times/sec."
+    widthCurr = GetStringWidth(FONT_NORMAL, gText_PressingSpeed, 0) + 8 + GetStringWidth(FONT_NORMAL, gStringVar4, 0);
+    if (widthCurr > width)
+        width = widthCurr;
+
+    ConvertIntToDecimalStringN(gStringVar1, 99999, STR_CONV_MODE_RIGHT_ALIGN, 5);
+    widthCurr = GetStringWidth(FONT_NORMAL, gText_BerryPowder, 0) + 8 + GetStringWidth(FONT_NORMAL, gStringVar1, 0);
+    if (widthCurr > width)
+        width = widthCurr;
+
+    ConvertIntToDecimalStringN(gStringVar1, 100, STR_CONV_MODE_RIGHT_ALIGN, 3);
+    StringExpandPlaceholders(gStringVar4, gText_Var1Percent);
+    widthCurr = GetStringWidth(FONT_NORMAL, gText_Silkiness, 0) + 8 + GetStringWidth(FONT_NORMAL, gStringVar4, 0);
+    if (widthCurr > width)
+        width = widthCurr;
+
+    return width;
 }
 
 static void PrintBerryCrushRecords(u8 windowId, s32 width)
@@ -2054,23 +2080,14 @@ static void PrintBerryCrushRecords(u8 windowId, s32 width)
 static void Task_ShowBerryCrushRecords(u8 taskId)
 {
     struct WindowTemplate window;
-    s32 width, widthCurr;
+    s32 width;
     s16 *data = gTasks[taskId].data;
 
     switch (tState)
     {
     case 0:
         window = sWindowTemplate_BerryCrushRecords;
-        width = GetStringWidth(FONT_NORMAL, gText_BerryCrushRecords, 0);
-        widthCurr = GetStringWidth(FONT_NORMAL, gText_PressingSpeed, 0) + 96;
-        if (widthCurr > width)
-            width = widthCurr;
-        widthCurr = GetStringWidth(FONT_NORMAL, gText_BerryPowder, 0) + 96;
-        if (widthCurr > width)
-            width = widthCurr;
-        widthCurr = GetStringWidth(FONT_NORMAL, gText_Silkiness, 0) + 96;
-        if (widthCurr > width)
-            width = widthCurr;
+        width = GetBerryCrushRecordsWidth();
         width = (width + 7) / 8;
         if (width & 1)
             width++;
