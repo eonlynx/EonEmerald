@@ -1996,20 +1996,16 @@ bool32 DnsWindowLightingActive(void)
     return !gMain.inBattle
         && (gMain.callback2 == CB2_Overworld || gMain.callback2 == CB2_OverworldBasic)
         && MapHasNaturalLight(gMapHeader.mapType)
+        && (!gPaletteFade.active || gPaletteFade.mode == HARDWARE_FADE)
         && gWeatherPtr->palProcessingState == WEATHER_PAL_STATE_IDLE
-        && !gPaletteFade.active
         && IsDnsLightingActive();
 }
 
-// Lights up windows during the night. The caller passes a temporary DMA
-// buffer; keeping the lights out of gPlttBufferFaded prevents them from
-// leaking back in during screen fades and map transitions.
-void DnsApplyWindowLighting(u16 *paletteBuffer)
+// Lights up windows during the night by overriding the configured palette
+// slots in the buffer that is about to be transferred.
+static void ApplyDnsWindowLighting(u16 *paletteBuffer)
 {
     u32 i;
-
-    if (!DnsWindowLightingActive())
-        return;
 
     for (i = 0; i < ARRAY_COUNT(sDnsLightingColours); i++)
     {
@@ -2022,6 +2018,28 @@ void DnsApplyWindowLighting(u16 *paletteBuffer)
         colourSlot = sDnsLightingColours[i].paletteNum * 16 + sDnsLightingColours[i].colourNum;
         paletteBuffer[colourSlot] = sDnsLightingColours[i].lightColour;
     }
+}
+
+void DnsApplyWindowLighting(u16 *paletteBuffer)
+{
+    if (DnsWindowLightingActive())
+        ApplyDnsWindowLighting(paletteBuffer);
+}
+
+// Eon behaviour: while a software fade is active, the window lights belong to
+// the unfaded palette so the fade blends them with the rest of the tileset
+// instead of the DMA-time overlay keeping them bright.
+void DnsPrepareWindowLighting(void)
+{
+    if (!gPaletteFade.active
+     || gPaletteFade.mode == HARDWARE_FADE
+     || gMain.inBattle
+     || (gMain.callback2 != CB2_Overworld && gMain.callback2 != CB2_OverworldBasic)
+     || !MapHasNaturalLight(gMapHeader.mapType)
+     || !IsDnsLightingActive())
+        return;
+
+    ApplyDnsWindowLighting(gPlttBufferUnfaded);
 }
 
 bool32 CurrentMapHasShadows(void)

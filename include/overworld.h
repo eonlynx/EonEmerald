@@ -166,6 +166,7 @@ void UpdateAltBgPalettes(u16 palettes);
 void UpdatePalettesWithTime(u32);
 bool32 DnsWindowLightingActive(void);
 void DnsApplyWindowLighting(u16 *paletteBuffer);
+void DnsPrepareWindowLighting(void);
 void CB2_Overworld(void);
 void SetMainCallback1(void (*cb)(void));
 void CB2_NewGame(void);

@@ -11,14 +11,6 @@
 #include "constants/rgb.h"
 #include "overworld.h"
 
-enum
-{
-    NORMAL_FADE,
-    FAST_FADE,
-    HARDWARE_FADE,
-    TIME_OF_DAY_FADE,
-};
-
 static u32 UpdateNormalPaletteFade(void);
 static void BeginFastPaletteFadeInternal(u32);
 static u32 UpdateFastPaletteFade(void);
@@ -96,6 +88,10 @@ u32 UpdatePaletteFade(void)
 
     if (sPlttBufferTransferPending)
         return PALETTE_FADE_STATUS_LOADING;
+
+    // Match Eon: during a software fade the window lights are part of the
+    // unfaded palette, so every fade step blends them with the tileset.
+    DnsPrepareWindowLighting();
 
     if (gPaletteFade.mode == NORMAL_FADE)
         result = UpdateNormalPaletteFade();
