@@ -2027,7 +2027,7 @@ static s32 GetBerryCrushRecordsWidth(void)
     // Reserve room for the widest possible value in each row, like the other
     // two records screens do with their fixed margins.
     FormatPressingSpeed(25599); // "255.99 times/sec."
-    widthCurr = GetStringWidth(FONT_NORMAL, gText_PressingSpeed, 0) + 8 + GetStringWidth(FONT_NORMAL, gStringVar4, 0);
+    widthCurr = GetStringWidth(FONT_NORMAL, gText_PressingSpeedRecords, 0) + 8 + GetStringWidth(FONT_NORMAL, gStringVar4, 0);
     if (widthCurr > width)
         width = widthCurr;
 
@@ -2059,7 +2059,7 @@ static void PrintBerryCrushRecords(u8 windowId, s32 width)
         GetStringCenterAlignXOffset(FONT_NORMAL, gText_BerryCrushRecords, width * 8), 1, TEXT_SKIP_DRAW, NULL);
 
     FormatPressingSpeed(bestPressingSpeed);
-    AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_PressingSpeed, 0, 25, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_PressingSpeedRecords, 0, 25, TEXT_SKIP_DRAW, NULL);
     x = (width * 8) - GetStringWidth(FONT_NORMAL, gStringVar4, 0);
     AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, x, 25, TEXT_SKIP_DRAW, NULL);
 

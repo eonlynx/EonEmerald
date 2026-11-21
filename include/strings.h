@@ -2065,6 +2065,7 @@ extern const u8 gText_BerryCrush2[];
 extern const u8 gText_PressingSpeedRankings[];
 extern const u8 gText_Var1Players[];
 extern const u8 gText_BerryCrushRecords[];
+extern const u8 gText_PressingSpeedRecords[];
 extern const u8 gText_BerryPowder[];
 extern const u8 gText_XDotYTimesPerSec[];
 extern const u8 gText_ReadyPickBerry[];

@@ -1068,6 +1068,7 @@ const u8 gText_BerryCrush2[] = _("Berry Crush");
 const u8 gText_PressingSpeedRankings[] = _("Pressing-Speed Rankings");
 const u8 gText_Var1Players[] = _("{STR_VAR_1} PLAYERS");
 ALIGNED(4) const u8 gText_BerryCrushRecords[] = _("Berry Crush Records");
+ALIGNED(4) const u8 gText_PressingSpeedRecords[] = _("Pressing speed:");
 ALIGNED(4) const u8 gText_BerryPowder[] = _("Berry powder:");
 ALIGNED(4) const u8 gText_XDotYTimesPerSec[] = _("{STR_VAR_1}.{STR_VAR_2} times/sec.");
 const u8 gText_SymbolsEarned[] = _("Symbols Earned");
