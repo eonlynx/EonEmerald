@@ -537,6 +537,28 @@ static const struct MenuAction MultichoiceList_WirelessMinigame[] =
     {gText_Exit},
 };
 
+static const struct MenuAction sMultichoiceList_MossdeepMinigame[] =
+{
+    {COMPOUND_STRING("POKéMON JUMP")},
+    {COMPOUND_STRING("DODRIO BERRY-PICKING")},
+    {COMPOUND_STRING("BERRY CRUSH")},
+    {gText_Exit},
+};
+
+static const struct MenuAction sMultichoiceList_MinigameMode[] =
+{
+    {COMPOUND_STRING("SOLO PLAY")},
+    {COMPOUND_STRING("WIRELESS LINK")},
+    {gText_Exit},
+};
+
+static const struct MenuAction sMultichoiceList_MinigameDifficulty[] =
+{
+    {COMPOUND_STRING("NORMAL")},
+    {COMPOUND_STRING("HARD")},
+    {gText_Exit},
+};
+
 static const struct MenuAction MultichoiceList_LinkLeader[] =
 {
     {COMPOUND_STRING("JOIN GROUP")},
@@ -1304,6 +1326,9 @@ static const struct MultichoiceListStruct sMultichoiceLists[] =
     [MULTI_HOF_VICTORIES_QUIT]                         = MULTICHOICE(sMultichoiceList_HOF_Victories_Quit),
     [MULTI_EGGS_VICTORIES_QUIT]                        = MULTICHOICE(sMultichoiceList_Eggs_Victories_Quit),
     [MULTI_HOF_EGGS_VICTORIES_QUIT]                    = MULTICHOICE(sMultichoiceList_HOF_Eggs_Victories_Quit),
+    [MULTI_MINIGAME_MODE]                              = MULTICHOICE(sMultichoiceList_MinigameMode),
+    [MULTI_MINIGAME_DIFFICULTY]                        = MULTICHOICE(sMultichoiceList_MinigameDifficulty),
+    [MULTI_MOSSDEEP_MINIGAME]                          = MULTICHOICE(sMultichoiceList_MossdeepMinigame),
 };
 
 const u8 *const gStdStrings[] =

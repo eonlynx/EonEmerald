@@ -22,6 +22,9 @@
 #include "task.h"
 #include "text_window.h"
 #include "window.h"
+#include "overworld.h"
+#include "constants/cable_club.h"
+#include "constants/vars.h"
 #include "constants/items.h"
 #include "constants/songs.h"
 
@@ -284,10 +287,30 @@ EWRAM_DATA static struct StatusBar *sStatusBar = NULL;
 EWRAM_DATA static struct DodrioGame_Gfx *sGfx = NULL;
 
 static bool32 sExitingGame;
+static bool8 sIsSoloMinigame;
+static u8 sSoloDifficulty;
+
+static const u8 sCpuName_Mister[] = _("MISTER");
+static const u8 sCpuName_Laddie[] = _("LADDIE");
+static const u8 sCpuName_Lassie[] = _("LASSIE");
+static const u8 sCpuName_Dude[]   = _("DUDE");
+static const u8 sCpuName_Miss[]   = _("MISS");
+static const u8 sCpuName_Master[] = _("MASTER");
+
+static const u8 *const sRegularCpuNames[] =
+{
+    sCpuName_Mister,
+    sCpuName_Laddie,
+    sCpuName_Lassie,
+    sCpuName_Dude,
+    sCpuName_Miss
+};
 
 static void ResetTasksAndSprites(void);
 static void InitDodrioGame(struct DodrioGame *);
 static void Task_StartDodrioGame(u8);
+static void InitSoloDodrioPlayers(void);
+static void UpdateCpuDodrioPickStates(void);
 static void DoGameIntro(void);
 static void InitCountdown(void);
 static void DoCountdown(void);
@@ -661,11 +684,23 @@ static void (*const sMemberFuncs[])(void) =
     [FUNC_WAIT_END_GAME]  = WaitEndGame_Member
 };
 
+void StartDodrioBerryPickingSolo(void)
+{
+    sIsSoloMinigame = TRUE;
+    sSoloDifficulty = VarGet(VAR_0x8006);
+    VarSet(VAR_CABLE_CLUB_STATE, USING_MINIGAME);
+    SetWarpDestination(gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum, WARP_ID_NONE, 5, 1);
+    SetDynamicWarpWithCoords(0, gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum, WARP_ID_NONE, 5, 1);
+    WarpIntoMap();
+    SetWirelessCommType0();
+    StartDodrioBerryPicking(gSpecialVar_0x8004, CB2_LoadMap);
+}
+
 void StartDodrioBerryPicking(u16 partyId, MainCallback exitCallback)
 {
     sExitingGame = FALSE;
 
-    if (gReceivedRemoteLinkPlayers && (sGame = AllocZeroed(sizeof(*sGame))))
+    if ((gReceivedRemoteLinkPlayers || sIsSoloMinigame) && (sGame = AllocZeroed(sizeof(*sGame))))
     {
         ResetTasksAndSprites();
         InitDodrioGame(sGame);
@@ -716,6 +751,7 @@ static void InitDodrioGame(struct DodrioGame *game)
 
     for (i = 0; i < MAX_RFU_PLAYERS; i++)
     {
+        game->difficulty[i] = (sIsSoloMinigame && sSoloDifficulty == 1) ? 14 : 0;
         game->inputState[i] = INPUTSTATE_NONE;
         game->inputDelay[i] = 0;
         game->berryResults[i][BERRY_BLUE] = 0;
@@ -736,14 +772,53 @@ static void InitDodrioGame(struct DodrioGame *game)
         game->playersAttemptingPick[i][1] = PLAYER_NONE;
     }
 
-    game->isLeader = GetMultiplayerId() == 0 ? TRUE : FALSE;
-    game->numPlayers = GetLinkPlayerCount();
+    game->isLeader = (sIsSoloMinigame || GetMultiplayerId() == 0) ? TRUE : FALSE;
+    game->numPlayers = sIsSoloMinigame ? MAX_RFU_PLAYERS : GetLinkPlayerCount();
     game->posToPlayerId[0] = GetMultiplayerId();
     for (i = 1; i < game->numPlayers; i++)
     {
         game->posToPlayerId[i] = game->posToPlayerId[i - 1] + 1;
         if (game->posToPlayerId[i] > game->numPlayers - 1)
             game->posToPlayerId[i] %= game->numPlayers;
+    }
+}
+
+static void InitSoloDodrioPlayers(void)
+{
+    u8 i;
+    u8 omitIdx = Random() % ARRAY_COUNT(sRegularCpuNames);
+    u8 nameIdx = 0;
+
+    StringCopy(sGame->players[0].name, gSaveBlock2Ptr->playerName);
+    StringCopy(gLinkPlayers[0].name, gSaveBlock2Ptr->playerName);
+    for (i = 1; i < MAX_RFU_PLAYERS; i++)
+    {
+        if (nameIdx == omitIdx)
+            nameIdx++;
+
+        sGame->monInfo[i].isShiny = FALSE;
+        StringCopy(sGame->players[i].name, sRegularCpuNames[nameIdx]);
+        StringCopy(gLinkPlayers[i].name, sRegularCpuNames[nameIdx]);
+        nameIdx++;
+    }
+
+    // Blend Master appears 5% of the time on Normal mode, and 10% of the time on Hard mode
+    bool8 blendMasterAppears = FALSE;
+    if (sSoloDifficulty == 1)
+    {
+        if ((Random() % 100) < 10)
+            blendMasterAppears = TRUE;
+    }
+    else
+    {
+        if ((Random() % 100) < 5)
+            blendMasterAppears = TRUE;
+    }
+
+    if (blendMasterAppears)
+    {
+        StringCopy(sGame->players[1].name, sCpuName_Master);
+        StringCopy(gLinkPlayers[1].name, sCpuName_Master);
     }
 }
 
@@ -755,11 +830,19 @@ static void Task_StartDodrioGame(u8 taskId)
     {
     case 0:
         SetVBlankCallback(NULL);
-        CreateTask_(Task_CommunicateMonInfo, 4);
-        sGame->startState++;
+        if (sIsSoloMinigame)
+        {
+            InitSoloDodrioPlayers();
+            sGame->startState = 1;
+        }
+        else
+        {
+            CreateTask_(Task_CommunicateMonInfo, 4);
+            sGame->startState++;
+        }
         break;
     case 1:
-        if (!FuncIsActiveTask(Task_CommunicateMonInfo))
+        if (sIsSoloMinigame || !FuncIsActiveTask(Task_CommunicateMonInfo))
         {
             InitGameGfx(&sGame->gfx);
             sGame->startState++;
@@ -768,14 +851,15 @@ static void Task_StartDodrioGame(u8 taskId)
     case 2:
         if (!IsGfxFuncActive())
         {
-            Rfu_SetLinkStandbyCallback();
+            if (!sIsSoloMinigame)
+                Rfu_SetLinkStandbyCallback();
             sGame->startState++;
         }
         break;
     case 3:
-        if (IsLinkTaskFinished())
+        if (sIsSoloMinigame || IsLinkTaskFinished())
         {
-            if (gReceivedRemoteLinkPlayers)
+            if (!sIsSoloMinigame && gReceivedRemoteLinkPlayers)
             {
                 LoadWirelessStatusIndicatorSpriteGfx();
                 CreateWirelessStatusIndicatorSprite(0, 0);
@@ -1051,6 +1135,16 @@ static bool32 AllLinkBlocksReceived(void)
 
 static void InitResults_Leader(void)
 {
+    if (sIsSoloMinigame)
+    {
+        if (WaitFanfare(TRUE))
+        {
+            SetGameFunc(FUNC_RESULTS);
+            FadeOutAndPlayNewMapMusic(MUS_RG_VICTORY_WILD, 4);
+        }
+        return;
+    }
+
     switch (sGame->state)
     {
     case 0:
@@ -1150,6 +1244,11 @@ static void DoResults(void)
     case 1:
         if (!IsGfxFuncActive())
         {
+            if (sIsSoloMinigame)
+            {
+                SetGameFunc(FUNC_ASK_PLAY_AGAIN);
+                return;
+            }
             SetGfxFuncById(GFXFUNC_MSG_COMM_STANDBY);
             sGame->state++;
         }
@@ -1220,6 +1319,14 @@ static void AskPlayAgain(void)
     case 3:
         if ((playAgainState = GetPlayAgainState()) != PLAY_AGAIN_NONE)
         {
+            if (sIsSoloMinigame)
+            {
+                if (playAgainState == PLAY_AGAIN_YES)
+                    SetGameFunc(FUNC_RESET_GAME);
+                else
+                    SetGameFunc(FUNC_EXIT);
+                return;
+            }
             sGame->state++;
         }
         break;
@@ -1284,6 +1391,12 @@ static void AskPlayAgain(void)
 
 static void EndLink(void)
 {
+    if (sIsSoloMinigame)
+    {
+        SetGameFunc(FUNC_EXIT);
+        return;
+    }
+
     switch (sGame->state)
     {
     case 0:
@@ -1333,6 +1446,7 @@ static void ExitGame(void)
     default:
         if (!IsGfxFuncActive())
         {
+            sIsSoloMinigame = FALSE;
             SetMainCallback2(sGame->exitCallback);
             DestroyTask(sGame->taskId);
             Free(sGame);
@@ -1393,9 +1507,10 @@ static void ResetGame(void)
         CreateDodrioGameTask(Task_NewGameIntro);
         ResetGfxState();
         InitDodrioGame(sGame);
-        if (!gReceivedRemoteLinkPlayers)
+        if (!gReceivedRemoteLinkPlayers && !sIsSoloMinigame)
             sGame->numPlayers = 1;
 
+        GetActiveBerryColumns(sGame->numPlayers, &sGame->berryColStart, &sGame->berryColEnd);
         SetRandomPrize();
         SetCloudInvisibility(FALSE);
         break;
@@ -1470,42 +1585,140 @@ static void Task_CommunicateMonInfo(u8 taskId)
 
 #undef tState
 
+static void UpdateCpuDodrioPickStates(void)
+{
+    u8 i;
+
+    for (i = 1; i < MAX_RFU_PLAYERS; i++)
+    {
+        if (sGame->inputState[i] == INPUTSTATE_NONE && sGame->players[i].comm.pickState == PICK_NONE)
+        {
+            u8 colLeft  = sDodrioHeadToColumnMap[4][i][0];
+            u8 colMid   = sDodrioHeadToColumnMap[4][i][1];
+            u8 colRight = sDodrioHeadToColumnMap[4][i][2];
+
+            // Middle column is exclusive to this player (highest priority)
+            if (sGame->berryState[colMid] == BERRYSTATE_NONE)
+            {
+                bool8 shouldPickMid = FALSE;
+                if (sSoloDifficulty == 1)
+                {
+                    if (sGame->player.berries.fallDist[colMid] == 6 || sGame->player.berries.fallDist[colMid] == 7)
+                        shouldPickMid = TRUE;
+                }
+                else
+                {
+                    if (sGame->player.berries.fallDist[colMid] == 7)
+                        shouldPickMid = TRUE;
+                    else if (sGame->player.berries.fallDist[colMid] == 6 && (Random() % 100 < 65))
+                        shouldPickMid = TRUE;
+                }
+
+                if (shouldPickMid)
+                {
+                    sGame->players[i].comm.ateBerry = FALSE;
+                    sGame->players[i].comm.pickState = PICK_MIDDLE;
+                    continue;
+                }
+            }
+
+            // Left column (colLeft == 6 is shared with Player 0's right head)
+            if (sGame->berryState[colLeft] == BERRYSTATE_NONE)
+            {
+                bool8 shouldPickLeft = FALSE;
+                if (colLeft == 6)
+                {
+                    if (sGame->player.berries.fallDist[colLeft] == 7)
+                        shouldPickLeft = TRUE;
+                    else if (sSoloDifficulty == 1 && sGame->player.berries.fallDist[colLeft] == 6 && (Random() % 100 < 40))
+                        shouldPickLeft = TRUE;
+                }
+                else
+                {
+                    if (sGame->player.berries.fallDist[colLeft] == 6 || sGame->player.berries.fallDist[colLeft] == 7)
+                        shouldPickLeft = TRUE;
+                }
+
+                if (shouldPickLeft)
+                {
+                    sGame->players[i].comm.ateBerry = FALSE;
+                    sGame->players[i].comm.pickState = PICK_LEFT;
+                    continue;
+                }
+            }
+
+            // Right column (colRight == 4 is shared with Player 0's left head)
+            if (sGame->berryState[colRight] == BERRYSTATE_NONE)
+            {
+                bool8 shouldPickRight = FALSE;
+                if (colRight == 4)
+                {
+                    if (sGame->player.berries.fallDist[colRight] == 7)
+                        shouldPickRight = TRUE;
+                    else if (sSoloDifficulty == 1 && sGame->player.berries.fallDist[colRight] == 6 && (Random() % 100 < 40))
+                        shouldPickRight = TRUE;
+                }
+                else
+                {
+                    if (sGame->player.berries.fallDist[colRight] == 6 || sGame->player.berries.fallDist[colRight] == 7)
+                        shouldPickRight = TRUE;
+                }
+
+                if (shouldPickRight)
+                {
+                    sGame->players[i].comm.ateBerry = FALSE;
+                    sGame->players[i].comm.pickState = PICK_RIGHT;
+                    continue;
+                }
+            }
+        }
+    }
+}
+
 static void RecvLinkData_Gameplay(void)
 {
     u8 i;
     u8 numPlayers = sGame->numPlayers;
 
-    sGame->players[0].receivedGameStatePacket = RecvPacket_GameState(0,
-                                                  &sGame->players[0],
-                                                  &sGame->players[0].comm,
-                                                  &sGame->players[1].comm,
-                                                  &sGame->players[2].comm,
-                                                  &sGame->players[3].comm,
-                                                  &sGame->players[4].comm,
-                                                  &sGame->numGraySquares,
-                                                  &sGame->berriesFalling,
-                                                  &sGame->allReadyToEnd);
-    sGame->clearRecvCmds = TRUE;
-
-    for (i = 1; i < numPlayers; i++)
+    if (sIsSoloMinigame)
     {
-        if (sGame->inputState[i] == INPUTSTATE_NONE && !RecvPacket_PickState(i, &sGame->players[i].comm.pickState))
-        {
-            sGame->players[i].comm.pickState = PICK_NONE;
-            sGame->clearRecvCmds = FALSE;
-        }
+        sGame->players[0].berries = sGame->player.berries;
+        UpdateCpuDodrioPickStates();
     }
-    if (++sGame->clearRecvCmdTimer >= 60)
+    else
     {
-        if (sGame->clearRecvCmds)
+        sGame->players[0].receivedGameStatePacket = RecvPacket_GameState(0,
+                                                      &sGame->players[0],
+                                                      &sGame->players[0].comm,
+                                                      &sGame->players[1].comm,
+                                                      &sGame->players[2].comm,
+                                                      &sGame->players[3].comm,
+                                                      &sGame->players[4].comm,
+                                                      &sGame->numGraySquares,
+                                                      &sGame->berriesFalling,
+                                                      &sGame->allReadyToEnd);
+        sGame->clearRecvCmds = TRUE;
+
+        for (i = 1; i < numPlayers; i++)
         {
-            ClearRecvCommands();
-            sGame->clearRecvCmdTimer = 0;
+            if (sGame->inputState[i] == INPUTSTATE_NONE && !RecvPacket_PickState(i, &sGame->players[i].comm.pickState))
+            {
+                sGame->players[i].comm.pickState = PICK_NONE;
+                sGame->clearRecvCmds = FALSE;
+            }
         }
-        else if (sGame->clearRecvCmdTimer > 70)
+        if (++sGame->clearRecvCmdTimer >= 60)
         {
-            ClearRecvCommands();
-            sGame->clearRecvCmdTimer = 0;
+            if (sGame->clearRecvCmds)
+            {
+                ClearRecvCommands();
+                sGame->clearRecvCmdTimer = 0;
+            }
+            else if (sGame->clearRecvCmdTimer > 70)
+            {
+                ClearRecvCommands();
+                sGame->clearRecvCmdTimer = 0;
+            }
         }
     }
 
@@ -1551,6 +1764,13 @@ static void RecvLinkData_ReadyToEnd(void)
 {
     u8 i;
     u8 numPlayers = sGame->numPlayers;
+
+    if (sIsSoloMinigame)
+    {
+        sGame->players[0].berries = sGame->player.berries;
+        sGame->allReadyToEnd = TRUE;
+        return;
+    }
 
     sGame->players[0].receivedGameStatePacket = RecvPacket_GameState(0,
                                                   &sGame->players[0],
@@ -1609,6 +1829,9 @@ static void RecvLinkData_Leader(void)
 
 static void SendLinkData_Leader(void)
 {
+    if (sIsSoloMinigame)
+        return;
+
     switch (sGame->funcId)
     {
     case FUNC_PLAY_GAME:
@@ -1865,6 +2088,9 @@ static void InitFirstWaveOfBerries(void)
         berries->fallDist[i] = (i % 2 == 0) ? 1 : 0;
         berries->ids[i] = BERRY_BLUE;
     }
+
+    if (sIsSoloMinigame)
+        sGame->players[0].berries = sGame->player.berries;
 }
 
 // This function checks every berry and resolves if it should be eaten or not.
@@ -2139,6 +2365,9 @@ static void UpdateBerrySprites(void)
     u8 berryStart = sGame->berryColStart;
     u8 berryEnd = sGame->berryColEnd;
 
+    if (sIsSoloMinigame)
+        sGame->players[sGame->multiplayerId].berries = sGame->player.berries;
+
     for (i = berryStart; i < berryEnd; i++)
     {
         struct DodrioGame_Player *player = &sGame->players[sGame->multiplayerId];
@@ -2241,6 +2470,9 @@ static bool32 AllPlayersReadyToStart(void)
 {
     u8 i, numPlayers;
 
+    if (sIsSoloMinigame)
+        return TRUE;
+
     numPlayers = sGame->numPlayers;
     for (i = 1; i < numPlayers; i++)
     {
@@ -2275,7 +2507,7 @@ static bool32 ReadyToEndGame_Leader(void)
     if (sGame->numGraySquares >= NUM_STATUS_SQUARES && !sGame->berriesFalling)
     {
         sGame->numGraySquares = NUM_STATUS_SQUARES;
-        if (sGame->allReadyToEnd)
+        if (sIsSoloMinigame || sGame->allReadyToEnd)
             return TRUE;
     }
 
@@ -2579,7 +2811,7 @@ static void ResetForPlayAgainPrompt(void)
             sGame->players[i].berries.fallDist[j] = 0;
         sGame->players[i].comm.pickState = PICK_NONE;
         sGame->players[i].comm.ateBerry = FALSE;
-        sGame->difficulty[i] = 0;
+        sGame->difficulty[i] = (sIsSoloMinigame && sSoloDifficulty == 1) ? 14 : 0;
         sGame->berriesEaten[i] = 0;
         sGame->scoreResults[i].ranking = 0;
         sGame->scoreResults[i].score = 0;

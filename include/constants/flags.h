@@ -1575,7 +1575,7 @@
 #define FLAG_GOT_TM42_AT_MEMORIAL_PILLAR            (DAILY_FLAGS_START + 0x5)  // Unused Flag
 #define FLAG_RECEIVED_SELPHY_EGG                    (DAILY_FLAGS_START + 0x6)  // Unused Flag
 #define FLAG_NO_ROOM_FOR_TM42_AT_MEMORIAL_PILLAR    (DAILY_FLAGS_START + 0x7)  // Unused Flag
-#define FLAG_UNUSED_0x928                           (DAILY_FLAGS_START + 0x8)  // Unused Flag
+#define FLAG_DAILY_BERRY_CRUSH_RECEIVED_BONUS       (DAILY_FLAGS_START + 0x8)
 #define FLAG_UNUSED_0x929                           (DAILY_FLAGS_START + 0x9)  // Unused Flag
 #define FLAG_DAILY_PICKED_LOTO_TICKET               (DAILY_FLAGS_START + 0xA)
 #define FLAG_DAILY_ROUTE_114_RECEIVED_BERRY         (DAILY_FLAGS_START + 0xB)
