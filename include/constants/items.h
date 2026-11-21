@@ -1062,6 +1062,14 @@ enum __attribute__((packed)) Item
     // Mirage Island Charm
     ITEM_WISH_CHARM = 881,
 
+    // Altering Cave Lures
+    ITEM_NORMAL_LURE = 882,
+    ITEM_WATER_LURE = 883,
+    ITEM_BUG_LURE = 884,
+    ITEM_ROCK_LURE = 885,
+    ITEM_SPECIAL_LURE = 886,
+    ITEM_RARE_LURE = 887,
+
     ITEMS_COUNT,
     ITEM_FIELD_ARROW = ITEMS_COUNT,
 };

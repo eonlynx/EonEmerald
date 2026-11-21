@@ -59,7 +59,7 @@
 #define FLAG_ENABLE_BRINEY_MATCH_CALL           0x25 // Mr. Briney registered in the PokéNav during the Mirage Island event
 #define FLAG_WISH_CHARM_VISITED                 0x26
 #define FLAG_WISH_CHARM_EXPIRED                 0x27
-#define FLAG_UNUSED_0x028    0x28 // Unused Flag
+#define FLAG_ALTERING_CAVE_LURE_ACTIVE          0x28
 #define FLAG_UNUSED_0x029    0x29 // Unused Flag
 #define FLAG_UNUSED_0x02A    0x2A // Unused Flag
 #define FLAG_UNUSED_0x02B    0x2B // Unused Flag
