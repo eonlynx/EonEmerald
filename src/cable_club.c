@@ -30,6 +30,7 @@
 #include "trainer_card.h"
 #include "party_menu.h"
 #include "window.h"
+#include "time_capsule.h"
 #include "constants/battle_frontier.h"
 #include "constants/cable_club.h"
 #include "constants/songs.h"
@@ -1157,9 +1158,34 @@ static void Task_StartWirelessTrade(u8 taskId)
     }
 }
 
+static void Task_StartTimeCapsuleTrade(u8 taskId)
+{
+    switch (gTasks[taskId].data[0])
+    {
+    case 0:
+        LockPlayerFieldControls();
+        FadeScreen(FADE_TO_BLACK, 0);
+        gWirelessCommType = 0;
+        gSelectedTradeMonPositions[TRADE_PLAYER] = 0;
+        gSelectedTradeMonPositions[TRADE_PARTNER] = 0;
+        m4aMPlayAllStop();
+        gTasks[taskId].data[0]++;
+        break;
+    case 1:
+        if (!gPaletteFade.active)
+        {
+            SetMainCallback2(CB2_StartCreateTradeMenu);
+            DestroyTask(taskId);
+        }
+        break;
+    }
+}
+
 void PlayerEnteredTradeSeat(void)
 {
-    if (gWirelessCommType != 0)
+    if (gTimeCapsuleActive)
+        CreateTask(Task_StartTimeCapsuleTrade, 80);
+    else if (gWirelessCommType != 0)
         CreateTask_EnterCableClubSeat(Task_StartWirelessTrade);
     else
         CreateTask_EnterCableClubSeat(Task_StartWiredTrade);

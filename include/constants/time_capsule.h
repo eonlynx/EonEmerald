@@ -1,0 +1,27 @@
+#ifndef GUARD_CONSTANTS_TIME_CAPSULE_H
+#define GUARD_CONSTANTS_TIME_CAPSULE_H
+
+#define TIME_CAPSULE_ROOM_TRADE     1
+#define TIME_CAPSULE_ROOM_COLOSSEUM 2
+
+#define TIME_CAPSULE_OK                 0
+#define TIME_CAPSULE_ERR_NO_LINK        1
+#define TIME_CAPSULE_ERR_TIMEOUT        2
+#define TIME_CAPSULE_ERR_WRONG_ROOM     3
+#define TIME_CAPSULE_ERR_SPECIES        4
+#define TIME_CAPSULE_ERR_MOVE           5
+#define TIME_CAPSULE_ERR_MAIL           6
+#define TIME_CAPSULE_ERR_EGG            7
+#define TIME_CAPSULE_ERR_BAD_EGG        8
+#define TIME_CAPSULE_ERR_SHINY          9
+#define TIME_CAPSULE_ERR_NOT_READY     10
+#define TIME_CAPSULE_ERR_DISABLED      11
+#define TIME_CAPSULE_ERR_CANCELLED     12
+#define TIME_CAPSULE_LINK_ESTABLISHED  13
+#define TIME_CAPSULE_CONFIRMED         14
+// The other game stopped answering (the console was turned off or the cable
+// was pulled).  The vanilla Cable Club shows the black "Communication error"
+// screen for this.
+#define TIME_CAPSULE_ERR_LINK_LOST     15
+
+#endif // GUARD_CONSTANTS_TIME_CAPSULE_H

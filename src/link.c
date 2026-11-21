@@ -27,6 +27,8 @@
 #include "link_rfu.h"
 #include "constants/rgb.h"
 #include "constants/trade.h"
+#include "time_capsule.h"
+#include "time_capsule/gb_trade_link.h"
 
 // Window IDs for the link error screens
 enum {
@@ -999,6 +1001,9 @@ u8 BitmaskAllOtherLinkPlayers(void)
 
 bool8 SendBlock(u8 unused, const void *src, u16 size)
 {
+    if (gTimeCapsuleActive)
+        return GbTrade_SendBlock(src, size);
+
     if (gWirelessCommType == TRUE)
         return Rfu_InitBlockSend(src, size);
 
@@ -1007,6 +1012,9 @@ bool8 SendBlock(u8 unused, const void *src, u16 size)
 
 bool8 SendBlockRequest(u8 blockReqType)
 {
+    if (gTimeCapsuleActive)
+        return TRUE;
+
     if (gWirelessCommType == TRUE)
         return Rfu_SendBlockRequest(blockReqType);
 
@@ -1021,6 +1029,9 @@ bool8 SendBlockRequest(u8 blockReqType)
 
 bool8 IsLinkTaskFinished(void)
 {
+    if (gTimeCapsuleActive)
+        return TRUE;
+
     if (gWirelessCommType == TRUE)
         return IsLinkRfuTaskFinished();
 
@@ -1356,6 +1367,9 @@ void SetCloseLinkCallbackAndType(u16 type)
 
 void SetCloseLinkCallback(void)
 {
+    if (gTimeCapsuleActive)
+        return;
+
     if (gWirelessCommType == TRUE)
     {
         Rfu_SetCloseLinkCallback();

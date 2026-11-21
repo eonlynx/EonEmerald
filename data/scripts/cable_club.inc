@@ -53,6 +53,7 @@ CableClub_OnWarp:
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_DOUBLE_BATTLE, CableClub_EventScript_CheckTurnAttendant
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_MULTI_BATTLE, CableClub_EventScript_CheckTurnAttendant
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_TRADE_CENTER, CableClub_EventScript_CheckTurnAttendant
+	map_script_2 VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, CableClub_EventScript_CheckTurnAttendant
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_RECORD_CORNER, CableClub_EventScript_CheckTurnAttendant
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_UNION_ROOM, CableClub_EventScript_CheckTurnAttendant
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_BERRY_CRUSH, CableClub_EventScript_CheckTurnAttendant
@@ -70,6 +71,7 @@ CableClub_OnLoad:
 	goto_if_eq VAR_CABLE_CLUB_STATE, USING_DOUBLE_BATTLE, CableClub_EventScript_OnLoadFromColosseum
 	goto_if_eq VAR_CABLE_CLUB_STATE, USING_MULTI_BATTLE, CableClub_EventScript_OnLoadFromColosseum
 	goto_if_eq VAR_CABLE_CLUB_STATE, USING_TRADE_CENTER, CableClub_EventScript_OnLoadFromTradeCenter
+	goto_if_eq VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, CableClub_EventScript_OnLoadFromTradeCenter
 	goto_if_eq VAR_CABLE_CLUB_STATE, USING_RECORD_CORNER, CableClub_EventScript_OnLoadFromRecordCorner
 	goto_if_eq VAR_CABLE_CLUB_STATE, USING_UNION_ROOM, CableClub_EventScript_OnLoadFromUnionRoom
 	goto_if_eq VAR_CABLE_CLUB_STATE, USING_BERRY_CRUSH, CableClub_EventScript_OnLoadFromBerryCrush
@@ -106,6 +108,7 @@ CableClub_OnFrame:
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_DOUBLE_BATTLE, CableClub_EventScript_ExitLinkRoom
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_MULTI_BATTLE, CableClub_EventScript_ExitLinkRoom
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_TRADE_CENTER, CableClub_EventScript_ExitTradeCenter
+	map_script_2 VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, TimeCapsule_EventScript_ExitLinkRoom
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_RECORD_CORNER, CableClub_EventScript_ExitRecordCorner
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_UNION_ROOM, CableClub_EventScript_ExitUnionRoom
 	map_script_2 VAR_CABLE_CLUB_STATE, USING_BERRY_CRUSH, CableClub_EventScript_ExitLinkRoom
@@ -700,23 +703,27 @@ EventScript_BattleColosseum_4P_CancelSpotTrigger::
 
 EventScript_TradeCenter_Chair0::
 	setvar VAR_0x8005, 0
+	goto_if_eq VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, TimeCapsule_EventScript_AwaitLinkup
 	special PlayerEnteredTradeSeat
 	end
 
 EventScript_TradeCenter_Chair1::
 	setvar VAR_0x8005, 1
+	goto_if_eq VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, TimeCapsule_EventScript_AwaitLinkup
 	special PlayerEnteredTradeSeat
 	end
 
 /* Never used */
 EventScript_TradeCenter_Chair2::
 	setvar VAR_0x8005, 2
+	goto_if_eq VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, TimeCapsule_EventScript_AwaitLinkup
 	special PlayerEnteredTradeSeat
 	end
 
 /* Never used */
 EventScript_TradeCenter_Chair3::
 	setvar VAR_0x8005, 3
+	goto_if_eq VAR_CABLE_CLUB_STATE, USING_TIME_CAPSULE_TRADE, TimeCapsule_EventScript_AwaitLinkup
 	special PlayerEnteredTradeSeat
 	end
 
