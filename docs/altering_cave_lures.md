@@ -163,8 +163,8 @@ All tables are compiled into `src/data/wild_encounters.h` via `tools/wild_encoun
 | File | Changes Made |
 |---|---|
 | `include/constants/items.h` | Registered `ITEM_NORMAL_LURE` through `ITEM_RARE_LURE` (874..879). |
-| `include/constants/flags.h` | Assigned `FLAG_ALTERING_CAVE_LURE_ACTIVE` to `0x20`. |
-| `include/constants/vars.h` | Assigned `VAR_ALTERING_CAVE_LURE_STEPS` (`0x40DB`) and `VAR_ALTERING_CAVE_LURE_ITEM` (`0x40DC`). |
+| `include/constants/flags.h` | Assigned `FLAG_ALTERING_CAVE_LURE_ACTIVE` to `0x28`. |
+| `include/constants/vars.h` | Assigned `VAR_ALTERING_CAVE_LURE_STEPS` (`0x40F7`) and `VAR_ALTERING_CAVE_LURE_ITEM` (`0x40F8`). |
 | `include/item_use.h` | Declared `ItemUseOutOfBattle_AlteringCaveLure(u8 taskId)`. |
 | `src/item_use.c` | Implemented `ItemUseOutOfBattle_AlteringCaveLure` (with Dad's advice rejection), `Task_StartUseAlteringCaveLure`, `Task_UseAlteringCaveLure`, and Escape Rope/Dig cleanup. |
 | `src/debug.c` | Prioritized Altering Cave Lures in `DebugAction_PCBag_Fill_PocketItems` to ensure they are added to the bag on command. |
@@ -173,7 +173,7 @@ All tables are compiled into `src/data/wild_encounters.h` via `tools/wild_encoun
 | `src/wild_encounter.c` | Implemented `UpdateAlteringCaveLureStepCounter`, `GetAlteringCaveWildSetFromLure`, and `GetAlteringCaveLureItemFromWildSet`. |
 | `src/field_control_avatar.c` | Hooked `UpdateAlteringCaveLureStepCounter()` into `TryStartStepBasedScript()`. |
 | `data/maps/AlteringCave/scripts.inc` | Added `EventScript_AlteringCaveLureWoreOff`, prompt logic, item renewal, and `AlteringCave_EventScript_ExitTrigger`. |
-| `data/maps/AlteringCave/map.json` | Added coordinate trigger at `(18, 22)` conditioned on `FLAG_ALTERING_CAVE_LURE_ACTIVE == 1`. |
+| `data/maps/AlteringCave/map.json` | Added coordinate trigger at `(22, 26)` conditioned on `FLAG_ALTERING_CAVE_LURE_ACTIVE == 1`. |
 | `src/data/wild_encounters.json` | Configured tables `gAlteringCave2` through `gAlteringCave7` with 12 distinct placeholder Pokémon slots each. |
 | `src/data/wild_encounters.h` | Regenerated wild encounter headers with the new Altering Cave encounter tables. |
 
