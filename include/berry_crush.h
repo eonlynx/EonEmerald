@@ -5,5 +5,6 @@
 
 void StartBerryCrush(MainCallback exitCallback);
 void StartBerryCrushSolo(void);
+void ShowBerryCrushRecords(void);
 
 #endif // GUARD_BERRY_CRUSH_H

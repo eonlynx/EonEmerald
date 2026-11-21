@@ -536,6 +536,7 @@ gSpecials::
 	def_special LoopWingFlapSE
 	def_special DestroyMewEmergingGrassSprite
 	def_special ShowBerryCrushRankings, waitstate=1
+	def_special ShowBerryCrushRecords, waitstate=1
 	def_special TryBufferWaldaPhrase
 	def_special DoWaldaNamingScreen, waitstate=1
 	def_special TryGetWallpaperWithWaldaPhrase

@@ -85,3 +85,9 @@ RS_MysteryEventsHouse_Text_BattleLost:
 	.string "Ah, too bad for you!\p"
 	.string "But it was a good match.\n"
 	.string "I hope you can win next time.$"
+
+MossdeepCity_GameCorner_1F_EventScript_BerryCrushRecords::
+	lockall
+	special ShowBerryCrushRecords
+	releaseall
+	end

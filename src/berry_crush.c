@@ -339,6 +339,7 @@ static void CopyPlayerNameWindowGfxToBg(struct BerryCrushGame *);
 static void CreateGameSprites(struct BerryCrushGame *);
 static void DestroyGameSprites(struct BerryCrushGame *);
 static void PrintTimer(struct BerryCrushGame_Gfx *, u16);
+static u32 DecodePressingSpeed(u16);
 static void SpriteCB_Sparkle_Init(struct Sprite *);
 static void HideTimer(struct BerryCrushGame_Gfx *);
 static void ResetGame(struct BerryCrushGame *);
@@ -1130,6 +1131,8 @@ static void UNUSED BerryCrush_InitVBlankCB(void)
 static void SaveResults(void)
 {
     u32 time, presses;
+    u32 localPresses, localSpeed;
+    struct BerryCrushIndividualRecords *records;
 
     // Calculate pressing speed ((time / 60) / presses)
     time = sGame->results.time;
@@ -1139,6 +1142,28 @@ static void SaveResults(void)
     presses = Q_24_8(presses);
     presses = MathUtil_Div32(presses, time) & 0xFFFF;
     sGame->pressingSpeed = presses;
+
+    // Track the local player's own records separately from the group's.
+    localPresses = Q_24_8(sGame->players[sGame->localId].numAPresses);
+    localPresses = MathUtil_Div32(localPresses, time) & 0xFFFF;
+    localSpeed = DecodePressingSpeed(localPresses);
+    records = &gSaveBlock2Ptr->berryPick.berryCrush;
+
+    if (localSpeed > records->bestPressingSpeed)
+    {
+        records->bestPressingSpeed = localSpeed;
+        sGame->newRecord = TRUE;
+    }
+    if (sGame->results.silkiness > records->bestSilkiness)
+    {
+        records->bestSilkiness = sGame->results.silkiness;
+        sGame->newRecord = TRUE;
+    }
+    if (sGame->results.powder > records->bestPowder)
+    {
+        records->bestPowder = sGame->results.powder;
+        sGame->newRecord = TRUE;
+    }
 
     switch (sGame->playerCount)
     {
@@ -1960,6 +1985,129 @@ void ShowBerryCrushRankings(void)
     gTasks[taskId].tPressingSpeeds(1) = gSaveBlock2Ptr->berryCrush.pressingSpeeds[1];
     gTasks[taskId].tPressingSpeeds(2) = gSaveBlock2Ptr->berryCrush.pressingSpeeds[2];
     gTasks[taskId].tPressingSpeeds(3) = gSaveBlock2Ptr->berryCrush.pressingSpeeds[3];
+}
+
+static const struct WindowTemplate sWindowTemplate_BerryCrushRecords =
+{
+    .bg = 0,
+    .tilemapLeft = 5,
+    .tilemapTop = 1,
+    .width = 20,
+    .height = 11,
+    .paletteNum = 15,
+    .baseBlock = 1,
+};
+
+static u32 DecodePressingSpeed(u16 pressingSpeed)
+{
+    u32 value = (u16)pressingSpeed >> 8;
+    u32 fraction = 0;
+    u8 i;
+
+    for (i = 0; i < 8; i++)
+    {
+        if (((pressingSpeed & 0xFF) >> (7 - i)) & 1)
+            fraction += sPressingSpeedConversionTable[i];
+    }
+    return value * 100 + fraction / 1000000;
+}
+
+static void FormatPressingSpeed(u32 hundredths)
+{
+    ConvertIntToDecimalStringN(gStringVar1, hundredths / 100, STR_CONV_MODE_RIGHT_ALIGN, 3);
+    ConvertIntToDecimalStringN(gStringVar2, hundredths % 100, STR_CONV_MODE_LEADING_ZEROS, 2);
+    StringExpandPlaceholders(gStringVar4, gText_XDotYTimesPerSec);
+}
+
+static void PrintBerryCrushRecords(u8 windowId, s32 width)
+{
+    u32 bestPowder = gSaveBlock2Ptr->berryPick.berryCrush.bestPowder;
+    u16 bestPressingSpeed = gSaveBlock2Ptr->berryPick.berryCrush.bestPressingSpeed;
+    u16 bestSilkiness = gSaveBlock2Ptr->berryPick.berryCrush.bestSilkiness;
+    s32 x;
+
+    LoadUserWindowBorderGfx_(windowId, 0x21D, BG_PLTT_ID(13));
+    DrawTextBorderOuter(windowId, 0x21D, 13);
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_BerryCrushRecords,
+        GetStringCenterAlignXOffset(FONT_NORMAL, gText_BerryCrushRecords, width * 8), 1, TEXT_SKIP_DRAW, NULL);
+
+    FormatPressingSpeed(bestPressingSpeed);
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_PressingSpeed, 0, 25, TEXT_SKIP_DRAW, NULL);
+    x = (width * 8) - GetStringWidth(FONT_NORMAL, gStringVar4, 0);
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, x, 25, TEXT_SKIP_DRAW, NULL);
+
+    ConvertIntToDecimalStringN(gStringVar1, bestPowder, STR_CONV_MODE_RIGHT_ALIGN, 5);
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_BerryPowder, 0, 41, TEXT_SKIP_DRAW, NULL);
+    x = (width * 8) - GetStringWidth(FONT_NORMAL, gStringVar1, 0);
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar1, x, 41, TEXT_SKIP_DRAW, NULL);
+
+    ConvertIntToDecimalStringN(gStringVar1, bestSilkiness, STR_CONV_MODE_RIGHT_ALIGN, 3);
+    StringExpandPlaceholders(gStringVar4, gText_Var1Percent);
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_Silkiness, 0, 57, TEXT_SKIP_DRAW, NULL);
+    x = (width * 8) - GetStringWidth(FONT_NORMAL, gStringVar4, 0);
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, x, 57, TEXT_SKIP_DRAW, NULL);
+
+    PutWindowTilemap(windowId);
+}
+
+static void Task_ShowBerryCrushRecords(u8 taskId)
+{
+    struct WindowTemplate window;
+    s32 width, widthCurr;
+    s16 *data = gTasks[taskId].data;
+
+    switch (tState)
+    {
+    case 0:
+        window = sWindowTemplate_BerryCrushRecords;
+        width = GetStringWidth(FONT_NORMAL, gText_BerryCrushRecords, 0);
+        widthCurr = GetStringWidth(FONT_NORMAL, gText_PressingSpeed, 0) + 96;
+        if (widthCurr > width)
+            width = widthCurr;
+        widthCurr = GetStringWidth(FONT_NORMAL, gText_BerryPowder, 0) + 96;
+        if (widthCurr > width)
+            width = widthCurr;
+        widthCurr = GetStringWidth(FONT_NORMAL, gText_Silkiness, 0) + 96;
+        if (widthCurr > width)
+            width = widthCurr;
+        width = (width + 7) / 8;
+        if (width & 1)
+            width++;
+        window.tilemapLeft = (30 - width) / 2;
+        window.width = width;
+        tWindowId = AddWindow(&window);
+        PrintBerryCrushRecords(tWindowId, width);
+        CopyWindowToVram(tWindowId, COPYWIN_FULL);
+        tState++;
+        break;
+    case 1:
+        if (!IsDma3ManagerBusyWithBgCopy())
+            tState++;
+        break;
+    case 2:
+        if (JOY_NEW(A_BUTTON | B_BUTTON))
+        {
+            rbox_fill_rectangle(tWindowId);
+            CopyWindowToVram(tWindowId, COPYWIN_MAP);
+            tState++;
+        }
+        break;
+    case 3:
+        if (!IsDma3ManagerBusyWithBgCopy())
+        {
+            RemoveWindow(tWindowId);
+            DestroyTask(taskId);
+            ScriptContext_Enable();
+        }
+        break;
+    }
+}
+
+void ShowBerryCrushRecords(void)
+{
+    u8 taskId = CreateTask(Task_ShowBerryCrushRecords, 0);
+    Task_ShowBerryCrushRecords(taskId);
 }
 
 static void PrintTimer(struct BerryCrushGame_Gfx *gfx, u16 timer)
