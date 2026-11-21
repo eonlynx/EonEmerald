@@ -1058,6 +1058,10 @@ enum __attribute__((packed)) Item
     ITEM_ROOM_4_KEY = 878,
     ITEM_ROOM_6_KEY = 879,
     ITEM_EXP_ALL = 880,
+
+    // Mirage Island Charm
+    ITEM_WISH_CHARM = 881,
+
     ITEMS_COUNT,
     ITEM_FIELD_ARROW = ITEMS_COUNT,
 };
